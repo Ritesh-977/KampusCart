@@ -13,6 +13,8 @@ import { toast } from 'react-toastify';
 const ENDPOINT = import.meta.env.VITE_SERVER_URL;
 
 const Chat = () => {
+  const location = useLocation();
+
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -89,6 +91,25 @@ const Chat = () => {
 
   useEffect(() => { fetchChats(); }, []);
 
+  // 2. NEW LOGIC: Check for redirect data and open chat
+  useEffect(() => {
+    if (location.state && location.state.chat) {
+        const chatData = location.state.chat;
+        
+        // Add to chat list locally if it doesn't exist yet (for instant UI feedback)
+        setChats(prev => {
+            const exists = prev.find(c => getUserId(c) === getUserId(chatData));
+            return exists ? prev : [chatData, ...prev];
+        });
+
+        // Select the chat
+        handleSelectChat(chatData);
+        
+        // Clear state to prevent reopening on refresh
+        window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   const fetchChats = async () => {
     try {
       const { data } = await API.get("/chat");
@@ -122,7 +143,7 @@ const Chat = () => {
       try {
           const { data } = await API.get(`/message/${chatId}`);
           setMessages(data);
-          socket.current.emit("join chat", chatId);
+          socket.current?.emit("join chat", chatId);
       } catch (error) { console.error("Error fetching messages:", error); }
 
       try {
@@ -294,15 +315,13 @@ const Chat = () => {
   if (!user) return <div className="p-10 text-center text-red-500">Please Log In to Chat</div>;
 
   return (
-    // FIX 1: Main Background
     <div className="h-[100dvh] flex flex-col bg-gray-100 dark:bg-gray-900 font-sans overflow-hidden transition-colors duration-200">
       <Navbar />
 
       <div className="flex-1 max-w-[95rem] w-full mx-auto p-0 sm:p-4 lg:p-6 h-full overflow-hidden">
-        {/* FIX 2: Container Background & Border */}
         <div className="bg-white dark:bg-gray-800 sm:rounded-2xl shadow-xl overflow-hidden h-full flex border border-gray-200 dark:border-gray-700 relative">
           
-          {/* --- IMAGE PREVIEW MODAL OVERLAY --- */}
+          {/* --- IMAGE PREVIEW MODAL --- */}
           {imagePreview && (
             <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-4 backdrop-blur-sm">
                 <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-2xl max-w-md w-full flex flex-col items-center transition-colors">
@@ -310,22 +329,10 @@ const Chat = () => {
                         <h3 className="font-bold text-gray-700 dark:text-gray-200">Send Image?</h3>
                         <button onClick={cancelPreview} className="text-gray-500 hover:text-red-500"><FaTimes /></button>
                     </div>
-                    
                     <img src={imagePreview} alt="Preview" className="max-h-[60vh] rounded border border-gray-200 dark:border-gray-700 object-contain" />
-                    
                     <div className="flex gap-3 mt-4 w-full">
-                        <button 
-                            onClick={cancelPreview}
-                            className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-                            disabled={isUploading}
-                        >
-                            Cancel
-                        </button>
-                        <button 
-                            onClick={sendImage}
-                            className="flex-1 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition flex justify-center items-center gap-2"
-                            disabled={isUploading}
-                        >
+                        <button onClick={cancelPreview} className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition" disabled={isUploading}>Cancel</button>
+                        <button onClick={sendImage} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition flex justify-center items-center gap-2" disabled={isUploading}>
                             {isUploading ? "Sending..." : <><FaPaperPlane /> Send</>}
                         </button>
                     </div>
@@ -343,7 +350,6 @@ const Chat = () => {
             <div className="p-4 shrink-0">
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FaSearch className="text-gray-400" /></span>
-                {/* FIX 3: Search Input */}
                 <input 
                     type="text" 
                     placeholder="Search chats..." 
@@ -355,73 +361,81 @@ const Chat = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar">
-              {chats.filter(c => {
+              {chats
+                // 1. Search Filter
+                .filter(c => {
                   const p = getSender(user, c.users);
                   return p.name.toLowerCase().includes(sidebarSearch.toLowerCase());
-              }).map((chat) => {
-                const partner = getSender(user, chat.users);
-                const partnerId = getUserId(partner);
-                const isOnline = onlineUsers.includes(partnerId);
-                const isActive = selectedChat && getUserId(selectedChat) === getUserId(chat);
+                })
+                // 2. UPDATED SORT LOGIC: Priority to Latest Message Date
+                .sort((a, b) => {
+                    const dateA = a.latestMessage ? new Date(a.latestMessage.createdAt) : new Date(0);
+                    const dateB = b.latestMessage ? new Date(b.latestMessage.createdAt) : new Date(0);
+                    return dateB - dateA;
+                })
+                .map((chat) => {
+                  const partner = getSender(user, chat.users);
+                  const partnerId = getUserId(partner);
+                  const isOnline = onlineUsers.includes(partnerId);
+                  const isActive = selectedChat && getUserId(selectedChat) === getUserId(chat);
 
-                const latestMsg = chat.latestMessage;
-                const isSenderMe = latestMsg && String(getUserId(latestMsg.sender)) === String(loggedInUserId);
-                const readBy = latestMsg?.readBy || [];
-                const hasRead = readBy.some(id => String(id) === String(loggedInUserId));
-                
-                const isUnread = latestMsg && !isSenderMe && !hasRead;
-                const isLatestMsgImage = checkIsImage(latestMsg?.content);
+                  const latestMsg = chat.latestMessage;
+                  
+                  // 3. UPDATED FILTER: HIDE EMPTY CHATS FROM SIDEBAR
+                  if (!latestMsg) return null; 
 
-                return (
-                <div 
-                  key={getUserId(chat)}
-                  onClick={() => handleSelectChat(chat)}
-                  // FIX 4: Active/Hover states for Sidebar Items
-                  className={`flex items-center p-4 cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-700 
-                    ${isUnread ? 'bg-white dark:bg-gray-700 border-l-4 border-green-500' : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'} 
-                    ${isActive ? 'bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-600' : ''}`}
-                >
-                  <div className="relative flex-shrink-0">
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
-                      {partner.profilePic || partner.pic ? <img src={partner.profilePic || partner.pic} className="h-full w-full object-cover" alt="" /> : partner.name.charAt(0)}
+                  const isSenderMe = String(getUserId(latestMsg.sender)) === String(loggedInUserId);
+                  const readBy = latestMsg?.readBy || [];
+                  const hasRead = readBy.some(id => String(id) === String(loggedInUserId));
+                  
+                  const isUnread = !isSenderMe && !hasRead;
+                  const isLatestMsgImage = checkIsImage(latestMsg?.content);
+
+                  return (
+                  <div 
+                    key={getUserId(chat)}
+                    onClick={() => handleSelectChat(chat)}
+                    className={`flex items-center p-4 cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-700 
+                      ${isUnread ? 'bg-white dark:bg-gray-700 border-l-4 border-green-500' : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'} 
+                      ${isActive ? 'bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-600' : ''}`}
+                  >
+                    <div className="relative flex-shrink-0">
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+                        {partner.profilePic || partner.pic ? <img src={partner.profilePic || partner.pic} className="h-full w-full object-cover" alt="" /> : partner.name.charAt(0)}
+                      </div>
+                      {isOnline && (
+                        <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white dark:ring-gray-800"></span>
+                      )}
                     </div>
-                    {isOnline && (
-                      <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white dark:ring-gray-800"></span>
-                    )}
+                    <div className="ml-4 flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline mb-1">
+                        <h3 className={`text-sm truncate ${isUnread ? 'font-extrabold text-black dark:text-white' : 'font-medium text-gray-700 dark:text-gray-200'} ${isActive ? 'text-indigo-900 dark:text-indigo-400' : ''}`}>
+                            {partner.name}
+                        </h3>
+                        <span className={`text-xs ${isUnread ? 'font-bold text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                            {latestMsg ? new Date(latestMsg.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ""}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                          <p className={`text-sm truncate ${isUnread ? 'font-bold text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'} ${isActive ? 'text-indigo-700 dark:text-indigo-300' : ''}`}>
+                              {isLatestMsgImage ? (
+                                  <span className="flex items-center gap-1 italic text-gray-400 dark:text-gray-500"><FaImage /> Photo</span>
+                              ) : latestMsg.content}
+                          </p>
+                          {isUnread && (
+                              <span className="ml-2 h-2.5 w-2.5 bg-green-500 rounded-full"></span>
+                          )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="ml-4 flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline mb-1">
-                      <h3 className={`text-sm truncate ${isUnread ? 'font-extrabold text-black dark:text-white' : 'font-medium text-gray-700 dark:text-gray-200'} ${isActive ? 'text-indigo-900 dark:text-indigo-400' : ''}`}>
-                          {partner.name}
-                      </h3>
-                      <span className={`text-xs ${isUnread ? 'font-bold text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
-                          {latestMsg ? new Date(latestMsg.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ""}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                        <p className={`text-sm truncate ${isUnread ? 'font-bold text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'} ${isActive ? 'text-indigo-700 dark:text-indigo-300' : ''}`}>
-                            {latestMsg ? (
-                                isLatestMsgImage ? (
-                                    <span className="flex items-center gap-1 italic text-gray-400 dark:text-gray-500"><FaImage /> Photo</span>
-                                ) : latestMsg.content
-                            ) : "Start chatting"}
-                        </p>
-                        {isUnread && (
-                            <span className="ml-2 h-2.5 w-2.5 bg-green-500 rounded-full"></span>
-                        )}
-                    </div>
-                  </div>
-                </div>
-              )})}
+                )})}
             </div>
           </div>
 
           {/* --- MAIN CHAT WINDOW --- */}
-          {/* FIX 5: Main Chat Background */}
           <div className={`${!isMobileChatOpen ? 'hidden md:flex' : 'flex'} flex-1 flex-col bg-[#f0f2f5] dark:bg-gray-900 relative h-full`}>
             {selectedChat ? (
               <>
-                {/* FIX 6: Chat Header */}
                 <div className="p-3 sm:p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm z-20 h-16 shrink-0 transition-colors">
                   <div className="flex items-center">
                     <button onClick={() => setIsMobileChatOpen(false)} className="md:hidden mr-3 text-gray-500 dark:text-gray-400 hover:text-indigo-600"><FaArrowLeft className="text-xl" /></button>
@@ -467,7 +481,6 @@ const Chat = () => {
                     
                     return (
                         <div key={index} ref={(el) => (messageRefs.current[msg._id] = el)} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                          {/* FIX 7: Message Bubble Backgrounds */}
                           <div className={`max-w-[80%] sm:max-w-[60%] rounded-2xl relative group transition-all duration-300 
                             ${isImg ? 'p-0 bg-transparent shadow-none border-none' : `px-4 py-2 shadow-sm border border-gray-100 dark:border-gray-700 ${isMe ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none'}`} 
                             ${isCurrentMatch ? 'ring-2 ring-orange-400 ring-offset-2' : ''}`}
@@ -490,7 +503,6 @@ const Chat = () => {
                   )}
                 </div>
 
-                {/* FIX 8: Input Area */}
                 <div className="p-3 sm:p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 z-30 shrink-0 transition-colors">
                   {showEmojiPicker && (
                       <div className="absolute bottom-20 left-4 z-30 shadow-2xl">
@@ -517,7 +529,6 @@ const Chat = () => {
                 </div>
               </>
             ) : (
-              // FIX 9: Empty Chat State
               <div className="flex-1 flex flex-col items-center justify-center bg-[#f0f2f5] dark:bg-gray-900 text-center p-8 transition-colors">
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-full shadow-md mb-6 animate-bounce-slow">
                     <div className="text-indigo-200 dark:text-indigo-900 text-6xl"><FaImage className="mx-auto" /></div>
