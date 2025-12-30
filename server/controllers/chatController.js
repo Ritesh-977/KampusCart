@@ -26,7 +26,7 @@ export const accessChat = async (req, res) => {
     if (isChat.length > 0) {
         res.send(isChat[0]);
     } else {
-        // Create new chat
+        // Create new chat container
         const chatData = {
             chatName: "sender",
             isGroupChat: false,
@@ -48,22 +48,29 @@ export const accessChat = async (req, res) => {
 };
 
 // 2. Fetch all chats for the user (Sidebar)
+// 🔴 THIS IS THE FIXED VERSION 🔴
 export const fetchChats = async (req, res) => {
     try {
+        // Step 1: Get ALL chats for this user from DB (don't filter here yet)
         let chats = await Chat.find({
             users: { $elemMatch: { $eq: req.user._id } }
         })
         .populate("users", "-password")
-        .populate({
-            path: "latestMessage",
-            populate: {
-                path: "sender",
-                select: "name email pic"
-            }
-        })
+        .populate("latestMessage")
         .sort({ updatedAt: -1 });
 
-        res.status(200).send(chats);
+        // Step 2: Populate the sender info inside the latestMessage
+        chats = await User.populate(chats, {
+            path: "latestMessage.sender",
+            select: "name email pic"
+        });
+
+        // Step 3: ✨ THE FILTER FIX ✨
+        // We filter the array in JavaScript after population.
+        // This removes any chat where 'latestMessage' is null, undefined, or invalid.
+        const validChats = chats.filter(chat => chat.latestMessage != null);
+
+        res.status(200).send(validChats);
     } catch (error) {
         res.status(400);
         throw new Error(error.message);
