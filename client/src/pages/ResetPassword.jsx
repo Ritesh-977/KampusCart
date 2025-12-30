@@ -23,7 +23,7 @@ const ResetPassword = () => {
 
     try {
       // Note: The endpoint includes the token in the URL
-      await axios.put(`http://localhost:5000/api/auth/reset-password/${resetToken}`, {
+      await axios.put(`${import.meta.env.VITE_SERVER_URL}/api/auth/reset-password/${resetToken}`, {
         password
       });
 

@@ -21,13 +21,18 @@ connectDB();
 
 const app = express();
 
-const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+//const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+// You likely already have this
+const allowedOrigins = [
+  "http://localhost:5173",                     // Localhost
+  "http://localhost:5174",                     // Localhost (alternative)
+  "https://kampuscart.onrender.com"     // Your Render Frontend
+];
 
 app.use(cors({
   origin: allowedOrigins,
-  credentials: true
+  credentials: true // Keep this if you use cookies/sessions
 }));
-
 app.use(express.json());
 app.use('/uploads', express.static('uploads')); 
 

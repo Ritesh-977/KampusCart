@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-    baseURL: 'http://localhost:5000/api', // Make sure this matches your backend port
+    baseURL: `${import.meta.env.VITE_SERVER_URL}/api`, // Make sure this matches your backend port
 });
 
 // This is the "Magic" part that fixes the 401 error

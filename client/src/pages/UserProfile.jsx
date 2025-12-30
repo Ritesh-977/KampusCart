@@ -80,7 +80,7 @@ const UserProfile = () => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/users/profile', {
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/users/profile`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) throw new Error('Failed to fetch profile');
@@ -181,7 +181,7 @@ const UserProfile = () => {
       if (imageFile) formData.append('profilePic', imageFile);
       if (coverFile) formData.append('coverImage', coverFile);
 
-      const response = await fetch('http://localhost:5000/api/users/profile', {
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/users/profile`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData

@@ -30,7 +30,7 @@ const EditItem = () => {
     const fetchItem = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/items/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/items/${id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -123,7 +123,7 @@ const EditItem = () => {
       });
 
       const token = localStorage.getItem('token'); 
-      const response = await fetch(`http://localhost:5000/api/items/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/items/${id}`, {
         method: 'PUT', 
         headers: { 'Authorization': `Bearer ${token}` },
         body: data 

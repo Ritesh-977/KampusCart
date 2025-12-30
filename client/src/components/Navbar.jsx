@@ -10,7 +10,7 @@ import API from '../api/axios';
 import io from 'socket.io-client'; 
 import { useTheme } from '../context/ThemeContext'; // <--- Import Theme Hook
 
-const ENDPOINT = "http://localhost:5000";
+const ENDPOINT = import.meta.env.VITE_SERVER_URL ;
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
