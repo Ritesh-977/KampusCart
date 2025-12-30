@@ -57,7 +57,9 @@ const generateResetTemplate = (resetUrl, userName) => {
 
 export const sendEmail = async (options) => {
     const transporter = nodemailer.createTransport({
-        service: 'Gmail',
+        host: 'smtp.gmail.com', // Explicit host
+        port: 465,              // Secure port for Gmail
+        secure: true,           // Use SSL
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
