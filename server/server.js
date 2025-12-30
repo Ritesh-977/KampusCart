@@ -26,7 +26,7 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",                     // Localhost
   "http://localhost:5174",                     // Localhost (alternative)
-  "https://kampuscart.onrender.com"     // Your Render Frontend
+  "https://kampuscart-official.onrender.com/"     // Your Render Frontend
 ];
 
 app.use(cors({
