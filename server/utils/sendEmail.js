@@ -56,13 +56,18 @@ const generateResetTemplate = (resetUrl, userName) => {
 };
 
 export const sendEmail = async (options) => {
-    const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com', // Explicit host
-        port: 465,              // Secure port for Gmail
-        secure: true,           // Use SSL
+   const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,              // CHANGE THIS: 587 is more reliable on cloud servers
+        secure: false,          // CHANGE THIS: Must be false for port 587
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
+        },
+        // 2. Add this TLS config to prevent handshake errors on some networks
+        tls: {
+            ciphers: "SSLv3",
+            rejectUnauthorized: false,
         },
     });
 
@@ -84,5 +89,14 @@ export const sendEmail = async (options) => {
         html: htmlContent,
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+        console.log("Attempting to send email to:", options.email);
+        const info = await transporter.sendMail(mailOptions);
+        console.log("Email sent successfully! Message ID:", info.messageId);
+        return info;
+    } catch (error) {
+        console.error("FATAL EMAIL ERROR:", error);
+        throw new Error("Email could not be sent: " + error.message);
+    }
+    
 };
