@@ -1,5 +1,5 @@
 // src/App.jsx
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom"; // 1. Import useLocation
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ScrollToTop from "./components/ScrollToTop";
@@ -26,6 +26,13 @@ import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
 
 function App() {
+  // 2. Get the current location
+  const location = useLocation();
+
+  // 3. Define paths where the footer should be hidden
+  // You can add '/login' or '/signup' here if you want to hide it there too
+  const hideFooter = location.pathname === '/chats'; 
+
   return (
     // Layout wrapper
     <div className="min-h-screen bg-gray-100 flex flex-col font-sans">
@@ -42,7 +49,7 @@ function App() {
         theme="light"
       />
 
-      {/* Scroll behavior controller (NEW, SAFE) */}
+      {/* Scroll behavior controller */}
       <ScrollToTop />
 
       {/* Main content */}
@@ -139,8 +146,8 @@ function App() {
         </Routes>
       </div>
 
-      {/* Footer */}
-      <Footer />
+      {/* 4. Conditionally Render Footer */}
+      {!hideFooter && <Footer />}
     </div>
   );
 }
