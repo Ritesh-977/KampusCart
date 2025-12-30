@@ -12,7 +12,7 @@ const MyListings = () => {
     const fetchMyItems = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:5000/api/items/my-listings', {
+        const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/items/my-listings`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -30,7 +30,7 @@ const MyListings = () => {
     e.preventDefault(); 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/items/${id}/status`, {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/items/${id}/status`, {
         method: 'PATCH',
         headers: { 
             'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ const MyListings = () => {
     if (window.confirm("Are you sure you want to remove this item permanently?")) {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`http://localhost:5000/api/items/${id}`, {
+        const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/items/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });

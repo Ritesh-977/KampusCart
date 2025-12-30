@@ -48,7 +48,7 @@ const LostAndFound = () => {
 
   const fetchItems = async () => {
     try {
-      const { data } = await axios.get('http://localhost:5000/api/lost-found');
+      const { data } = await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/lost-found`);
       setItems(data);
     } catch (error) {
       console.error("Error fetching items:", error);
@@ -76,7 +76,7 @@ const LostAndFound = () => {
     if(!window.confirm("Are you sure you want to mark this as resolved?")) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/lost-found/${itemId}/resolve`, {}, {
+      await axios.put(`${import.meta.env.VITE_SERVER_URL}/api/lost-found/${itemId}/resolve`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setItems(items.map(item => 
@@ -106,7 +106,7 @@ const LostAndFound = () => {
       formData.append('description', fullDescription);
       if (newItem.image) formData.append('image', newItem.image);
 
-      const { data } = await axios.post('http://localhost:5000/api/lost-found', formData, {
+      const { data } = await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/lost-found`, formData, {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
       });
 

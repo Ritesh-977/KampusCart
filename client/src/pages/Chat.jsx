@@ -10,7 +10,7 @@ import {
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
-const ENDPOINT = "http://localhost:5000";
+const ENDPOINT = import.meta.env.VITE_SERVER_URL;
 
 const Chat = () => {
   const [chats, setChats] = useState([]);

@@ -44,7 +44,7 @@ const Auth = () => {
   const handleResendOtp = async () => {
     setError('');
     try {
-      await axios.post('http://localhost:5000/api/auth/resend-otp', {
+      await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/auth/resend-otp`, {
         email: formData.email
       });
       toast.success("New code sent! Check your email.");
@@ -58,7 +58,7 @@ const Auth = () => {
     setError('');
     setLoading(true);
 
-    const API_URL = 'http://localhost:5000/api/auth'; 
+    const API_URL = `${import.meta.env.VITE_SERVER_URL}/api/auth`; 
 
     try {
       if (isLogin) {

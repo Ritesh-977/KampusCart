@@ -33,7 +33,7 @@ const ForgotPassword = () => {
 
     setIsLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/auth/forgot-password', { email });
+      await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/auth/forgot-password`, { email });
       setIsSuccess(true);
     } catch (err) {
       setApiError(err.response?.data?.message || 'Failed to send email. Try again.');
@@ -185,12 +185,12 @@ const ForgotPassword = () => {
         {/* Help Text */}
         <p className="text-center text-sm text-gray-500 dark:text-gray-500 mt-6">
           Need more help?{' '}
-          <a 
-            href="mailto:riteshsingh0977@gmail.com" 
-            className="text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium hover:underline transition-colors"
-          >
-            Contact Support
-          </a>
+         <Link
+  to="/contact"
+  className="text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium hover:underline transition-colors"
+>
+  Contact Support
+</Link>
         </p>
       </div>
     </div>

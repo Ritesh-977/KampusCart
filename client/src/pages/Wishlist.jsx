@@ -12,7 +12,7 @@ const Wishlist = () => {
     const fetchWishlist = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:5000/api/users/wishlist', {
+        const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/users/wishlist`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -32,7 +32,7 @@ const Wishlist = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await fetch('http://localhost:5000/api/users/wishlist', {
+      await fetch(`${import.meta.env.VITE_SERVER_URL}/api/users/wishlist`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
