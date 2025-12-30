@@ -18,11 +18,17 @@ const Footer = () => {
     <footer className="bg-gray-900 text-gray-300 pt-8 pb-4 mt-auto border-t border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        {/* GRID CHANGES: 
+           1. 'grid-cols-2': Sets mobile layout to 2 columns side-by-side.
+           2. 'lg:grid-cols-3': Reverts to 3 columns for desktop.
+        */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 mb-6">
 
-          {/* Brand */}
-          <div>
+          {/* BRAND SECTION CHANGES: 
+             1. 'col-span-2': Makes the logo/brand text span the full width on mobile.
+             2. 'lg:col-span-1': Makes it take just 1 column on desktop.
+          */}
+          <div className="col-span-2 lg:col-span-1">
             <Link
               to="/"
               className="flex items-center text-lg font-bold text-white tracking-tight mb-3"
@@ -33,27 +39,21 @@ const Footer = () => {
               </span>
             </Link>
 
-            <p className="text-gray-400 mb-3 text-sm leading-snug">
+            <p className="text-gray-400 mb-3 text-sm leading-snug max-w-xs">
               A trusted marketplace for students to buy and sell locally.
             </p>
 
             <div className="flex space-x-2">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <FaFacebook size={16} />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <FaTwitter size={16} />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <FaInstagram size={16} />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <FaLinkedin size={16} />
-              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors"><FaFacebook size={16} /></a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors"><FaTwitter size={16} /></a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors"><FaInstagram size={16} /></a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors"><FaLinkedin size={16} /></a>
             </div>
           </div>
 
-          {/* Platform */}
+          {/* PLATFORM SECTION: 
+             Naturally falls into Column 1 (Left) on mobile 
+          */}
           <div>
             <h3 className="text-xs font-semibold text-white uppercase tracking-wider mb-3">
               Platform
@@ -66,7 +66,9 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Support */}
+          {/* SUPPORT SECTION: 
+             Naturally falls into Column 2 (Right) on mobile 
+          */}
           <div>
             <h3 className="text-xs font-semibold text-white uppercase tracking-wider mb-3">
               Support
