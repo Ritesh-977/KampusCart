@@ -3,6 +3,7 @@ dotenv.config();
 
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser'; // 1. IMPORT THIS
 import { createServer } from 'http'; 
 import { Server } from 'socket.io';  
 import connectDB from './config/db.js';
@@ -15,25 +16,30 @@ import lostFoundRoutes from './routes/lostFoundRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';       
 import messageRoutes from './routes/messageRoutes.js'; 
 import uploadRoutes from './routes/uploadRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 // Connect to Database
 connectDB();
 
 const app = express();
 
-//const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
-// You likely already have this
+app.set('trust proxy', 1);
+
 const allowedOrigins = [
-  "http://localhost:5173",                     // Localhost
-  "http://localhost:5174",                     // Localhost (alternative)
-  "https://kampuscart-official.onrender.com"     // Your Render Frontend
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://www.kampuscart.site",   
+  "https://buy-sell-murex.vercel.app",
+  "https://kampuscart.onrender.com"
 ];
 
 app.use(cors({
   origin: allowedOrigins,
-  credentials: true // Keep this if you use cookies/sessions
+  credentials: true // Crucial for cookies to work
 }));
+
 app.use(express.json());
+app.use(cookieParser()); // 2. USE THIS (Must be before routes)
 app.use('/uploads', express.static('uploads')); 
 
 // Register Routes
@@ -44,6 +50,15 @@ app.use('/api/lost-found', lostFoundRoutes);
 app.use('/api/chat', chatRoutes); 
 app.use('/api/message', messageRoutes); 
 app.use('/api/upload', uploadRoutes);
+app.use('/api/admin', adminRoutes);
+
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
 
 app.get('/', (req, res) => {
     res.send('API is running...');
@@ -63,19 +78,15 @@ const io = new Server(httpServer, {
 const onlineUsers = new Map(); 
 
 io.on('connection', (socket) => {
-    console.log('🔗 New Socket Connection:', socket.id);
-
+   
     // A. User Setup
     socket.on('setup', (userData) => {
-        // Handle cases where frontend sends object {_id: "..."} or just "..."
         const userId = userData._id || userData.id || userData;
-        
         if (!userId) return console.log("⚠️ Setup failed: No User ID provided");
         
         socket.join(userId);
         onlineUsers.set(userId, socket.id);
-        
-        console.log(`✅ User Setup Complete: ${userId}`);
+    
         socket.emit('connected');
         io.emit('online_users', Array.from(onlineUsers.keys()));
     });
@@ -98,7 +109,6 @@ io.on('connection', (socket) => {
 
             if (String(userId) === String(senderId)) return;
             
-            // console.log(`📡 Sending message to: ${userId}`);
             socket.in(userId).emit('message received', newMessageReceived);
         });
     });

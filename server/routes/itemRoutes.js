@@ -1,7 +1,9 @@
 import express from 'express';
 import { upload } from '../middleware/multer.js';
 import { protect } from '../middleware/authMiddleware.js';
-import { createItem, deleteItem, getItemById, getItems, getMyItems, getMyListings, toggleSoldStatus, updateItem} from '../controllers/itemController.js';
+import { createItem, deleteItem, getItemById, getItems, getItemsByUser, getMyItems, getMyListings, reportItem, toggleSoldStatus, updateItem} from '../controllers/itemController.js';
+
+
 
 const router = express.Router();
 
@@ -17,6 +19,8 @@ router.get('/my-items', protect, getMyItems);
 
 router.get('/my-listings', protect, getMyListings);
 
+router.get('/user/:userId', getItemsByUser);
+
 router.get('/:id', getItemById);
 
 router.put('/:id', protect, upload.array('images', 3), updateItem);
@@ -26,5 +30,9 @@ router.delete('/:id', protect, deleteItem);
 
 // Toggle sold status of an item
 router.patch('/:id/status', protect, toggleSoldStatus);
+
+router.post('/:id/report', protect, reportItem);
+
+
 
 export default router;
