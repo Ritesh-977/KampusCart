@@ -6,6 +6,25 @@ import ItemCard from '../components/ItemCard';
 import API from '../api/axios.js';
 import { toast } from "react-toastify";
 
+// --- SKELETON COMPONENT ---
+const SkeletonItemCard = () => (
+  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full animate-pulse">
+    <div className="aspect-[4/3] bg-gray-200 dark:bg-gray-700 w-full"></div>
+    <div className="p-4 flex flex-col flex-1 gap-3">
+      <div className="flex justify-between">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+      </div>
+      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+      <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mt-auto"></div>
+      <div className="flex items-center gap-2 mt-2 pt-3 border-t border-gray-100 dark:border-gray-700">
+        <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+      </div>
+    </div>
+  </div>
+);
+
 const Home = () => {
   const [items, setItems] = useState([]);
   const [wishlist, setWishlist] = useState([]); 
@@ -38,15 +57,17 @@ const Home = () => {
     } catch (error) {
       console.error("Error fetching items:", error);
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 300);
     }
   };
 
   const fetchWishlist = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return; 
+    // ✅ FIX 1: Check for 'user' object instead of 'token' string
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) return; 
 
     try {
+      // API instance automatically sends the HttpOnly cookie
       const response = await API.get('/users/wishlist');
       const ids = response.data.map(item => item._id);
       setWishlist(ids);
@@ -59,8 +80,9 @@ const Home = () => {
     e.preventDefault(); 
     e.stopPropagation();
 
-    const token = localStorage.getItem('token');
-    if (!token) {
+    // ✅ FIX 2: Check for 'user' object
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
         toast.warning("Please login to save items to wishlist!");
         return;
     }
@@ -77,7 +99,6 @@ const Home = () => {
     }
   };
 
-  // --- 1. SCROLL LISTENER (Infinite Scroll) ---
   useEffect(() => {
     const handleScroll = () => {
       if (
@@ -100,23 +121,20 @@ const Home = () => {
     fetchWishlist();
   }, []);
 
-  // --- 3. AUTO-SCROLL LOGIC (FIXED WITH DELAY) ---
   useEffect(() => {
     if (searchQuery && !loading) {
-      // We wait 100ms to let the browser finish "resetting" the scroll to top
       const timer = setTimeout(() => {
         const itemsSection = document.getElementById('items');
         if (itemsSection) {
           const elementPosition = itemsSection.getBoundingClientRect().top + window.scrollY;
-          // Offset of 240px handles the Sticky Navbar + Filter Bar height
-          const offsetPosition = elementPosition - 240; 
+          const offsetPosition = elementPosition - 280; 
 
           window.scrollTo({
             top: offsetPosition,
             behavior: 'smooth'
           });
         }
-      }, 100); // 100ms delay ensures reliability
+      }, 100); 
 
       return () => clearTimeout(timer);
     }
@@ -129,20 +147,20 @@ const Home = () => {
       <main className="flex-grow">
         <HeroSection />
 
-        {/* --- FILTER & SORT SECTION --- */}
-        <section className="bg-white dark:bg-gray-800 py-8 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-20 z-40">
+        <section className="bg-white dark:bg-gray-800 py-3 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-[150px] md:top-20 z-40 transition-all">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
               
+              {/* Categories */}
               <div className="flex-1 overflow-hidden">
-                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Categories</h3>
-                <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide">
+                <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2">Categories</h3>
+                <div className="flex space-x-3 overflow-x-auto pb-1 scrollbar-hide">
                   <button
                       onClick={() => setSelectedCategory('')}
-                      className={`inline-flex items-center px-5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                      className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap border ${
                         selectedCategory === '' 
-                        ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md' 
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-transparent shadow-md' 
+                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'
                       }`}
                     >
                       All
@@ -151,10 +169,10 @@ const Home = () => {
                     <button
                       key={cat}
                       onClick={() => setSelectedCategory(cat === selectedCategory ? '' : cat)}
-                      className={`inline-flex items-center px-5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                      className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap border ${
                         selectedCategory === cat 
-                        ? 'bg-indigo-600 text-white shadow-md' 
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        ? 'bg-indigo-600 text-white border-transparent shadow-md' 
+                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'
                       }`}
                     >
                       {cat}
@@ -163,12 +181,13 @@ const Home = () => {
                 </div>
               </div>
 
+              {/* Sort By */}
               <div className="flex-shrink-0 lg:border-l lg:pl-8 dark:border-gray-700">
-                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Sort By</h3>
-                <div className="flex flex-wrap gap-2">
+                <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2">Sort By</h3>
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                   <button
                     onClick={() => setSortBy(sortBy === 'priceLow' ? '' : 'priceLow')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
+                    className={`px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition-all whitespace-nowrap ${
                       sortBy === 'priceLow'
                       ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
                       : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-gray-300'
@@ -178,7 +197,7 @@ const Home = () => {
                   </button>
                   <button
                     onClick={() => setSortBy(sortBy === 'priceHigh' ? '' : 'priceHigh')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
+                    className={`px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition-all whitespace-nowrap ${
                       sortBy === 'priceHigh'
                       ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
                       : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-gray-300'
@@ -205,9 +224,13 @@ const Home = () => {
               </span>
             </div>
 
+            {/* --- REPLACED SPINNER WITH SKELETON GRID --- */}
             {loading ? (
-              <div className="flex justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+              <div className="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
+                {/* Render 8 Skeleton Cards while loading */}
+                {[...Array(8)].map((_, index) => (
+                  <SkeletonItemCard key={index} />
+                ))}
               </div>
             ) : items.length > 0 ? (
               <div className="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
@@ -228,7 +251,7 @@ const Home = () => {
               </div>
             )}
             
-            {items.length > visibleCount && (
+            {!loading && items.length > visibleCount && (
                <div className="py-8 text-center text-gray-400 text-sm italic">
                  Scroll for more...
                </div>

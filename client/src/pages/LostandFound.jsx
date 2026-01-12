@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import axios from 'axios';
-import {ToastContainer, toast } from 'react-toastify';
+import API from '../api/axios'; // ✅ IMPORT YOUR AXIOS INSTANCE
+import { ToastContainer, toast } from 'react-toastify';
 
 import { 
   FaSearch, 
@@ -15,7 +15,6 @@ import {
   FaSpinner,
   FaCheck
 } from 'react-icons/fa';
-
 
 const LostAndFound = () => {
   const [items, setItems] = useState([]);
@@ -40,7 +39,9 @@ const LostAndFound = () => {
   });
   
   const [previewUrl, setPreviewUrl] = useState(null);
-  const currentUser = JSON.parse(localStorage.getItem('user'));
+  
+  // Safe retrieval of user object
+  const currentUser = JSON.parse(localStorage.getItem('user')) || {};
 
   useEffect(() => {
     fetchItems();
@@ -48,11 +49,11 @@ const LostAndFound = () => {
 
   const fetchItems = async () => {
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/lost-found`);
+      // ✅ FIX: Use API.get
+      const { data } = await API.get('/lost-found');
       setItems(data);
     } catch (error) {
       console.error("Error fetching items:", error);
-      // Optional: toast.error("Failed to load items");
     } finally {
       setLoading(false);
     }
@@ -75,19 +76,16 @@ const LostAndFound = () => {
   const handleMarkResolved = async (itemId) => {
     if(!window.confirm("Are you sure you want to mark this as resolved?")) return;
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${import.meta.env.VITE_SERVER_URL}/api/lost-found/${itemId}/resolve`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // ✅ FIX: Use API.put (Cookie sent auto)
+      await API.put(`/lost-found/${itemId}/resolve`, {});
+      
       setItems(items.map(item => 
         item._id === itemId ? { ...item, status: 'Resolved' } : item
       ));
       
-      // --- 2. SUCCESS TOAST ---
       toast.success("Item marked as resolved!");
       
     } catch (error) {
-      // --- 3. ERROR TOAST ---
       toast.error("Failed to update status");
     }
   };
@@ -96,7 +94,6 @@ const LostAndFound = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('title', newItem.title);
       formData.append('type', newItem.type); 
@@ -106,9 +103,9 @@ const LostAndFound = () => {
       formData.append('description', fullDescription);
       if (newItem.image) formData.append('image', newItem.image);
 
-      const { data } = await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/lost-found`, formData, {
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
-      });
+      // ✅ FIX: Use API.post
+      // Axios automatically handles multipart/form-data headers
+      const { data } = await API.post('/lost-found', formData);
 
       const enrichedItem = {
         ...data, 
@@ -123,11 +120,9 @@ const LostAndFound = () => {
       setNewItem({ type: 'Lost', title: '', category: 'Other', location: '', date: '', description: '', contact: '', image: null });
       setPreviewUrl(null);
       
-      // --- 4. SUCCESS TOAST ---
       toast.success("Item reported successfully!");
 
     } catch (error) {
-      // --- 5. ERROR TOAST ---
       toast.error(error.response?.data?.message || "Failed to report item");
     } finally {
       setSubmitting(false);
@@ -152,7 +147,6 @@ const LostAndFound = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans transition-colors duration-300">
       <Navbar />
       
-      {/* --- 6. TOAST CONTAINER (Essential for toasts to show) --- */}
       <ToastContainer 
         position="top-right"
         autoClose={3000}
@@ -227,9 +221,9 @@ const LostAndFound = () => {
                         </div>
                     )}
                     {item.image && (
-                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center pointer-events-none">
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center pointer-events-none">
                           <p className="text-white opacity-0 group-hover:opacity-100 font-bold bg-black/50 px-2 py-1 rounded text-xs">Click to Expand</p>
-                       </div>
+                        </div>
                     )}
                 </div>
 

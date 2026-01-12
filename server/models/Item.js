@@ -4,7 +4,6 @@ const itemSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
     location: { type: String, required: false },
-    sellerEmail: { type: String },
     price: { type: Number, required: true },
     category: { 
         type: String, 
@@ -15,9 +14,26 @@ const itemSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User', 
         required: true 
-    }, // Links the item to the person who posted it
+    },
     isSold: { type: Boolean, default: false },
-    contactNumber: { type: String, required: true }
+    contactNumber: { type: String, required: true },
+
+    // 👇 ADDED THESE FIELDS TO STORE CUSTOM INFO
+    sellerEmail: { type: String },
+    sellerName: { type: String }, // <--- This was missing!
+
+    isReported: {
+        type: Boolean,
+        default: false,
+    },
+    reportReason: {
+        type: String,
+        default: "",
+    },
+    reportCount: {
+        type: Number,
+        default: 0, 
+    },
 }, { timestamps: true });
 
 itemSchema.index({ title: 'text', description: 'text' });

@@ -33,6 +33,13 @@ const userSchema = new mongoose.Schema({
         ref: 'Item' 
     }],
 
+    // Admin Flag
+    isAdmin: { type: Boolean, default: false },
+    
+    // --- NEW BAN FIELDS ---
+    isBanned: { type: Boolean, default: false },
+    banExpiresAt: { type: Date, default: null } // If null & isBanned=true, it's permanent
+
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

@@ -3,19 +3,14 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  // 1. FIX: Initialize state directly from localStorage (Lazy Initialization)
-  // This prevents the state from starting as "null" and overwriting your preference
+  // 1. Initialize state (Lazy Initialization)
   const [theme, setTheme] = useState(() => {
     // Check localStorage immediately
     const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      return savedTheme;
-    }
-    // Fallback to system preference
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    return 'light';
+    
+    // If a theme is saved, use it. 
+    // If NOT saved (first visit), return 'dark' by default.
+    return savedTheme || 'dark';
   });
 
   useEffect(() => {
@@ -24,11 +19,12 @@ export const ThemeProvider = ({ children }) => {
     
     if (theme === 'dark') {
       root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
     } else {
       root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
     }
+    
+    // Save the current preference to localStorage
+    localStorage.setItem('theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {

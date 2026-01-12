@@ -1,4 +1,6 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+
+// Initialize Resend with your API Key
 
 // TEMPLATE 1: OTP Verification (Blue Theme)
 const generateVerificationTemplate = (otp, userName) => {
@@ -56,47 +58,37 @@ const generateResetTemplate = (resetUrl, userName) => {
 };
 
 export const sendEmail = async (options) => {
-   const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,              // CHANGE THIS: 587 is more reliable on cloud servers
-        secure: false,          // CHANGE THIS: Must be false for port 587
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-        // 2. Add this TLS config to prevent handshake errors on some networks
-        tls: {
-            ciphers: "SSLv3",
-            rejectUnauthorized: false,
-        },
-    });
-
     let htmlContent;
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     // LOGIC: Automatically switch template based on input
     if (options.resetUrl) {
-        // If a reset URL is provided, use the Reset Password template
         htmlContent = generateResetTemplate(options.resetUrl, options.name);
     } else {
-        // Otherwise, default to the OTP Verification template
         htmlContent = generateVerificationTemplate(options.otp, options.name);
     }
 
-    const mailOptions = {
-        from: '"CampusMart Security" <noreply@campusmart.com>',
-        to: options.email,
-        subject: options.subject,
-        html: htmlContent,
-    };
-
     try {
-        console.log("Attempting to send email to:", options.email);
-        const info = await transporter.sendMail(mailOptions);
-        console.log("Email sent successfully! Message ID:", info.messageId);
-        return info;
-    } catch (error) {
-        console.error("FATAL EMAIL ERROR:", error);
-        throw new Error("Email could not be sent: " + error.message);
+        const { data, error } = await resend.emails.send({
+            // IMPORTANT: If you haven't verified 'campusmart.com' on Resend yet,
+            // you MUST use 'onboarding@resend.dev' for testing.
+            from: 'CampusMart Security <noreply@kampuscart.site>', 
+            to: [options.email], // Resend requires an array for 'to' (or a single string, but array is safer)
+            subject: options.subject,
+            html: htmlContent,
+        });
+
+        if (error) {
+            console.error('Resend API Error:', error);
+            throw new Error('Failed to send email via Resend');
+        }
+
+        console.log('Email sent successfully:', data);
+        return data;
+
+    } catch (err) {
+        console.error('Email sending failed:', err);
+        throw err;
     }
-    
 };

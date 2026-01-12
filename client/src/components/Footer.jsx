@@ -46,7 +46,7 @@ const Footer = () => {
             <div className="flex space-x-2">
               <a href="#" className="text-gray-400 hover:text-white transition-colors"><FaFacebook size={16} /></a>
               <a href="#" className="text-gray-400 hover:text-white transition-colors"><FaTwitter size={16} /></a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors"><FaInstagram size={16} /></a>
+              <a href="https://www.instagram.com/kampuscart/?hl=en" className="text-gray-400 hover:text-white transition-colors"><FaInstagram size={16} /></a>
               <a href="#" className="text-gray-400 hover:text-white transition-colors"><FaLinkedin size={16} /></a>
             </div>
           </div>

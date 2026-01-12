@@ -4,7 +4,8 @@ import {
     getUserProfile, 
     updateUserProfile, 
     toggleWishlist, 
-    getWishlist 
+    getWishlist, 
+    getUserById
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -29,5 +30,7 @@ router.route('/profile')
 router.route('/wishlist')
     .post(protect, toggleWishlist)
     .get(protect, getWishlist);
+
+router.get('/:id', getUserById);
 
 export default router;

@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import { FaUser, FaEnvelope, FaPhone, FaGraduationCap, FaEdit, FaSave, FaTimes, FaCamera, FaSpinner, FaCheck, FaImage } from 'react-icons/fa';
 import Cropper from 'react-easy-crop';
 import { toast } from 'react-toastify';
+import API from '../api/axios';
 
 // --- UTILITY FUNCTION FOR CROPPING ---
 const createImage = (url) =>
@@ -79,12 +80,8 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/users/profile`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Failed to fetch profile');
-        const data = await response.json();
+         const { data } = await API.get('/users/profile');
+
         setUser({
           name: data.name || '',
           email: data.email || '',
@@ -169,10 +166,9 @@ const UserProfile = () => {
   const triggerFileInput = () => fileInputRef.current.click();
   const triggerCoverInput = () => coverInputRef.current.click();
 
-  const handleSave = async () => {
+ const handleSave = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('name', user.name);
       formData.append('phone', user.phone);
@@ -181,23 +177,21 @@ const UserProfile = () => {
       if (imageFile) formData.append('profilePic', imageFile);
       if (coverFile) formData.append('coverImage', coverFile);
 
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/users/profile`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
-      });
+      // ✅ FIX: Use API.put
+      // - No token needed (Cookie sent automatically)
+      // - No 'Content-Type' header needed (Axios detects FormData automatically)
+      const { data: updatedData } = await API.put('/users/profile', formData);
 
-      if (!response.ok) throw new Error('Failed to update profile');
-
-      const updatedData = await response.json();
-
-      const savedUser = JSON.parse(localStorage.getItem('user'));
+      // Update LocalStorage User Info (So Navbar updates immediately)
+      const savedUser = JSON.parse(localStorage.getItem('user')) || {};
       localStorage.setItem('user', JSON.stringify({
         ...savedUser,
         name: updatedData.name,
-        profilePic: updatedData.profilePic
+        profilePic: updatedData.profilePic,
+        // Add other fields if necessary
       }));
 
+      // Update UI
       if (updatedData.profilePic) setImagePreview(updatedData.profilePic);
       if (updatedData.coverImage) setCoverPreview(updatedData.coverImage);
 
@@ -207,12 +201,13 @@ const UserProfile = () => {
       toast.success("Profile updated successfully!");
 
     } catch (err) {
-      toast.error(err.message);
+      console.error(err);
+      // Handle Axios error response
+      toast.error(err.response?.data?.message || "Failed to update profile");
     } finally {
       setSaving(false);
     }
   };
-
   if (loading) return <div className="min-h-screen flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold bg-gray-50 dark:bg-gray-900 transition-colors">Loading Profile...</div>;
 
   return (
