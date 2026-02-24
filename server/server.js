@@ -17,11 +17,15 @@ import chatRoutes from './routes/chatRoutes.js';
 import messageRoutes from './routes/messageRoutes.js'; 
 import uploadRoutes from './routes/uploadRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import { startCronJobs } from './utils/cronJobs.js';
 
 // Connect to Database
 connectDB();
 
 const app = express();
+
+// Initialize scheduled tasks
+startCronJobs();
 
 app.set('trust proxy', 1);
 

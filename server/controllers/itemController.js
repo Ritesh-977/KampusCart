@@ -2,6 +2,8 @@ import Item from '../models/Item.js';
 import asyncHandler from 'express-async-handler';
 import getOrSetCache from '../utils/cacheResponse.js'; // Import your helper
 import redis from '../config/redis.js'; // Import redis for manual clearing
+import webpush from '../utils/webPush.js';
+import User from '../models/User.js';
 
 // --- HELPER TO CLEAR CACHE ---
 // We call this whenever an item is created, updated, or deleted.
@@ -43,6 +45,48 @@ export const createItem = async (req, res) => {
 
         // 🧹 CLEAR CACHE so the new item shows up on the home page
         await clearItemCache();
+
+        const sendPushNotifications = async () => {
+            try {
+                // 1. Format the payload (Use an environment variable for the domain when deploying!)
+                const frontendUrl = 'https://www.kampuscart.site';
+                const payload = JSON.stringify({
+                    title: 'New Deal on KampusCart! 🛒',
+                    body: `${title} was just listed for ₹${price} in ${category}.`,
+                    url: `${frontendUrl}/item/${newItem._id}` ,
+                    icon: `${frontendUrl}/logo.png`, // Make sure you have a logo.png in your frontend public folder!
+                    image: imageUrls[0]
+                });
+
+                // 2. Find subscribed users (excluding the person who just posted the item)
+                const subscribedUsers = await User.find({
+                    pushSubscription: { $ne: null },
+                    _id: { $ne: req.user.id } 
+                });
+
+                // 3. Fire off notifications in parallel
+                const pushPromises = subscribedUsers.map(user => {
+                    return webpush.sendNotification(user.pushSubscription, payload)
+                        .catch(async (error) => {
+                            // Status 410 or 404 means the user unsubscribed or blocked notifications in their browser settings
+                            if (error.statusCode === 410 || error.statusCode === 404) {
+                                console.log(`Cleaning up dead subscription for user: ${user.email}`);
+                                await User.findByIdAndUpdate(user._id, { pushSubscription: null });
+                            } else {
+                                console.error(`Push error for ${user.email}:`, error);
+                            }
+                        });
+                });
+
+                await Promise.all(pushPromises);
+                console.log(`Successfully broadcasted push alerts to ${subscribedUsers.length} users.`);
+            } catch (pushError) {
+                console.error("Fatal error broadcasting push notifications:", pushError);
+            }
+        };
+
+        // Execute the broadcast in the background (Notice there is no 'await' here!)
+        sendPushNotifications();
 
         res.status(201).json(newItem);
     } catch (error) {

@@ -38,7 +38,13 @@ const userSchema = new mongoose.Schema({
     
     // --- NEW BAN FIELDS ---
     isBanned: { type: Boolean, default: false },
-    banExpiresAt: { type: Date, default: null } // If null & isBanned=true, it's permanent
+    banExpiresAt: { type: Date, default: null }, // If null & isBanned=true, it's permanent
+
+    pushSubscription: { 
+    type: Object, 
+    default: null 
+},
+
 
 }, { timestamps: true });
 

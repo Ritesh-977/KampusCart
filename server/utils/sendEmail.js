@@ -57,24 +57,66 @@ const generateResetTemplate = (resetUrl, userName) => {
     `;
 };
 
+// TEMPLATE 3: Monthly Digest (Green Theme for Marketplace Activity)
+const generateMonthlyDigestTemplate = (userName, recentItems) => {
+    // 1. Added .slice(0, 3) to ensure a maximum of 3 items are rendered
+    const itemsHtml = recentItems.slice(0, 3).map(item => `
+        <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+            <strong style="color: #333; font-size: 16px;">${item.title}</strong>
+            <span style="color: #4CAF50; float: right; font-weight: bold;">₹${item.price}</span>
+            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">${item.category}</p>
+        </div>
+    `).join('');
+
+    return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;">
+        <div style="background-color: #4CAF50; padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">KampusCart Highlights</h1>
+        </div>
+        <div style="padding: 30px; color: #333; line-height: 1.6;">
+            <h2 style="color: #4CAF50;">This Month on Campus</h2>
+            <p>Hi <strong>${userName || 'Student'}</strong>,</p>
+            
+            <p style="font-size: 16px; font-weight: bold; color: #2E7D32;">Why spend more when someone on your campus is selling it for less?</p>
+            
+            <p>Check out some of the top items your fellow students listed on KampusCart recently. Don't miss out on these deals!</p>
+            
+            <div style="margin: 30px 0; background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                ${itemsHtml || '<p>It was a quiet month! Be the first to list something new.</p>'}
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="https://kampuscart.site" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+                    Browse All Items
+                </a>
+            </div>
+        </div>
+        <div style="background-color: #f9f9f9; padding: 15px; text-align: center; font-size: 12px; color: #999;">
+            <p>&copy; ${new Date().getFullYear()} KampusCart Team</p>
+            <p><a href="#" style="color: #999; text-decoration: underline;">Unsubscribe from monthly digests</a></p>
+        </div>
+    </div>
+    `;
+};
+
 export const sendEmail = async (options) => {
     let htmlContent;
-
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    // LOGIC: Automatically switch template based on input
+    // LOGIC: Automatically switch template based on input flags
     if (options.resetUrl) {
         htmlContent = generateResetTemplate(options.resetUrl, options.name);
+    } else if (options.isMonthlyDigest) {
+        // Trigger the new digest template
+        htmlContent = generateMonthlyDigestTemplate(options.name, options.recentItems);
     } else {
         htmlContent = generateVerificationTemplate(options.otp, options.name);
     }
 
     try {
         const { data, error } = await resend.emails.send({
-            // IMPORTANT: If you haven't verified 'campusmart.com' on Resend yet,
-            // you MUST use 'onboarding@resend.dev' for testing.
-            from: 'CampusMart Security <noreply@kampuscart.site>', 
-            to: [options.email], // Resend requires an array for 'to' (or a single string, but array is safer)
+            from: 'KampusCart <noreply@kampuscart.site>', 
+            to: [options.email], 
             subject: options.subject,
             html: htmlContent,
         });

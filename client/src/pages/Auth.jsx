@@ -10,6 +10,7 @@ import { loadSlim } from "@tsparticles/slim";
 
 // --- IMPORT THEME CONTEXT ---
 import { useTheme } from '../context/ThemeContext'; 
+import { subscribeUserToPush } from '../utils/pushSubscription';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -110,6 +111,20 @@ const Auth = () => {
 
         setLoading(false);
         toast.success('Logged in successfully!');
+
+      const currentUserId = response.data.user.id; 
+
+      if (!currentUserId) {
+          console.error("CRITICAL: The user ID is missing from the login response!");
+      } else {
+          try {
+              await subscribeUserToPush(currentUserId);
+          } catch (err) {
+              console.log("Push subscription skipped or denied.");
+          }
+      }
+
+
         navigate('/'); 
       }
 
