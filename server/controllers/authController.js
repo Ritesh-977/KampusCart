@@ -5,8 +5,6 @@ import bcrypt from 'bcryptjs';
 import { sendEmail } from '../utils/sendEmail.js';
 
 // --- 1. HELPER: Send Token in HTTP-Only Cookie ---
-// backend/controllers/authController.js
-
 const sendToken = (user, statusCode, res) => {
     const token = jwt.sign(
         { id: user._id },
@@ -14,18 +12,18 @@ const sendToken = (user, statusCode, res) => {
         { expiresIn: '7d' }
     );
 
-    // 1. Calculate Expiry
+    // ⚡ FIXED: Use res.cookie instead of setHeader manually
+    // This ensures consistent formatting with the Logout function
     const options = {
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 
-    httpOnly: true,
-    sameSite: 'None', // Required for Cross-Site (Vercel -> Render)
-    secure: true,     // Required for HTTPS
-};
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 Days
+        httpOnly: true,
+        sameSite: 'lax', 
+        secure: false,
+        //domain: ".kampuscart.site", // <--- CRITICAL: Must match Logout
+        path: "/" // Explicit path ensures no ambiguity
+    };
 
-    // 2. FORCE "None" & "Secure"
-    // Chrome allows 'Secure' cookies on localhost even without HTTPS.
-    // This allows the cookie to hop from port 5000 to 5173.
-    res.setHeader('Set-Cookie', `token=${token}; Path=/; HttpOnly; Expires=${options.expires}; SameSite=None; Secure`);
+    res.cookie('token', token, options);
 
     res.status(statusCode).json({
         success: true,
@@ -170,6 +168,8 @@ export const loginUser = async (req, res) => {
             }
         }
 
+        res.clearCookie('token', { domain: 'api.kampuscart.site', path: '/' });
+
         // Send Token via Cookie Helper
         sendToken(user, 200, res);
 
@@ -178,17 +178,25 @@ export const loginUser = async (req, res) => {
     }
 };
 
-// --- LOGOUT USER ---
 export const logoutUser = (req, res) => {
-    res.cookie('token', 'none', {
-        expires: new Date(Date.now() + 10 * 1000), 
+    // 1. Define the base options that apply to all cookies first
+    const baseCookieOptions = {
         httpOnly: true,
-        // MUST MATCH sendToken options to delete successfully
         sameSite: 'None', 
         secure: true,
-        domain: ".kampuscart.site"
-    });
+        path: "/"
+    };
 
+    // 2. Clear the NEW wildcard cookie (.kampuscart.site)
+    res.clearCookie('token', { ...baseCookieOptions, domain: ".kampuscart.site" });
+
+    // 3. Clear the OLD specific cookie (api.kampuscart.site)
+    res.clearCookie('token', { ...baseCookieOptions, domain: "api.kampuscart.site" });
+
+    // 4. Clear default (no domain specified) just to be safe
+    res.clearCookie('token', baseCookieOptions);
+
+    // 5. Send success response
     res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
