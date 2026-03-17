@@ -21,7 +21,7 @@ router.get('/my-listings', protect, getMyListings);
 
 router.get('/user/:userId', getItemsByUser);
 
-router.get('/:id', getItemById);
+router.get('/:id', protect, getItemById);
 
 router.put('/:id', protect, upload.array('images', 3), updateItem);
 

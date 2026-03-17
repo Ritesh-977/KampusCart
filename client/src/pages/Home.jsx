@@ -5,6 +5,7 @@ import HeroSection from '../components/HeroSection';
 import ItemCard from '../components/ItemCard';
 import API from '../api/axios.js';
 import { toast } from "react-toastify";
+import { useCollege } from '../context/CollegeContext';
 
 // --- SKELETON COMPONENT ---
 const SkeletonItemCard = () => (
@@ -27,18 +28,20 @@ const SkeletonItemCard = () => (
 
 const Home = () => {
   const [items, setItems] = useState([]);
-  const [wishlist, setWishlist] = useState([]); 
+  const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  const [visibleCount, setVisibleCount] = useState(8); 
+
+  const [visibleCount, setVisibleCount] = useState(8);
 
   // Filters & Sorting
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [sortBy, setSortBy] = useState(''); 
+  const [sortBy, setSortBy] = useState('');
 
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const searchQuery = queryParams.get('search') || '';
+
+  const { selectedCollege } = useCollege();
 
   const categories = ['Cycles', 'Books & Notes', 'Electronics', 'Hostel Essentials', 'Stationery', 'Others'];
 
@@ -49,13 +52,21 @@ const Home = () => {
         params: {
           search: searchQuery,
           category: selectedCategory,
-          sortBy: sortBy
+          sortBy: sortBy,
+          college: selectedCollege?.name || '',
         }
       });
-      setItems(response.data);
-      setVisibleCount(8); 
+
+      // Safely extract the array regardless of backend response structure
+      const fetchedItems = Array.isArray(response.data)
+        ? response.data
+        : response.data.items || response.data.data || [];
+
+      setItems(fetchedItems);
+      setVisibleCount(8);
     } catch (error) {
       console.error("Error fetching items:", error);
+      setItems([]); // Fallback to an empty array on error to prevent crashes
     } finally {
       setTimeout(() => setLoading(false), 300);
     }
@@ -64,7 +75,7 @@ const Home = () => {
   const fetchWishlist = async () => {
     // ✅ FIX 1: Check for 'user' object instead of 'token' string
     const user = JSON.parse(localStorage.getItem('user'));
-    if (!user) return; 
+    if (!user) return;
 
     try {
       // API instance automatically sends the HttpOnly cookie
@@ -77,14 +88,14 @@ const Home = () => {
   };
 
   const handleToggleWishlist = async (e, itemId) => {
-    e.preventDefault(); 
+    e.preventDefault();
     e.stopPropagation();
 
     // ✅ FIX 2: Check for 'user' object
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user) {
-        toast.warning("Please login to save items to wishlist!");
-        return;
+      toast.warning("Please login to save items to wishlist!");
+      return;
     }
 
     try {
@@ -102,7 +113,7 @@ const Home = () => {
   useEffect(() => {
     const handleScroll = () => {
       if (
-        window.innerHeight + document.documentElement.scrollTop + 100 
+        window.innerHeight + document.documentElement.scrollTop + 100
         >= document.documentElement.offsetHeight
       ) {
         setVisibleCount((prev) => prev + 8);
@@ -115,7 +126,7 @@ const Home = () => {
 
   useEffect(() => {
     fetchItems();
-  }, [selectedCategory, searchQuery, sortBy]);
+  }, [selectedCategory, searchQuery, sortBy, selectedCollege]);
 
   useEffect(() => {
     fetchWishlist();
@@ -127,53 +138,51 @@ const Home = () => {
         const itemsSection = document.getElementById('items');
         if (itemsSection) {
           const elementPosition = itemsSection.getBoundingClientRect().top + window.scrollY;
-          const offsetPosition = elementPosition - 280; 
+          const offsetPosition = elementPosition - 280;
 
           window.scrollTo({
             top: offsetPosition,
             behavior: 'smooth'
           });
         }
-      }, 100); 
+      }, 100);
 
       return () => clearTimeout(timer);
     }
-  }, [searchQuery, loading]); 
+  }, [searchQuery, loading]);
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       <Navbar />
-      
+
       <main className="flex-grow">
         <HeroSection />
 
         <section className="bg-white dark:bg-gray-800 py-3 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-[150px] md:top-20 z-40 transition-all">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
-              
+
               {/* Categories */}
               <div className="flex-1 overflow-hidden">
                 <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2">Categories</h3>
                 <div className="flex space-x-3 overflow-x-auto pb-1 scrollbar-hide">
                   <button
-                      onClick={() => setSelectedCategory('')}
-                      className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap border ${
-                        selectedCategory === '' 
-                        ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-transparent shadow-md' 
+                    onClick={() => setSelectedCategory('')}
+                    className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap border ${selectedCategory === ''
+                        ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-transparent shadow-md'
                         : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'
                       }`}
-                    >
-                      All
-                    </button>
+                  >
+                    All
+                  </button>
                   {categories.map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setSelectedCategory(cat === selectedCategory ? '' : cat)}
-                      className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap border ${
-                        selectedCategory === cat 
-                        ? 'bg-indigo-600 text-white border-transparent shadow-md' 
-                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'
-                      }`}
+                      className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap border ${selectedCategory === cat
+                          ? 'bg-indigo-600 text-white border-transparent shadow-md'
+                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'
+                        }`}
                     >
                       {cat}
                     </button>
@@ -187,21 +196,19 @@ const Home = () => {
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                   <button
                     onClick={() => setSortBy(sortBy === 'priceLow' ? '' : 'priceLow')}
-                    className={`px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition-all whitespace-nowrap ${
-                      sortBy === 'priceLow'
-                      ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                      : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-gray-300'
-                    }`}
+                    className={`px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition-all whitespace-nowrap ${sortBy === 'priceLow'
+                        ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-gray-300'
+                      }`}
                   >
                     Price: Low to High
                   </button>
                   <button
                     onClick={() => setSortBy(sortBy === 'priceHigh' ? '' : 'priceHigh')}
-                    className={`px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition-all whitespace-nowrap ${
-                      sortBy === 'priceHigh'
-                      ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                      : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-gray-300'
-                    }`}
+                    className={`px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition-all whitespace-nowrap ${sortBy === 'priceHigh'
+                        ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-gray-300'
+                      }`}
                   >
                     Price: High to Low
                   </button>
@@ -217,10 +224,16 @@ const Home = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                {searchQuery ? `Results for "${searchQuery}"` : selectedCategory ? `${selectedCategory}` : 'Fresh Recommendations'}
+                {searchQuery
+                  ? `Results for "${searchQuery}"`
+                  : selectedCategory
+                    ? `${selectedCategory}`
+                    : selectedCollege
+                      ? `Fresh Picks at ${selectedCollege.shortName}`
+                      : 'Fresh Recommendations'}
               </h2>
               <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                  Showing {Math.min(visibleCount, items.length)} of {items.length} items
+                Showing {Math.min(visibleCount, items.length)} of {items.length} items
               </span>
             </div>
 
@@ -235,30 +248,35 @@ const Home = () => {
             ) : items.length > 0 ? (
               <div className="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
                 {items.slice(0, visibleCount).map((item) => (
-                  <ItemCard 
-        key={item._id} 
-        item={item} 
-        isWishlisted={wishlist.includes(item._id)}
-        onToggleWishlist={(e) => handleToggleWishlist(e, item._id)}
-    />
+                  <ItemCard
+                    key={item._id}
+                    item={item}
+                    isWishlisted={wishlist.includes(item._id)}
+                    onToggleWishlist={(e) => handleToggleWishlist(e, item._id)}
+                  />
                 ))}
               </div>
             ) : (
               <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
                 <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">No items found matching your criteria.</p>
-                <button onClick={() => {setSelectedCategory(''); setSortBy('');}} className="mt-4 text-indigo-600 dark:text-indigo-400 font-bold hover:underline">Clear Filters</button>
+                <button onClick={() => { setSelectedCategory(''); setSortBy(''); }} className="mt-4 text-indigo-600 dark:text-indigo-400 font-bold hover:underline">Clear Filters</button>
               </div>
             )}
-            
+
             {!loading && items.length > visibleCount && (
-               <div className="py-8 text-center text-gray-400 text-sm italic">
-                 Scroll for more...
-               </div>
+              <div className="py-10 flex flex-col items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 dark:bg-indigo-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 dark:bg-indigo-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 dark:bg-indigo-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+                <p className="text-sm text-gray-400 dark:text-gray-500">Loading more items...</p>
+              </div>
             )}
           </div>
         </section>
       </main>
-      
+
     </div>
   );
 };

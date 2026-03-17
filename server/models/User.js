@@ -2,17 +2,17 @@ import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    email: { 
-        type: String, 
-        required: true, 
-        unique: true, 
-        lowercase: true 
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true
     },
     password: { type: String, required: true },
-    
+
     // Profile Fields
     phone: { type: String },
-    year: { type: String }, 
+    year: { type: String },
     profilePic: { type: String, default: "" },
     coverImage: { type: String, default: "" },
 
@@ -28,22 +28,27 @@ const userSchema = new mongoose.Schema({
 
     // --- NEW: WISHLIST FIELD ---
     // Stores an array of Item IDs
-    wishlist: [{ 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Item' 
+    wishlist: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Item'
     }],
 
     // Admin Flag
     isAdmin: { type: Boolean, default: false },
-    
+
     // --- NEW BAN FIELDS ---
     isBanned: { type: Boolean, default: false },
     banExpiresAt: { type: Date, default: null }, // If null & isBanned=true, it's permanent
 
-    pushSubscription: { 
-    type: Object, 
-    default: null 
-},
+    pushSubscription: {
+        type: Array,
+        default: []
+    },
+
+    college: {
+        type: String,
+        default: "MNNIT Allahabad"
+    }
 
 
 }, { timestamps: true });
