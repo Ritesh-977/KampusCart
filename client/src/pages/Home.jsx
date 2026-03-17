@@ -43,6 +43,9 @@ const Home = () => {
 
   const { selectedCollege } = useCollege();
 
+  const user = JSON.parse(localStorage.getItem('user'));
+  const isViewingOtherCollege = !!(user && selectedCollege && user.college !== selectedCollege.name);
+
   const categories = ['Cycles', 'Books & Notes', 'Electronics', 'Hostel Essentials', 'Stationery', 'Others'];
 
   const fetchItems = async () => {
@@ -222,6 +225,17 @@ const Home = () => {
         {/* --- ITEMS GRID SECTION --- */}
         <section className="py-12 min-h-[500px]" id="items">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            {/* Tourist Banner */}
+            {isViewingOtherCollege && (
+              <div className="mb-6 flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+                <span className="text-lg leading-snug">👀</span>
+                <p>
+                  You are viewing <strong>{selectedCollege.name}</strong>. Your home campus is <strong>{user.college}</strong>. You can browse, but cannot contact sellers here.
+                </p>
+              </div>
+            )}
+
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                 {searchQuery
