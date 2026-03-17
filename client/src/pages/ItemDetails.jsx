@@ -77,6 +77,7 @@ const ItemDetails = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [isReporting, setIsReporting] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -84,8 +85,12 @@ const ItemDetails = () => {
         const res = await API.get(`/items/${id}`);
         setItem(res.data);
       } catch (err) {
-        console.error(err);
-        toast.error("Failed to load item details.");
+        if (err.response?.status === 403) {
+          setAccessDenied(true);
+        } else {
+          console.error(err);
+          toast.error("Failed to load item details.");
+        }
       } finally {
         setTimeout(() => setLoading(false), 300);
       }
@@ -173,6 +178,9 @@ const ItemDetails = () => {
     return `https://wa.me/${cleanNumber}?text=${message}`;
   };
 
+  const user = JSON.parse(localStorage.getItem('user'));
+  const isOtherCollege = !!(user && item?.college && user.college !== item.college);
+
   const displayName = item ? (item.sellerName || item.seller.name) : '';
   const displayEmail = item ? (item.sellerEmail || item.seller.email) : '';
 
@@ -183,6 +191,17 @@ const ItemDetails = () => {
       
       {loading ? (
         <ItemDetailsSkeleton />
+      ) : accessDenied ? (
+        <div className="flex flex-col items-center justify-center py-32 px-4 text-center">
+          <div className="text-5xl mb-4">🔒</div>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Outside Your Campus</h2>
+          <p className="text-gray-500 dark:text-gray-400 max-w-sm">
+            You cannot interact with items outside your college. This listing belongs to a different campus marketplace.
+          </p>
+          <button onClick={() => navigate(-1)} className="mt-6 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition">
+            Go Back
+          </button>
+        </div>
       ) : !item ? (
         <div className="text-center py-20 text-gray-600 dark:text-gray-400">Item not found.</div>
       ) : (
@@ -319,7 +338,11 @@ const ItemDetails = () => {
 
                 {/* Actions */}
                 <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {!item.isSold ? (
+                  {isOtherCollege ? (
+                    <button disabled className="sm:col-span-2 w-full bg-gray-100 dark:bg-gray-800 rounded-xl py-4 font-bold text-gray-400 dark:text-gray-500 cursor-not-allowed border border-dashed border-gray-300 dark:border-gray-600">
+                      Available only for {item.college} students
+                    </button>
+                  ) : !item.isSold ? (
                     <>
                       <button onClick={handleChat} className="sm:col-span-2 flex items-center justify-center bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg">
                         <FaCommentDots className="mr-2 text-xl" /> Chat with Seller

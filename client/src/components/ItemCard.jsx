@@ -5,7 +5,10 @@ import API from '../api/axios'; // ✅ Using configured Axios instance
 import { toast } from 'react-toastify';
 
 const ItemCard = ({ item, isWishlisted, onToggleWishlist }) => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+
+  const user = JSON.parse(localStorage.getItem('user'));
+  const isOtherCollege = !!(user && item.college && user.college !== item.college);
 
   const imageSrc = item.image || (item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/400');
 
@@ -70,14 +73,23 @@ const ItemCard = ({ item, isWishlisted, onToggleWishlist }) => {
           )}
         </button>
 
-        {/* FIX 5: Chat Button (Dark Mode Colors) */}
-        <button
-          onClick={handleChatClick}
-          className="absolute bottom-2 right-2 p-2 rounded-full bg-white/90 dark:bg-gray-900/80 backdrop-blur-sm shadow-sm hover:scale-110 active:scale-95 transition-all duration-200 z-30 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 cursor-pointer group/chat"
-          title="Chat with Seller"
-        >
-           <FaCommentDots className="text-lg group-hover/chat:scale-110 transition-transform" />
-        </button>
+        {/* Chat Button — disabled for cross-college items */}
+        {isOtherCollege ? (
+          <div
+            className="absolute bottom-2 right-2 p-2 rounded-full bg-gray-100/90 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm z-30 text-gray-400 cursor-not-allowed"
+            title={`Available only for ${item.college} students`}
+          >
+            <FaCommentDots className="text-lg" />
+          </div>
+        ) : (
+          <button
+            onClick={handleChatClick}
+            className="absolute bottom-2 right-2 p-2 rounded-full bg-white/90 dark:bg-gray-900/80 backdrop-blur-sm shadow-sm hover:scale-110 active:scale-95 transition-all duration-200 z-30 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 cursor-pointer group/chat"
+            title="Chat with Seller"
+          >
+            <FaCommentDots className="text-lg group-hover/chat:scale-110 transition-transform" />
+          </button>
+        )}
 
         {/* FIX 6: Status Badge (Dark Mode Colors) */}
         <div className="absolute top-2 left-2 bg-white/90 dark:bg-gray-900/80 backdrop-blur-sm text-xs font-semibold px-2.5 py-1 rounded-full text-gray-700 dark:text-gray-200 uppercase tracking-wider shadow-sm z-20">

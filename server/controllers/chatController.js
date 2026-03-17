@@ -7,6 +7,13 @@ export const accessChat = async (req, res) => {
 
     if (!userId) return res.status(400).send("UserId param not sent with request");
 
+    // Block cross-college chat initiation
+    const targetUser = await User.findById(userId).select('college');
+    if (!targetUser) return res.status(404).json({ message: "User not found." });
+    if (req.user.college !== targetUser.college) {
+        return res.status(403).json({ message: "You cannot interact with items outside your college." });
+    }
+
     // Check if chat exists
     let isChat = await Chat.find({
         isGroupChat: false,
