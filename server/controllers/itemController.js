@@ -1,19 +1,17 @@
 import Item from '../models/Item.js';
 import asyncHandler from 'express-async-handler';
-import getOrSetCache from '../utils/cacheResponse.js'; // Import your helper
-import redis from '../config/redis.js'; // Import redis for manual clearing
+import getOrSetCache from '../utils/cacheResponse.js';
+import redis from '../config/redis.js';
 import webpush from '../utils/webPush.js';
 import User from '../models/User.js';
 
-// --- HELPER TO CLEAR CACHE ---
-// We call this whenever an item is created, updated, or deleted.
-// It deletes all keys starting with 'items:' (e.g., items:default, items:{"category":"Books"})
-const clearItemCache = async () => {
+// --- HELPER TO CLEAR CACHE (Updated for Multi-College) ---
+const clearItemCache = async (college) => {
     try {
-        const keys = await redis.keys("items:*"); // Find all item-related keys
+        const keys = await redis.keys(`items:${college}:*`);
         if (keys.length > 0) {
-            await redis.del(keys); // Delete them
-           // console.log("🧹 Item Cache Cleared!");
+            await redis.del(keys);
+            // console.log(`🧹 Item Cache Cleared for ${college}!`);
         }
     } catch (error) {
         console.error("Cache Clear Error:", error);
@@ -40,53 +38,65 @@ export const createItem = async (req, res) => {
             sellerEmail,
             sellerName,
             images: imageUrls,
-            seller: req.user.id
+            seller: req.user.id,
+            college: req.user.college // <--- Secured: Tied to the logged-in seller's college
         });
 
-        // 🧹 CLEAR CACHE so the new item shows up on the home page
-        await clearItemCache();
+        // 🧹 CLEAR CACHE only for this user's college
+        await clearItemCache(req.user.college);
 
+        // 👇 --- NEW: MULTI-DEVICE BROADCAST --- 👇
         const sendPushNotifications = async () => {
             try {
-                // 1. Format the payload (Use an environment variable for the domain when deploying!)
-                const frontendUrl = 'https://www.kampuscart.site';
+                const frontendUrl = 'https://www.kampuscart.site'; // Change to your actual frontend URL
                 const payload = JSON.stringify({
                     title: 'New Deal on KampusCart! 🛒',
                     body: `${title} was just listed for ₹${price} in ${category}.`,
-                    url: `${frontendUrl}/item/${newItem._id}` ,
-                    icon: `${frontendUrl}/logo.png`, // Make sure you have a logo.png in your frontend public folder!
+                    url: `${frontendUrl}/item/${newItem._id}`,
+                    icon: imageUrls[0],
                     image: imageUrls[0]
                 });
 
-                // 2. Find subscribed users (excluding the person who just posted the item)
+                const currentUserId = req.user._id || req.user.id;
+
+                // 1. Find users who have AT LEAST one device subscribed
                 const subscribedUsers = await User.find({
-                    pushSubscription: { $ne: null },
-                    _id: { $ne: req.user.id } 
+                    pushSubscriptions: { $exists: true, $not: { $size: 0 } },
+                    _id: { $ne: currentUserId } 
                 });
 
-                // 3. Fire off notifications in parallel
-                const pushPromises = subscribedUsers.map(user => {
-                    return webpush.sendNotification(user.pushSubscription, payload)
-                        .catch(async (error) => {
-                            // Status 410 or 404 means the user unsubscribed or blocked notifications in their browser settings
-                            if (error.statusCode === 410 || error.statusCode === 404) {
-                                console.log(`Cleaning up dead subscription for user: ${user.email}`);
-                                await User.findByIdAndUpdate(user._id, { pushSubscription: null });
-                            } else {
-                                console.error(`Push error for ${user.email}:`, error);
-                            }
-                        });
+                const pushPromises = [];
+
+                // 2. Loop through every user...
+                subscribedUsers.forEach(user => {
+                    // ...and loop through every device they own!
+                    user.pushSubscriptions.forEach(sub => {
+                        const promise = webpush.sendNotification(sub, payload)
+                            .catch(async (error) => {
+                                // If a user uninstalls the browser on one device, remove JUST that device
+                                if (error.statusCode === 410 || error.statusCode === 404) {
+                                    console.log(`Cleaning up dead device for user: ${user.email}`);
+                                    await User.findByIdAndUpdate(user._id, { 
+                                        $pull: { pushSubscriptions: sub } 
+                                    });
+                                } else {
+                                    console.error(`Push error for ${user.email}:`, error);
+                                }
+                            });
+                        pushPromises.push(promise);
+                    });
                 });
 
+                // Fire them all at once
                 await Promise.all(pushPromises);
-                console.log(`Successfully broadcasted push alerts to ${subscribedUsers.length} users.`);
+                console.log(`Successfully broadcasted push alerts to ${pushPromises.length} devices.`);
             } catch (pushError) {
                 console.error("Fatal error broadcasting push notifications:", pushError);
             }
         };
 
-        // Execute the broadcast in the background (Notice there is no 'await' here!)
         sendPushNotifications();
+        // 👆 ----------------------------------------- 👆
 
         res.status(201).json(newItem);
     } catch (error) {
@@ -133,8 +143,8 @@ export const updateItem = async (req, res) => {
             { new: true }
         );
 
-        // 🧹 CLEAR CACHE
-        await clearItemCache();
+        // 🧹 CLEAR CACHE for this college
+        await clearItemCache(req.user.college);
 
         res.status(200).json(updatedItem);
     } catch (error) {
@@ -145,24 +155,36 @@ export const updateItem = async (req, res) => {
 
 export const getItems = async (req, res) => {
     try {
-        const { search, category, minPrice, maxPrice, sortBy } = req.query;
+        // ⚡ EXTRACT COLLEGE FROM QUERY (URL) NOT FROM LOGGED IN USER
+        const { search, category, minPrice, maxPrice, sortBy, college } = req.query;
 
-        // 🔑 Generate a unique Cache Key based on the user's query
-        // Examples: "items:default" or "items:{"category":"Books"}"
+        // 🛡️ SAFETY CHECK: Ensure the frontend actually requested a college
+        if (!college) {
+            return res.status(400).json({ message: "Please select a college to view items." });
+        }
+
+        // 🔑 Generate Cache Key tied specifically to the requested college
         const queryString = JSON.stringify(req.query);
-        const cacheKey = `items:${queryString}`;
+        const cacheKey = `items:${college}:${queryString}`;
 
         // ⚡ WRAP DB QUERY IN CACHE HELPER
         const items = await getOrSetCache(cacheKey, async () => {
-            
-            // --- ORIGINAL DB LOGIC START ---
-            let query = {};
+
+            // --- DATA ISOLATION: Match college OR legacy items with no college field ---
+            const collegeFilter = { $or: [{ college: college }, { college: { $exists: false } }] };
+            let query = { ...collegeFilter };
 
             if (search) {
-                query.$or = [
-                    { title: { $regex: search, $options: 'i' } },
-                    { description: { $regex: search, $options: 'i' } }
-                ];
+                // Can't have two $or at top level — combine with $and
+                query = {
+                    $and: [
+                        collegeFilter,
+                        { $or: [
+                            { title: { $regex: search, $options: 'i' } },
+                            { description: { $regex: search, $options: 'i' } }
+                        ]}
+                    ]
+                };
             }
 
             if (category) {
@@ -184,11 +206,9 @@ export const getItems = async (req, res) => {
             if (sortBy === 'priceLow') sortOptions = { price: 1 };
             if (sortBy === 'priceHigh') sortOptions = { price: -1 };
 
-            // Return the result of the query (this gets saved to Redis)
             return await Item.find(query)
                 .populate('seller', 'name email')
                 .sort(sortOptions);
-            // --- ORIGINAL DB LOGIC END ---
         });
 
         res.status(200).json(items);
@@ -199,10 +219,19 @@ export const getItems = async (req, res) => {
 
 export const getItemById = async (req, res) => {
     try {
-        // Optional: You can cache individual items too if you want!
-        // Key: item:12345
         const item = await Item.findById(req.params.id).populate('seller', 'name email');
         if (!item) return res.status(404).json({ message: "Item not found" });
+
+        // 🛡️ SECURITY CHECK 1: Ensure the user is logged in (req.user exists)
+        if (!req.user) {
+            return res.status(401).json({ message: "Please log in to view item details." });
+        }
+
+        // 🛡️ SECURITY CHECK 2: Ensure the item belongs to the user's college
+        if (item.college && item.college !== req.user.college) {
+            return res.status(403).json({ message: "Access denied. This item belongs to another college marketplace." });
+        }
+
         res.status(200).json(item);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -211,7 +240,6 @@ export const getItemById = async (req, res) => {
 
 export const getMyItems = async (req, res) => {
     try {
-        // No caching here usually (since it's private/dynamic data), but you could if needed.
         const items = await Item.find({ seller: req.user.id }).sort({ createdAt: -1 });
         res.status(200).json(items);
     } catch (error) {
@@ -228,7 +256,7 @@ export const deleteItem = async (req, res) => {
         await item.deleteOne();
 
         // 🧹 CLEAR CACHE
-        await clearItemCache();
+        await clearItemCache(req.user.college);
 
         res.status(200).json({ message: "Item removed" });
     } catch (error) {
@@ -254,17 +282,14 @@ export const toggleSoldStatus = async (req, res) => {
         item.isSold = !item.isSold;
         await item.save();
 
-        // 🧹 CLEAR CACHE (Important: "Sold" items should disappear from listings)
-        await clearItemCache();
+        // 🧹 CLEAR CACHE
+        await clearItemCache(req.user.college);
 
         res.status(200).json(item);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
-
-// ... Rest of your controllers (getItemsByUser, reportItem) stay the same ...
-// You usually don't cache reports or user-specific profiles unless traffic is huge.
 
 export const getItemsByUser = async (req, res) => {
     try {

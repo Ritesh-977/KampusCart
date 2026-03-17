@@ -9,6 +9,8 @@ import Footer from "./components/Footer";
 import Auth from "./pages/Auth";
 import Home from "./pages/Home";
 import ProtectedRoute from "./components/ProtectedRoute";
+import CollegeProtectedRoute from "./components/CollegeProtectedRoute";
+import CollegeSelection from "./pages/CollegeSelection";
 import ItemDetails from "./pages/ItemDetails";
 import MyListings from "./pages/MyListings";
 import EditItem from "./pages/EditItem";
@@ -25,7 +27,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
 import PublicProfile from "./pages/PublicProfile";
-import AdminDashboard from "./pages/AdminDashboard"; // <--- 1. Import Admin Page
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -56,13 +58,14 @@ function App() {
       {/* Main content */}
       <div className="flex-grow">
         <Routes>
-          {/* === PUBLIC PAGES === */}
-          <Route path="/" element={<Home />} />
+          {/* === COLLEGE SELECTION (exempt from college guard) === */}
+          <Route path="/select-college" element={<CollegeSelection />} />
+
+          {/* === PUBLIC PAGES (exempt from college check) === */}
           <Route path="/login" element={<Auth />} />
           <Route path="/signup" element={<Auth />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/passwordreset/:resetToken" element={<ResetPassword />} />
-          <Route path="/profile/view/:userId" element={<PublicProfile />} />
 
           {/* Support Pages */}
           <Route path="/about" element={<About />} />
@@ -70,111 +73,139 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/terms" element={<Terms />} />
 
-          {/* === PROTECTED PAGES === */}
-          
-          {/* 2. Add Admin Route */}
+          {/* === COLLEGE-GATED PAGES === */}
+          <Route
+            path="/"
+            element={
+              <CollegeProtectedRoute>
+                <Home />
+              </CollegeProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile/view/:userId"
+            element={
+              <CollegeProtectedRoute>
+                <PublicProfile />
+              </CollegeProtectedRoute>
+            }
+          />
+
+          {/* Admin Route */}
           <Route
             path="/admin"
             element={
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
+              <CollegeProtectedRoute>
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              </CollegeProtectedRoute>
             }
           />
 
           <Route
             path="/sell"
             element={
-              <ProtectedRoute>
-                <SellItem />
-              </ProtectedRoute>
+              <CollegeProtectedRoute>
+                <ProtectedRoute>
+                  <SellItem />
+                </ProtectedRoute>
+              </CollegeProtectedRoute>
             }
           />
 
           <Route
             path="/profile"
             element={
-              <ProtectedRoute>
-                <UserProfile />
-              </ProtectedRoute>
+              <CollegeProtectedRoute>
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              </CollegeProtectedRoute>
             }
           />
 
           <Route
             path="/my-listings"
             element={
-              <ProtectedRoute>
-                <MyListings />
-              </ProtectedRoute>
+              <CollegeProtectedRoute>
+                <ProtectedRoute>
+                  <MyListings />
+                </ProtectedRoute>
+              </CollegeProtectedRoute>
             }
           />
 
           <Route
             path="/settings"
             element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
+              <CollegeProtectedRoute>
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              </CollegeProtectedRoute>
             }
           />
 
           <Route
             path="/edit-item/:id"
             element={
-              <ProtectedRoute>
-                <EditItem />
-              </ProtectedRoute>
+              <CollegeProtectedRoute>
+                <ProtectedRoute>
+                  <EditItem />
+                </ProtectedRoute>
+              </CollegeProtectedRoute>
             }
           />
 
           <Route
             path="/wishlist"
             element={
-              <ProtectedRoute>
-                <Wishlist />
-              </ProtectedRoute>
+              <CollegeProtectedRoute>
+                <ProtectedRoute>
+                  <Wishlist />
+                </ProtectedRoute>
+              </CollegeProtectedRoute>
             }
           />
 
           <Route
             path="/chats"
             element={
-              <ProtectedRoute>
-                <Chat />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* 404 */}
-          <Route
-            path="*"
-            element={
-              <NotFound />
+              <CollegeProtectedRoute>
+                <ProtectedRoute>
+                  <Chat />
+                </ProtectedRoute>
+              </CollegeProtectedRoute>
             }
           />
 
           <Route 
             path="/lost-and-found" 
             element={
-              <ProtectedRoute>
-                <LostAndFound />
-              </ProtectedRoute>
+              <CollegeProtectedRoute>
+                <ProtectedRoute>
+                  <LostAndFound />
+                </ProtectedRoute>
+              </CollegeProtectedRoute>
             } 
           />
 
           <Route
-           path="/item/:id"
-            element={<ProtectedRoute>
-              <ItemDetails />
-            </ProtectedRoute>}
-           />
+            path="/item/:id"
+            element={
+              <CollegeProtectedRoute>
+                <ProtectedRoute>
+                  <ItemDetails />
+                </ProtectedRoute>
+              </CollegeProtectedRoute>
+            }
+          />
 
-
-
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
-
-          
-
       </div>
 
       {/* Conditionally Render Footer */}

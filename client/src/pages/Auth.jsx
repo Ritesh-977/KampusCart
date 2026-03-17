@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash, FaStore } from "react-icons/fa";
 import API from '../api/axios'; // ✅ Using configured Axios instance
 import { toast } from 'react-toastify';
+import { colleges } from '../data/colleges';
 
 // --- IMPORTS FOR PARTICLES ---
 import Particles, { initParticlesEngine } from "@tsparticles/react";
@@ -58,6 +59,7 @@ const Auth = () => {
   const [signupStep, setSignupStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [agree, setAgree] = useState(false);
+  const [signupCollege, setSignupCollege] = useState(null);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -76,8 +78,12 @@ const Auth = () => {
   };
 
   const validateEmail = (email) => {
-    const collegeRegex = /^[a-zA-Z0-9._%+-]+@mnnit\.ac\.in$/;
-    return collegeRegex.test(email);
+    if (!signupCollege?.emailDomain) {
+      // No specific domain — just check it's a valid email format
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+    const escapedDomain = signupCollege.emailDomain.replace(/\./g, '\\.');
+    return new RegExp(`^[a-zA-Z0-9._%+\\-]+@${escapedDomain}$`, 'i').test(email);
   };
 
   const handleResendOtp = async () => {
@@ -129,8 +135,14 @@ const Auth = () => {
       }
 
       else if (signupStep === 1) {
+        if (!signupCollege) {
+          setError('Please select your college.');
+          setLoading(false);
+          return;
+        }
         if (!validateEmail(formData.email)) {
-          setError('Only @mnnit.ac.in emails are allowed.');
+          const domainHint = signupCollege.emailDomain ? `@${signupCollege.emailDomain}` : 'your college email';
+          setError(`Please use your ${signupCollege.name} institutional email (${domainHint}).`);
           setLoading(false);
           return;
         }
@@ -233,6 +245,34 @@ const Auth = () => {
                 </div>
                 )}
 
+                {!isLogin && signupStep === 1 && (
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Your College</label>
+                    <div className="mt-1">
+                    <select
+                        value={signupCollege?.id || ''}
+                        onChange={(e) => {
+                          const found = colleges.find(c => c.id === e.target.value);
+                          setSignupCollege(found || null);
+                          setError('');
+                        }}
+                        required
+                        className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+                    >
+                        <option value="">— Select your college —</option>
+                        {colleges.filter(c => c.id !== 'other').map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                    </select>
+                    </div>
+                    {signupCollege?.emailDomain && (
+                      <p className="mt-1 text-xs text-indigo-600 dark:text-indigo-400">
+                        Use your institutional email ending with <strong>@{signupCollege.emailDomain}</strong>
+                      </p>
+                    )}
+                </div>
+                )}
+
                 {signupStep === 1 && (
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -243,7 +283,7 @@ const Auth = () => {
                         name="email"
                         type="email"
                         required
-                        placeholder="name.regNo@mnnit.ac.in"
+                        placeholder={!isLogin && signupCollege?.emailDomain ? `yourname@${signupCollege.emailDomain}` : 'your.email@college.ac.in'}
                         value={formData.email}
                         onChange={handleChange}
                         className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
@@ -394,8 +434,9 @@ const Auth = () => {
                 <button
                     onClick={() => {
                     setIsLogin(!isLogin);
-                    setSignupStep(1); 
+                    setSignupStep(1);
                     setError('');
+                    setSignupCollege(null);
                     }}
                     className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-[#5dbd62] hover:bg-[#51a956] dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white text-sm font-medium transition-colors"
                 >

@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  FaSearch, FaUserCircle, FaStore, FaHistory, FaTrashAlt, 
-  FaHeart, FaPlus, FaSignOutAlt, FaUser, FaList, FaBullhorn, 
-  FaCommentDots, FaTimes, FaSun, FaMoon, FaUserShield 
+import {
+  FaSearch, FaUserCircle, FaStore, FaHistory, FaTrashAlt,
+  FaHeart, FaPlus, FaSignOutAlt, FaUser, FaList, FaBullhorn,
+  FaCommentDots, FaTimes, FaSun, FaMoon, FaUserShield, FaUniversity, FaExchangeAlt, FaBars
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import API from '../api/axios'; 
 import io from 'socket.io-client'; 
-import { useTheme } from '../context/ThemeContext'; 
+import { useTheme } from '../context/ThemeContext';
+import { useCollege } from '../context/CollegeContext';
 
 const ENDPOINT = import.meta.env.VITE_SERVER_URL;
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme(); 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const { selectedCollege, clearCollege } = useCollege();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState([]); 
@@ -61,7 +64,9 @@ const Navbar = () => {
     const delayDebounceFn = setTimeout(async () => {
       if (searchTerm.trim().length > 0) { 
         try {
-          const { data } = await API.get(`/items?search=${searchTerm}`);
+          const params = { search: searchTerm };
+          if (selectedCollege?.name) params.college = selectedCollege.name;
+          const { data } = await API.get('/items', { params });
           setSuggestions(Array.isArray(data) ? data.slice(0, 6) : []); 
           setShowDropdown(true);
         } catch (error) {
@@ -74,7 +79,7 @@ const Navbar = () => {
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
+  }, [searchTerm, selectedCollege]);
 
   const handleLogout = async () => {
     try {
@@ -92,6 +97,12 @@ const Navbar = () => {
       localStorage.removeItem('user');
       navigate('/login');
     }
+  };
+
+  const handleSwitchCampus = () => {
+    setIsDropdownOpen(false);
+    clearCollege();
+    navigate('/select-college');
   };
 
   const handleFullSearch = (e) => {
@@ -223,12 +234,27 @@ const Navbar = () => {
       <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[95rem] mx-auto">
         <div className="flex justify-between h-20 items-center gap-2 sm:gap-4">
 
-          {/* Logo */}
-          <div className="flex-shrink-0 flex items-center cursor-pointer min-w-fit" onClick={() => navigate('/')}>
+          {/* Logo + College Badge */}
+          <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer min-w-fit" onClick={() => navigate('/')}>
             <div className="flex items-center text-xl sm:text-2xl font-black text-indigo-600 tracking-tight">
               <FaStore className="h-6 w-6 sm:h-8 sm:w-8 mr-1.5 sm:mr-2.5" />
               <span className="dark:text-white">kampus<span className="text-gray-900 dark:text-gray-400">Cart</span></span>
             </div>
+            {selectedCollege && (
+              <button
+                onClick={handleSwitchCampus}
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border transition-all hover:opacity-75"
+                style={{
+                  background: `${selectedCollege.theme.primary}15`,
+                  color: selectedCollege.theme.primary,
+                  borderColor: `${selectedCollege.theme.primary}40`,
+                }}
+                title="Switch campus"
+              >
+                <FaUniversity className="text-[10px]" />
+                <span className="max-w-[80px] truncate">{selectedCollege.shortName}</span>
+              </button>
+            )}
           </div>
 
           {/* --- MIDDLE: SEARCH BAR (Hidden on Mobile) --- */}
@@ -346,6 +372,18 @@ const Navbar = () => {
                             <><FaMoon className="mr-3 text-indigo-500" /> Dark Mode</>
                         )}
                       </button>
+
+                      {/* Switch Campus */}
+                      <button
+                        onClick={handleSwitchCampus}
+                        className="w-full text-left group flex items-center px-6 py-3 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+                      >
+                        <FaExchangeAlt className="mr-3 text-indigo-400" />
+                        Switch Campus
+                        {selectedCollege && (
+                          <span className="ml-auto text-[10px] font-bold text-gray-400 dark:text-gray-500 truncate max-w-[70px]">{selectedCollege.shortName}</span>
+                        )}
+                      </button>
                       
                       <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
                       
@@ -360,22 +398,82 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <Link to="/login" className="text-gray-600 dark:text-gray-300 font-bold hover:text-indigo-600 px-3 py-2 text-xs sm:text-sm whitespace-nowrap">Log in</Link>
-                <Link to="/signup" className="bg-indigo-600 text-white px-3 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold hover:bg-indigo-700 shadow-lg whitespace-nowrap">Sign up</Link>
-                
-                <button 
-                  onClick={toggleTheme}
-                  className="ml-1 sm:ml-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-yellow-400 transition-colors"
-                >
-                  {theme === 'dark' ? <FaSun className="text-sm sm:text-base" /> : <FaMoon className="text-sm sm:text-base" />}
-                </button>
+              <div className="flex items-center gap-1.5">
+
+                {/* Desktop: full buttons */}
+                <div className="hidden sm:flex items-center gap-2">
+                  <Link to="/login" className="text-gray-600 dark:text-gray-300 font-bold hover:text-indigo-600 px-3 py-2 text-sm whitespace-nowrap transition-colors">Log in</Link>
+                  <Link to="/signup" className="bg-indigo-600 text-white px-5 py-2.5 rounded-full text-sm font-bold hover:bg-indigo-700 shadow-lg whitespace-nowrap transition-colors">Sign up</Link>
+                  <button
+                    onClick={handleSwitchCampus}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                    title="Switch campus"
+                  >
+                    <FaExchangeAlt />
+                    <span className="hidden lg:block">Switch Campus</span>
+                  </button>
+                  <button
+                    onClick={toggleTheme}
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-yellow-400 transition-colors"
+                  >
+                    {theme === 'dark' ? <FaSun /> : <FaMoon />}
+                  </button>
+                </div>
+
+                {/* Mobile: theme + hamburger only */}
+                <div className="flex sm:hidden items-center gap-1">
+                  <button
+                    onClick={toggleTheme}
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-yellow-400 transition-colors"
+                  >
+                    {theme === 'dark' ? <FaSun className="text-base" /> : <FaMoon className="text-base" />}
+                  </button>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(prev => !prev)}
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors"
+                  >
+                    {isMobileMenuOpen ? <FaTimes className="text-base" /> : <FaBars className="text-base" />}
+                  </button>
+                </div>
+
               </div>
             )}
           </div>
         </div>
       </div>
       
+      {/* --- MOBILE MENU DROPDOWN (non-logged-in only) --- */}
+      {!isLoggedIn && isMobileMenuOpen && (
+        <div className="sm:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3 space-y-2 shadow-lg animate-in slide-in-from-top-2">
+          <Link
+            to="/signup"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center justify-center w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-colors shadow-md"
+          >
+            Create Account
+          </Link>
+          <Link
+            to="/login"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center justify-center w-full py-3 px-4 border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 text-gray-700 dark:text-gray-200 font-bold rounded-xl text-sm transition-colors"
+          >
+            Log in
+          </Link>
+          <button
+            onClick={() => { setIsMobileMenuOpen(false); handleSwitchCampus(); }}
+            className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-gray-50 dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium rounded-xl text-sm transition-colors"
+          >
+            <FaExchangeAlt className="text-xs" />
+            Switch Campus
+            {selectedCollege && (
+              <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${selectedCollege.theme.primary}20`, color: selectedCollege.theme.primary }}>
+                {selectedCollege.shortName}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* --- MOBILE SEARCH BAR (Visible md:hidden) --- */}
       <div className="md:hidden px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-3 relative">
         <form onSubmit={handleFullSearch} className="relative">
