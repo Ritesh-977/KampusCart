@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const SLIDER_IMAGES = [
-  "https://ik.imagekit.io/gucotw3hj/Gemini_Generated_Image_bu1rsrbu1rsrbu1r.png", 
-  "https://ik.imagekit.io/gucotw3hj/Gemini_Generated_Image_26brjo26brjo26br.png",
-  "https://ik.imagekit.io/gucotw3hj/Gemini_Generated_Image_w8q5njw8q5njw8q5.png",
-  "https://ik.imagekit.io/gucotw3hj/Gemini_Generated_Image_6el2t16el2t16el2.png"
+  "https://ik.imagekit.io/65khfs6t5/01_tCvp9CFm4.png", 
+  "https://ik.imagekit.io/65khfs6t5/IMG_20260318_011457.png",
+  "https://ik.imagekit.io/65khfs6t5/03.png",
+  "https://ik.imagekit.io/65khfs6t5/04.png"
   
 ];
 

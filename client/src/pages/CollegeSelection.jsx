@@ -104,6 +104,14 @@ const CollegeSelection = () => {
               </button>
             </div>
           ) : (
+            <div
+              className="overflow-y-auto pr-1"
+              style={{
+                maxHeight: 'min(680px, 70vh)',
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(255,255,255,0.12) transparent',
+              }}
+            >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredColleges.map((college) => {
                 const isSelected = selectedId === college.id;
@@ -173,6 +181,7 @@ const CollegeSelection = () => {
                   </button>
                 );
               })}
+            </div>
             </div>
           )}
         </div>

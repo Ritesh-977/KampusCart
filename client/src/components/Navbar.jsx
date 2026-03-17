@@ -242,7 +242,6 @@ const Navbar = () => {
             </div>
             {selectedCollege && (
               <button
-                onClick={handleSwitchCampus}
                 className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border transition-all hover:opacity-75"
                 style={{
                   background: `${selectedCollege.theme.primary}15`,
