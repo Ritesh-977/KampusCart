@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet,
-  SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator,
-  Image, Alert, Animated
+  KeyboardAvoidingView, Platform, ActivityIndicator,
+  Image, Alert, StatusBar
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { io } from 'socket.io-client';
 import * as ImagePicker from 'expo-image-picker';
@@ -12,98 +13,146 @@ import API from '../api/axios';
 import { getToken } from '../utils/secureStorage';
 
 const SOCKET_URL = 'https://api.kampuscart.site';
-const FALLBACK_AVATAR = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
-const CLOUDINARY_PATTERN = /^https?:\/\//;
+const FALLBACK_AVATAR =
+  'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
 
-const ChatScreen = ({ route, navigation }) => {
+// ─── helpers ────────────────────────────────────────────────────────────────
+const normalizeId = (val) => {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') return String(val._id || val.id || '');
+  return String(val);
+};
+
+const isImageUrl = (str) =>
+  typeof str === 'string' &&
+  /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)/i.test(str);
+
+const formatTime = (dateStr) => {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleTimeString('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+const formatLastSeen = (dateStr) => {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr);
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+};
+
+// ─── component ──────────────────────────────────────────────────────────────
+export default function ChatScreen({ route, navigation }) {
   const { chat, otherUser } = route.params;
   const { currentUser } = useContext(AuthContext);
 
+  // Compute my ID once; try every possible key the backend might use
+  const myId = useMemo(
+    () =>
+      normalizeId(currentUser?._id) ||
+      normalizeId(currentUser?.id) ||
+      '',
+    [currentUser]
+  );
+
+  const checkIsMe = useCallback(
+    (msg) => {
+      if (!myId) return false;
+      const sid = normalizeId(msg?.sender?._id) || normalizeId(msg?.sender?.id) || normalizeId(msg?.sender);
+      return sid === myId;
+    },
+    [myId]
+  );
+
+  // ── state ──
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState(null);
 
-  // Search
+  // search
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [matchIndices, setMatchIndices] = useState([]); // indices in `messages`
+  const [currentMatch, setCurrentMatch] = useState(0);
 
+  // refs
   const socketRef = useRef(null);
   const flatListRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
-  const searchInputRef = useRef(null);
+  const typingTimerRef = useRef(null);
+  const searchRef = useRef(null);
 
-  // Normalise sender ID to string for reliable comparison
-  const myId = String(currentUser?._id || '');
-  const isMe = useCallback((msg) => {
-    const senderId = String(msg.sender?._id || msg.sender || '');
-    return !!myId && myId === senderId;
-  }, [myId]);
-
-  // ── Header ──────────────────────────────────────────────────────────
+  // ── header ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
-      headerStyle: { backgroundColor: '#ffffff', elevation: 0, shadowOpacity: 0 },
+      headerStyle: { backgroundColor: '#075e54' },   // WhatsApp-ish dark green — or use your brand colour
+      headerTintColor: '#fff',
       headerLeft: () => (
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 8 }}
+          style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 4 }}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <Ionicons name="arrow-back" size={22} color="#1f2937" />
+          <Ionicons name="arrow-back" size={22} color="#fff" />
           <Image
             source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }}
-            style={{ width: 36, height: 36, borderRadius: 18, marginLeft: 8 }}
+            style={styles.headerAvatar}
           />
         </TouchableOpacity>
       ),
       headerTitle: () => (
-        <View style={{ marginLeft: 4 }}>
-          <Text style={{ fontSize: 16, fontWeight: '700', color: '#1f2937' }} numberOfLines={1}>
+        <TouchableOpacity activeOpacity={0.8}>
+          <Text style={styles.headerName} numberOfLines={1}>
             {otherUser?.name || 'Chat'}
           </Text>
           {isTyping ? (
-            <Text style={{ fontSize: 12, color: '#4f46e5', fontStyle: 'italic' }}>typing...</Text>
+            <Text style={styles.headerStatusTyping}>typing…</Text>
           ) : isOnline ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: '#10b981', marginRight: 4 }} />
-              <Text style={{ fontSize: 12, color: '#10b981', fontWeight: '600' }}>Online</Text>
-            </View>
+            <Text style={styles.headerStatusOnline}>online</Text>
           ) : lastSeen ? (
-            <Text style={{ fontSize: 12, color: '#9ca3af' }}>last seen {formatLastSeen(lastSeen)}</Text>
+            <Text style={styles.headerStatusOffline}>last seen {formatLastSeen(lastSeen)}</Text>
           ) : null}
-        </View>
+        </TouchableOpacity>
       ),
       headerRight: () => (
-        <TouchableOpacity onPress={toggleSearch} style={{ marginRight: 14 }}>
-          <Ionicons name={searchVisible ? 'close' : 'search'} size={22} color="#374151" />
+        <TouchableOpacity
+          onPress={openSearch}
+          style={{ marginRight: 12 }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="search" size={22} color="#fff" />
         </TouchableOpacity>
       ),
     });
   }, [otherUser, isOnline, isTyping, lastSeen, searchVisible]);
 
-  // ── Socket setup ────────────────────────────────────────────────────
+  // ── socket ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     fetchMessages();
-    setupSocket();
+    initSocket();
     return () => {
       socketRef.current?.emit('leave_chat', chat._id);
       socketRef.current?.disconnect();
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     };
   }, []);
 
-  const setupSocket = async () => {
+  const initSocket = async () => {
     const token = await getToken();
     const socket = io(SOCKET_URL, {
       transports: ['websocket'],
       extraHeaders: { Authorization: `Bearer ${token}` },
       reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
+      reconnectionDelay: 1500,
     });
 
     socket.on('connect', () => {
@@ -112,42 +161,17 @@ const ChatScreen = ({ route, navigation }) => {
 
     socket.on('connected', () => {
       socket.emit('join_chat', chat._id);
-      // Ask server about other user's online status
       socket.emit('check_online', otherUser?._id);
     });
 
-    // New incoming message
-    socket.on('message_received', (newMsg) => {
-      const senderId = String(newMsg.sender?._id || newMsg.sender || '');
-      // Only add if it's for this chat and not from me (already added optimistically)
-      if (senderId !== myId) {
-        setMessages(prev => {
-          // Avoid duplicates
-          if (prev.find(m => m._id === newMsg._id)) return prev;
-          return [...prev, newMsg];
-        });
-        API.put('/message/read', { chatId: chat._id }).catch(() => {});
-      }
-    });
-
-    // Online status events
-    socket.on('user_online', (userId) => {
-      if (String(userId) === String(otherUser?._id)) {
-        setIsOnline(true);
-        setLastSeen(null);
-      }
-    });
-    socket.on('user_offline', ({ userId, lastSeen: ls }) => {
-      if (String(userId) === String(otherUser?._id)) {
-        setIsOnline(false);
-        setLastSeen(ls || new Date().toISOString());
-      }
-    });
-    socket.on('online_status', ({ userId, online, lastSeen: ls }) => {
-      if (String(userId) === String(otherUser?._id)) {
-        setIsOnline(online);
-        if (!online && ls) setLastSeen(ls);
-      }
+    socket.on('message_received', (msg) => {
+      const senderId = normalizeId(msg?.sender?._id) || normalizeId(msg?.sender);
+      if (senderId === myId) return; // already added optimistically
+      setMessages((prev) => {
+        if (prev.find((m) => m._id === msg._id)) return prev;
+        return [...prev, msg];
+      });
+      API.put('/message/read', { chatId: chat._id }).catch(() => {});
     });
 
     socket.on('typing', (chatId) => {
@@ -157,249 +181,317 @@ const ChatScreen = ({ route, navigation }) => {
       if (chatId === chat._id) setIsTyping(false);
     });
 
-    socket.on('connect_error', (err) => console.log('Socket error:', err.message));
+    socket.on('user_online', (userId) => {
+      if (normalizeId(userId) === normalizeId(otherUser?._id)) {
+        setIsOnline(true);
+        setLastSeen(null);
+      }
+    });
+    socket.on('user_offline', ({ userId, lastSeen: ls }) => {
+      if (normalizeId(userId) === normalizeId(otherUser?._id)) {
+        setIsOnline(false);
+        if (ls) setLastSeen(ls);
+      }
+    });
+    socket.on('online_status', ({ userId, online, lastSeen: ls }) => {
+      if (normalizeId(userId) === normalizeId(otherUser?._id)) {
+        setIsOnline(online);
+        if (!online && ls) setLastSeen(ls);
+      }
+    });
 
+    socket.on('connect_error', (e) => console.warn('socket error:', e.message));
     socketRef.current = socket;
   };
 
-  // ── Fetch messages ───────────────────────────────────────────────────
+  // ── fetch ──────────────────────────────────────────────────────────────────
   const fetchMessages = async () => {
     try {
-      const response = await API.get(`/message/${chat._id}`);
-      setMessages(response.data);
-      await API.put('/message/read', { chatId: chat._id });
-    } catch (err) {
-      console.error('Fetch messages error:', err);
+      const res = await API.get(`/message/${chat._id}`);
+      setMessages(res.data || []);
+      API.put('/message/read', { chatId: chat._id }).catch(() => {});
+    } catch (e) {
+      console.error('fetch messages:', e);
     } finally {
       setLoading(false);
     }
   };
 
-  // ── Send text message ────────────────────────────────────────────────
+  // ── send text ──────────────────────────────────────────────────────────────
   const handleSend = async () => {
     const text = newMessage.trim();
     if (!text) return;
     setNewMessage('');
     socketRef.current?.emit('stop_typing', chat._id);
 
-    // Optimistic message
+    const tempId = `tmp_${Date.now()}`;
     const optimistic = {
-      _id: `temp_${Date.now()}`,
+      _id: tempId,
       content: text,
       sender: { _id: myId, name: currentUser?.name },
       chat: chat._id,
       createdAt: new Date().toISOString(),
-      sending: true,
+      _pending: true,
     };
-    setMessages(prev => [...prev, optimistic]);
+    setMessages((prev) => [...prev, optimistic]);
 
     try {
-      const response = await API.post('/message', { content: text, chatId: chat._id });
-      // Replace optimistic with real message
-      setMessages(prev =>
-        prev.map(m => m._id === optimistic._id ? response.data : m)
-      );
-      socketRef.current?.emit('new_message', response.data);
+      const res = await API.post('/message', { content: text, chatId: chat._id });
+      setMessages((prev) => prev.map((m) => (m._id === tempId ? res.data : m)));
+      socketRef.current?.emit('new_message', res.data);
     } catch {
-      // Mark optimistic as failed
-      setMessages(prev =>
-        prev.map(m => m._id === optimistic._id ? { ...m, failed: true, sending: false } : m)
+      setMessages((prev) =>
+        prev.map((m) => (m._id === tempId ? { ...m, _failed: true, _pending: false } : m))
       );
-      Alert.alert('Send Failed', 'Tap the message to retry.');
     }
   };
 
-  // ── Send image ───────────────────────────────────────────────────────
-  const handlePickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Permission Required', 'Allow access to photos to send images.');
+  // ── send image ─────────────────────────────────────────────────────────────
+  const handleAttach = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Permission Needed', 'Allow photo access to send images.');
       return;
     }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.7,
+      quality: 0.75,
     });
-
     if (result.canceled) return;
 
-    const uri = result.assets[0].uri;
+    const { uri } = result.assets[0];
     const filename = uri.split('/').pop();
-    const match = /\.(\w+)$/.exec(filename);
-    const type = match ? `image/${match[1]}` : 'image/jpeg';
+    const ext = /\.(\w+)$/.exec(filename);
+    const type = ext ? `image/${ext[1]}` : 'image/jpeg';
 
-    const optimistic = {
-      _id: `temp_img_${Date.now()}`,
-      content: uri,           // local URI shown while uploading
-      isImage: true,
-      sender: { _id: myId },
-      chat: chat._id,
-      createdAt: new Date().toISOString(),
-      sending: true,
-    };
-    setMessages(prev => [...prev, optimistic]);
+    const tempId = `tmp_img_${Date.now()}`;
+    setMessages((prev) => [
+      ...prev,
+      {
+        _id: tempId,
+        content: uri,
+        isImage: true,
+        sender: { _id: myId },
+        chat: chat._id,
+        createdAt: new Date().toISOString(),
+        _pending: true,
+      },
+    ]);
 
     try {
-      const formData = new FormData();
-      formData.append('image', { uri, name: filename, type });
-      const uploadRes = await API.post('/upload', formData, {
+      const form = new FormData();
+      form.append('image', { uri, name: filename, type });
+      const up = await API.post('/upload', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const imageUrl = uploadRes.data?.url || uploadRes.data?.secure_url;
-
-      const msgRes = await API.post('/message', {
-        content: imageUrl,
-        chatId: chat._id,
-      });
-
-      setMessages(prev =>
-        prev.map(m => m._id === optimistic._id ? { ...msgRes.data, isImage: true } : m)
+      const imageUrl = up.data?.url || up.data?.secure_url || up.data;
+      const res = await API.post('/message', { content: imageUrl, chatId: chat._id });
+      setMessages((prev) =>
+        prev.map((m) => (m._id === tempId ? { ...res.data, isImage: true } : m))
       );
-      socketRef.current?.emit('new_message', { ...msgRes.data, isImage: true });
+      socketRef.current?.emit('new_message', { ...res.data, isImage: true });
     } catch {
-      setMessages(prev => prev.filter(m => m._id !== optimistic._id));
-      Alert.alert('Upload Failed', 'Could not send image.');
+      setMessages((prev) => prev.filter((m) => m._id !== tempId));
+      Alert.alert('Failed', 'Could not send image.');
     }
   };
 
-  // ── Typing ───────────────────────────────────────────────────────────
-  const handleTyping = (text) => {
+  // ── typing ─────────────────────────────────────────────────────────────────
+  const handleChangeText = (text) => {
     setNewMessage(text);
     if (!socketRef.current) return;
     socketRef.current.emit('typing', chat._id);
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => {
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => {
       socketRef.current?.emit('stop_typing', chat._id);
     }, 2000);
   };
 
-  // ── Search ───────────────────────────────────────────────────────────
-  const toggleSearch = () => {
-    setSearchVisible(v => {
-      if (v) setSearchQuery('');
-      return !v;
-    });
-    setTimeout(() => searchInputRef.current?.focus(), 100);
+  // ── search ─────────────────────────────────────────────────────────────────
+  const openSearch = () => {
+    setSearchVisible(true);
+    setTimeout(() => searchRef.current?.focus(), 150);
   };
 
-  const displayMessages = searchQuery
-    ? messages.filter(m =>
-        typeof m.content === 'string' &&
-        m.content.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : messages;
-
-  // ── Helpers ──────────────────────────────────────────────────────────
-  const formatTime = (dateStr) =>
-    new Date(dateStr).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-
-  const formatLastSeen = (dateStr) => {
-    if (!dateStr) return '';
-    const diff = Date.now() - new Date(dateStr);
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  const closeSearch = () => {
+    setSearchVisible(false);
+    setSearchQuery('');
+    setMatchIndices([]);
+    setCurrentMatch(0);
   };
 
-  const isImageContent = (content) =>
-    typeof content === 'string' && CLOUDINARY_PATTERN.test(content) &&
-    /\.(jpg|jpeg|png|gif|webp)/i.test(content);
+  const handleSearch = (q) => {
+    setSearchQuery(q);
+    if (!q.trim()) {
+      setMatchIndices([]);
+      setCurrentMatch(0);
+      return;
+    }
+    const lower = q.toLowerCase();
+    const indices = messages.reduce((acc, msg, i) => {
+      if (typeof msg.content === 'string' && msg.content.toLowerCase().includes(lower)) {
+        acc.push(i);
+      }
+      return acc;
+    }, []);
+    setMatchIndices(indices);
+    setCurrentMatch(0);
+    if (indices.length > 0) scrollToMatch(indices[0]);
+  };
 
-  // ── Render message ───────────────────────────────────────────────────
-  const renderMessage = ({ item, index }) => {
-    const mine = isMe(item);
-    const prevMsg = displayMessages[index - 1];
-    const nextMsg = displayMessages[index + 1];
-    const sameSenderPrev = prevMsg && String(prevMsg.sender?._id || prevMsg.sender) === String(item.sender?._id || item.sender);
-    const sameSenderNext = nextMsg && String(nextMsg.sender?._id || nextMsg.sender) === String(item.sender?._id || item.sender);
-    const showAvatar = !mine && !sameSenderNext;
-    const showTime = !sameSenderNext;
-    const isImg = item.isImage || isImageContent(item.content);
+  const scrollToMatch = (msgIndex) => {
+    flatListRef.current?.scrollToIndex({ index: msgIndex, animated: true, viewPosition: 0.5 });
+  };
 
-    return (
-      <View style={[styles.messageRow, mine ? styles.rowMe : styles.rowOther]}>
-        {/* Avatar placeholder for alignment */}
-        {!mine && (
-          <View style={styles.avatarSlot}>
-            {showAvatar ? (
-              <Image source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }} style={styles.msgAvatar} />
-            ) : null}
+  const goToPrevMatch = () => {
+    if (!matchIndices.length) return;
+    const next = (currentMatch - 1 + matchIndices.length) % matchIndices.length;
+    setCurrentMatch(next);
+    scrollToMatch(matchIndices[next]);
+  };
+
+  const goToNextMatch = () => {
+    if (!matchIndices.length) return;
+    const next = (currentMatch + 1) % matchIndices.length;
+    setCurrentMatch(next);
+    scrollToMatch(matchIndices[next]);
+  };
+
+  // ── render message ─────────────────────────────────────────────────────────
+  const renderMessage = useCallback(
+    ({ item, index }) => {
+      const mine = checkIsMe(item);
+      const prevSender = normalizeId(messages[index - 1]?.sender?._id) || normalizeId(messages[index - 1]?.sender);
+      const nextSender = normalizeId(messages[index + 1]?.sender?._id) || normalizeId(messages[index + 1]?.sender);
+      const thisSender = normalizeId(item.sender?._id) || normalizeId(item.sender);
+      const groupedWithNext = thisSender === nextSender;
+      const showTime = !groupedWithNext;
+      const showAvatar = !mine && !groupedWithNext;
+
+      const isImg = item.isImage || isImageUrl(item.content);
+
+      // Search highlight
+      const isHighlighted = searchQuery && matchIndices.includes(index);
+      const isCurrentMatch = isHighlighted && matchIndices[currentMatch] === index;
+
+      return (
+        <View
+          style={[
+            styles.row,
+            mine ? styles.rowRight : styles.rowLeft,
+            !groupedWithNext && styles.rowSpaced,
+          ]}
+        >
+          {/* Avatar slot (left side only) */}
+          {!mine && (
+            <View style={styles.avatarSlot}>
+              {showAvatar && (
+                <Image
+                  source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }}
+                  style={styles.msgAvatar}
+                />
+              )}
+            </View>
+          )}
+
+          <View style={[styles.bubbleCol, mine ? styles.bubbleColRight : styles.bubbleColLeft]}>
+            {/* Highlight wrapper */}
+            {isCurrentMatch && <View style={styles.currentMatchHighlight} />}
+            {isHighlighted && !isCurrentMatch && <View style={styles.matchHighlight} />}
+
+            {isImg ? (
+              <View style={[styles.imgBubble, mine ? styles.imgBubbleMe : styles.imgBubbleOther]}>
+                <Image source={{ uri: item.content }} style={styles.chatImage} resizeMode="cover" />
+                {item._pending && (
+                  <View style={styles.imgOverlay}>
+                    <ActivityIndicator color="#fff" />
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View
+                style={[
+                  styles.bubble,
+                  mine ? styles.bubbleMe : styles.bubbleOther,
+                  // tail shaping
+                  mine
+                    ? prevSender !== thisSender
+                      ? styles.tailTopRight
+                      : null
+                    : prevSender !== thisSender
+                    ? styles.tailTopLeft
+                    : null,
+                ]}
+              >
+                <Text style={[styles.bubbleText, mine ? styles.textMe : styles.textOther]}>
+                  {item.content}
+                </Text>
+              </View>
+            )}
+
+            {/* Time + status */}
+            {showTime && (
+              <View style={[styles.metaRow, mine ? styles.metaRight : styles.metaLeft]}>
+                <Text style={styles.timeText}>{formatTime(item.createdAt)}</Text>
+                {mine && (
+                  <Ionicons
+                    name={item._pending ? 'time-outline' : item._failed ? 'alert-circle-outline' : 'checkmark-done-outline'}
+                    size={13}
+                    color={item._failed ? '#ef4444' : '#9ca3af'}
+                    style={{ marginLeft: 3 }}
+                  />
+                )}
+              </View>
+            )}
           </View>
-        )}
-
-        <View style={[styles.bubbleWrapper, mine ? styles.bubbleWrapperMe : styles.bubbleWrapperOther]}>
-          {isImg ? (
-            <View style={[styles.imageBubble, mine ? styles.imageBubbleMe : styles.imageBubbleOther]}>
-              <Image source={{ uri: item.content }} style={styles.chatImage} resizeMode="cover" />
-              {item.sending && (
-                <View style={styles.imageOverlay}>
-                  <ActivityIndicator color="#fff" />
-                </View>
-              )}
-            </View>
-          ) : (
-            <View style={[styles.bubble, mine ? styles.bubbleMe : styles.bubbleOther,
-              !sameSenderPrev && (mine ? styles.bubbleTopMe : styles.bubbleTopOther),
-              !sameSenderNext && (mine ? styles.bubbleBottomMe : styles.bubbleBottomOther),
-            ]}>
-              <Text style={[styles.bubbleText, mine ? styles.bubbleTextMe : styles.bubbleTextOther]}>
-                {item.content}
-              </Text>
-              {item.sending && !item.failed && (
-                <Ionicons name="time-outline" size={10} color="rgba(255,255,255,0.6)" style={{ alignSelf: 'flex-end', marginTop: 2 }} />
-              )}
-              {item.failed && (
-                <Ionicons name="alert-circle" size={10} color="#fca5a5" style={{ alignSelf: 'flex-end', marginTop: 2 }} />
-              )}
-            </View>
-          )}
-
-          {showTime && (
-            <Text style={[styles.msgTime, mine ? styles.msgTimeMe : styles.msgTimeOther]}>
-              {formatTime(item.createdAt)}
-              {mine && !item.sending && !item.failed && (
-                <Text> ✓</Text>
-              )}
-            </Text>
-          )}
         </View>
-      </View>
-    );
-  };
+      );
+    },
+    [checkIsMe, messages, searchQuery, matchIndices, currentMatch, otherUser]
+  );
 
-  // ── Render ───────────────────────────────────────────────────────────
+  // ── main render ────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <StatusBar backgroundColor="#075e54" barStyle="light-content" />
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        {/* Search bar */}
+        {/* ── Search bar ─────────────────────────────────────────────── */}
         {searchVisible && (
           <View style={styles.searchBar}>
-            <Ionicons name="search" size={16} color="#9ca3af" style={{ marginRight: 8 }} />
+            <TouchableOpacity onPress={closeSearch} style={{ padding: 4 }}>
+              <Ionicons name="arrow-back" size={20} color="#374151" />
+            </TouchableOpacity>
             <TextInput
-              ref={searchInputRef}
+              ref={searchRef}
               style={styles.searchInput}
-              placeholder="Search messages..."
+              placeholder="Search messages"
               placeholderTextColor="#9ca3af"
               value={searchQuery}
-              onChangeText={setSearchQuery}
+              onChangeText={handleSearch}
             />
-            {searchQuery ? (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={18} color="#9ca3af" />
-              </TouchableOpacity>
+            {matchIndices.length > 0 ? (
+              <View style={styles.searchNav}>
+                <Text style={styles.searchCount}>
+                  {currentMatch + 1}/{matchIndices.length}
+                </Text>
+                <TouchableOpacity onPress={goToPrevMatch} style={styles.navBtn}>
+                  <Ionicons name="chevron-up" size={20} color="#4f46e5" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={goToNextMatch} style={styles.navBtn}>
+                  <Ionicons name="chevron-down" size={20} color="#4f46e5" />
+                </TouchableOpacity>
+              </View>
+            ) : searchQuery ? (
+              <Text style={styles.noResults}>No results</Text>
             ) : null}
           </View>
         )}
 
-        {/* Messages list */}
+        {/* ── Messages ───────────────────────────────────────────────── */}
         {loading ? (
           <View style={styles.center}>
             <ActivityIndicator size="large" color="#4f46e5" />
@@ -407,187 +499,234 @@ const ChatScreen = ({ route, navigation }) => {
         ) : (
           <FlatList
             ref={flatListRef}
-            data={displayMessages}
+            data={messages}
             keyExtractor={(item) => item._id}
             renderItem={renderMessage}
             contentContainerStyle={styles.list}
-            onContentSizeChange={() => !searchQuery && flatListRef.current?.scrollToEnd({ animated: true })}
-            onLayout={() => !searchQuery && flatListRef.current?.scrollToEnd({ animated: false })}
+            onContentSizeChange={() =>
+              !searchVisible && flatListRef.current?.scrollToEnd({ animated: true })
+            }
+            onLayout={() =>
+              !searchVisible && flatListRef.current?.scrollToEnd({ animated: false })
+            }
+            onScrollToIndexFailed={(info) => {
+              // Fallback if index is not yet measured
+              setTimeout(() => {
+                flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
+              }, 300);
+            }}
             ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                {searchQuery ? (
-                  <Text style={styles.emptyText}>No messages match "{searchQuery}"</Text>
-                ) : (
-                  <>
-                    <Image source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }} style={styles.emptyAvatar} />
-                    <Text style={styles.emptyName}>{otherUser?.name}</Text>
-                    <Text style={styles.emptyText}>Say hello! 👋</Text>
-                  </>
-                )}
+              <View style={styles.emptyBox}>
+                <Image
+                  source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }}
+                  style={styles.emptyAvatar}
+                />
+                <Text style={styles.emptyName}>{otherUser?.name}</Text>
+                <Text style={styles.emptyHint}>Say hello! 👋</Text>
               </View>
             }
           />
         )}
 
-        {/* Typing indicator */}
+        {/* ── Typing indicator ───────────────────────────────────────── */}
         {isTyping && (
           <View style={styles.typingRow}>
-            <Image source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }} style={styles.typingAvatar} />
+            <Image
+              source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }}
+              style={styles.typingAvatar}
+            />
             <View style={styles.typingBubble}>
-              <View style={styles.dotsRow}>
-                <View style={[styles.dot, styles.dot1]} />
-                <View style={[styles.dot, styles.dot2]} />
-                <View style={[styles.dot, styles.dot3]} />
+              <View style={styles.typingDots}>
+                <View style={[styles.dot, styles.d1]} />
+                <View style={[styles.dot, styles.d2]} />
+                <View style={[styles.dot, styles.d3]} />
               </View>
             </View>
           </View>
         )}
 
-        {/* Input bar */}
-        <View style={styles.inputBar}>
-          <TouchableOpacity style={styles.attachBtn} onPress={handlePickImage}>
-            <Ionicons name="attach" size={22} color="#6b7280" />
-          </TouchableOpacity>
-
-          <TextInput
-            style={styles.textInput}
-            placeholder="Message..."
-            placeholderTextColor="#9ca3af"
-            value={newMessage}
-            onChangeText={handleTyping}
-            multiline
-            maxLength={1000}
-          />
-
+        {/* ── Input bar ──────────────────────────────────────────────── */}
+        <View style={styles.inputRow}>
+          <View style={styles.inputWrap}>
+            <TouchableOpacity style={styles.attachBtn} onPress={handleAttach}>
+              <Ionicons name="attach" size={22} color="#6b7280" />
+            </TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              placeholder="Message"
+              placeholderTextColor="#9ca3af"
+              value={newMessage}
+              onChangeText={handleChangeText}
+              multiline
+              maxLength={1000}
+            />
+          </View>
           <TouchableOpacity
-            style={[styles.sendBtn, !newMessage.trim() && styles.sendBtnOff]}
+            style={[styles.sendBtn, !newMessage.trim() && styles.sendOff]}
             onPress={handleSend}
-            disabled={!newMessage.trim() || sending}
+            disabled={!newMessage.trim()}
           >
-            <Ionicons name="send" size={18} color="#ffffff" />
+            <Ionicons name="send" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
-
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
-};
+}
 
+// ─── styles ─────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f0f2f5' },
+  safe: { flex: 1, backgroundColor: '#ece5dd' },   // WhatsApp chat bg
+  flex: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
+  // Header
+  headerAvatar: { width: 36, height: 36, borderRadius: 18, marginLeft: 10 },
+  headerName: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  headerStatusTyping: { fontSize: 12, color: '#a7f3d0', fontStyle: 'italic' },
+  headerStatusOnline: { fontSize: 12, color: '#a7f3d0' },
+  headerStatusOffline: { fontSize: 12, color: 'rgba(255,255,255,0.7)' },
 
   // Search bar
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#ffffff', paddingHorizontal: 14, paddingVertical: 10,
-    borderBottomWidth: 1, borderBottomColor: '#e5e7eb',
+    backgroundColor: '#fff', paddingHorizontal: 10,
+    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#e5e7eb',
   },
-  searchInput: { flex: 1, fontSize: 15, color: '#1f2937' },
+  searchInput: { flex: 1, fontSize: 15, color: '#1f2937', marginHorizontal: 8 },
+  searchNav: { flexDirection: 'row', alignItems: 'center' },
+  searchCount: { fontSize: 13, color: '#6b7280', marginRight: 4 },
+  navBtn: { padding: 4 },
+  noResults: { fontSize: 13, color: '#9ca3af', marginRight: 8 },
 
-  // Messages
-  list: { paddingHorizontal: 12, paddingVertical: 10 },
+  // List
+  list: { paddingHorizontal: 10, paddingVertical: 12 },
 
-  messageRow: {
-    flexDirection: 'row', alignItems: 'flex-end',
-    marginBottom: 2,
+  // Message row
+  row: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 2 },
+  rowLeft: { justifyContent: 'flex-start' },
+  rowRight: { justifyContent: 'flex-end' },
+  rowSpaced: { marginBottom: 6 },
+
+  avatarSlot: { width: 30, marginRight: 4, alignSelf: 'flex-end' },
+  msgAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#ddd' },
+
+  bubbleCol: { maxWidth: '75%', position: 'relative' },
+  bubbleColLeft: { alignItems: 'flex-start' },
+  bubbleColRight: { alignItems: 'flex-end' },
+
+  // Search highlights (absolutely behind bubble)
+  currentMatchHighlight: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 214, 0, 0.45)',
+    borderRadius: 14,
+    zIndex: -1,
   },
-  rowMe: { justifyContent: 'flex-end' },
-  rowOther: { justifyContent: 'flex-start' },
+  matchHighlight: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 214, 0, 0.2)',
+    borderRadius: 14,
+    zIndex: -1,
+  },
 
-  avatarSlot: { width: 30, marginRight: 6, alignSelf: 'flex-end' },
-  msgAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#e5e7eb' },
-
-  bubbleWrapper: { maxWidth: '75%' },
-  bubbleWrapperMe: { alignItems: 'flex-end' },
-  bubbleWrapperOther: { alignItems: 'flex-start' },
-
+  // Text bubble
   bubble: {
-    paddingHorizontal: 13, paddingVertical: 9,
-    borderRadius: 18, marginBottom: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 18,
+    marginBottom: 1,
   },
-  bubbleMe: { backgroundColor: '#4f46e5' },
+  bubbleMe: {
+    backgroundColor: '#dcf8c6',       // WhatsApp green sent
+    borderTopRightRadius: 18,
+    borderBottomRightRadius: 6,
+  },
   bubbleOther: {
     backgroundColor: '#ffffff',
-    borderWidth: 1, borderColor: '#e5e7eb',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04, shadowRadius: 2, elevation: 1,
+    borderTopLeftRadius: 18,
+    borderBottomLeftRadius: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  // Tail shaping
-  bubbleTopMe: { borderTopRightRadius: 4 },
-  bubbleBottomMe: { borderBottomRightRadius: 4 },
-  bubbleTopOther: { borderTopLeftRadius: 4 },
-  bubbleBottomOther: { borderBottomLeftRadius: 4 },
+  // Pointed tail at the top of a new sender group
+  tailTopRight: { borderTopRightRadius: 4 },
+  tailTopLeft: { borderTopLeftRadius: 4 },
 
   bubbleText: { fontSize: 15, lineHeight: 21 },
-  bubbleTextMe: { color: '#ffffff' },
-  bubbleTextOther: { color: '#1f2937' },
+  textMe: { color: '#1f2937' },
+  textOther: { color: '#1f2937' },
 
-  // Image messages
-  imageBubble: { borderRadius: 14, overflow: 'hidden', marginBottom: 1 },
-  imageBubbleMe: { borderBottomRightRadius: 4 },
-  imageBubbleOther: { borderBottomLeftRadius: 4 },
-  chatImage: { width: 200, height: 200 },
-  imageOverlay: {
+  // Time + tick
+  metaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2, marginBottom: 2 },
+  metaRight: { justifyContent: 'flex-end', paddingRight: 4 },
+  metaLeft: { justifyContent: 'flex-start', paddingLeft: 4 },
+  timeText: { fontSize: 11, color: '#9ca3af' },
+
+  // Image bubble
+  imgBubble: { borderRadius: 14, overflow: 'hidden', marginBottom: 1 },
+  imgBubbleMe: { borderBottomRightRadius: 4 },
+  imgBubbleOther: { borderBottomLeftRadius: 4 },
+  chatImage: { width: 210, height: 210 },
+  imgOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
-  msgTime: { fontSize: 10, color: '#9ca3af', marginTop: 2, marginBottom: 4, paddingHorizontal: 4 },
-  msgTimeMe: { textAlign: 'right', color: '#9ca3af' },
-  msgTimeOther: { textAlign: 'left' },
-
-  // Typing indicator
+  // Typing
   typingRow: {
     flexDirection: 'row', alignItems: 'flex-end',
-    paddingLeft: 12, paddingBottom: 6,
+    paddingLeft: 12, paddingBottom: 8,
   },
   typingAvatar: { width: 26, height: 26, borderRadius: 13, marginRight: 6 },
   typingBubble: {
-    backgroundColor: '#ffffff', paddingHorizontal: 14, paddingVertical: 10,
+    backgroundColor: '#fff', paddingHorizontal: 14, paddingVertical: 10,
     borderRadius: 18, borderBottomLeftRadius: 4,
-    borderWidth: 1, borderColor: '#e5e7eb',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06, shadowRadius: 2, elevation: 1,
   },
-  dotsRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  dot: {
-    width: 7, height: 7, borderRadius: 4, backgroundColor: '#9ca3af',
-  },
-  dot1: { opacity: 0.4 },
-  dot2: { opacity: 0.7 },
-  dot3: { opacity: 1 },
+  typingDots: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#9ca3af' },
+  d1: { opacity: 0.35 },
+  d2: { opacity: 0.65 },
+  d3: { opacity: 1 },
 
   // Input bar
-  inputBar: {
+  inputRow: {
     flexDirection: 'row', alignItems: 'flex-end',
-    paddingHorizontal: 10, paddingVertical: 8,
-    backgroundColor: '#ffffff', borderTopWidth: 1, borderTopColor: '#e5e7eb',
+    paddingHorizontal: 8, paddingVertical: 6,
+    backgroundColor: '#f0f2f5',
   },
-  attachBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    justifyContent: 'center', alignItems: 'center',
-    marginRight: 6,
+  inputWrap: {
+    flex: 1, flexDirection: 'row', alignItems: 'flex-end',
+    backgroundColor: '#fff', borderRadius: 24,
+    paddingHorizontal: 8, paddingVertical: Platform.OS === 'ios' ? 10 : 4,
+    marginRight: 8, minHeight: 44,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08, shadowRadius: 2, elevation: 1,
   },
-  textInput: {
-    flex: 1, minHeight: 40, maxHeight: 120,
-    backgroundColor: '#f3f4f6', borderRadius: 20,
-    paddingHorizontal: 14, paddingVertical: 9,
-    fontSize: 15, color: '#1f2937',
+  attachBtn: { padding: 6, alignSelf: 'flex-end' },
+  input: {
+    flex: 1, fontSize: 15, color: '#1f2937',
+    maxHeight: 120, paddingHorizontal: 6,
+    paddingVertical: Platform.OS === 'ios' ? 0 : 6,
   },
   sendBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#4f46e5', justifyContent: 'center', alignItems: 'center',
-    marginLeft: 8,
-    shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3, shadowRadius: 4, elevation: 3,
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: '#075e54',
+    justifyContent: 'center', alignItems: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2, shadowRadius: 3, elevation: 3,
   },
-  sendBtnOff: { backgroundColor: '#a5b4fc' },
+  sendOff: { backgroundColor: '#9ca3af' },
 
   // Empty state
-  emptyContainer: { alignItems: 'center', paddingTop: 60 },
-  emptyAvatar: { width: 72, height: 72, borderRadius: 36, marginBottom: 12, backgroundColor: '#e5e7eb' },
-  emptyName: { fontSize: 16, fontWeight: '700', color: '#374151', marginBottom: 4 },
-  emptyText: { fontSize: 14, color: '#9ca3af' },
+  emptyBox: { alignItems: 'center', paddingTop: 60 },
+  emptyAvatar: { width: 72, height: 72, borderRadius: 36, marginBottom: 12, backgroundColor: '#ddd' },
+  emptyName: { fontSize: 17, fontWeight: '700', color: '#374151', marginBottom: 4 },
+  emptyHint: { fontSize: 14, color: '#9ca3af' },
 });
-
-export default ChatScreen;
