@@ -27,6 +27,7 @@ const PostScreen = ({ navigation }) => {
   const [contact, setContact] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [customCategory, setCustomCategory] = useState('');
+  const [location, setLocation] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [images, setImages] = useState([]); // array of URIs
   const [loading, setLoading] = useState(false);
@@ -86,6 +87,7 @@ const PostScreen = ({ navigation }) => {
 
       const finalCategory = selectedCategory.name === 'Other' ? customCategory.trim() : selectedCategory.name;
       formData.append('category', finalCategory);
+      formData.append('location', location.trim());
 
       images.forEach((uri) => {
         const filename = uri.split('/').pop();
@@ -103,6 +105,7 @@ const PostScreen = ({ navigation }) => {
           text: 'View Listing',
           onPress: () => {
             setTitle(''); setPrice(''); setDescription(''); setContact('');
+            setLocation('');
             setSelectedCategory(null); setCustomCategory(''); setImages([]);
             navigation.navigate('Home');
           }
@@ -246,6 +249,18 @@ const PostScreen = ({ navigation }) => {
                 value={contact}
                 onChangeText={setContact}
                 maxLength={10}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Pickup Location</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. Hostel 5, Room 203 or Library Gate"
+                placeholderTextColor="#9ca3af"
+                value={location}
+                onChangeText={setLocation}
+                maxLength={80}
               />
             </View>
 

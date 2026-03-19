@@ -156,34 +156,7 @@ const ProfileScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Quick Actions */}
-      <View style={styles.quickActions}>
-        <TouchableOpacity
-          style={styles.quickActionBtn}
-          onPress={() => navigation.navigate('Wishlist')}
-        >
-          <Ionicons name="heart-outline" size={20} color="#ef4444" />
-          <Text style={styles.quickActionText}>Wishlist</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.quickActionBtn}
-          onPress={() => navigation.navigate('Sell')}
-        >
-          <Ionicons name="add-circle-outline" size={20} color="#4f46e5" />
-          <Text style={styles.quickActionText}>Sell Item</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.quickActionBtn}
-          onPress={() => navigation.navigate('LostFound')}
-        >
-          <Ionicons name="search-outline" size={20} color="#f59e0b" />
-          <Text style={styles.quickActionText}>Lost & Found</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.sectionDivider}>
+      <View style={styles.sectionDivider}
         <Text style={styles.sectionTitle}>Your Listings</Text>
         <Text style={styles.sectionCount}>{myItems.length} items</Text>
       </View>
@@ -328,7 +301,7 @@ const styles = StyleSheet.create({
   coverImage: { width, height: 150, backgroundColor: '#d1d5db' },
   menuBtn: {
     position: 'absolute', top: Platform.OS === 'android' ? 46 : 62,
-    right: 14, backgroundColor: 'rgba(0,0,0,0.45)',
+    right: 10, backgroundColor: 'rgba(0,0,0,0.45)',
     padding: 8, borderRadius: 20,
   },
 
@@ -416,16 +389,6 @@ const styles = StyleSheet.create({
   statNumber: { fontSize: 20, fontWeight: '800', color: '#1f2937' },
   statLabel: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
   statDivider: { width: 1, height: 32, backgroundColor: '#e5e7eb' },
-
-  quickActions: {
-    flexDirection: 'row', backgroundColor: '#ffffff',
-    paddingVertical: 14, paddingHorizontal: 20,
-    borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
-  },
-  quickActionBtn: {
-    flex: 1, alignItems: 'center', gap: 4,
-  },
-  quickActionText: { fontSize: 11, color: '#374151', fontWeight: '600', textAlign: 'center' },
 
   sectionDivider: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',

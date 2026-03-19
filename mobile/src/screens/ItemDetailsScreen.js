@@ -172,7 +172,7 @@ const ItemDetailsScreen = ({ route, navigation }) => {
                   key={index}
                   source={{ uri: img.url || img }}
                   style={styles.image}
-                  resizeMode="cover"
+                  resizeMode="contain"
                 />
               ))
             ) : (
@@ -240,7 +240,7 @@ const ItemDetailsScreen = ({ route, navigation }) => {
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <Ionicons name="location-outline" size={18} color="#4f46e5" />
-              <Text style={styles.infoText}>{item.college}</Text>
+              <Text style={styles.infoText}>{item.location || item.college}</Text>
             </View>
             <View style={styles.infoRow}>
               <Ionicons name="time-outline" size={18} color="#4f46e5" />
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
 
   // Carousel
   carouselContainer: { width, height: 320, backgroundColor: '#f3f4f6' },
-  image: { width, height: 320, resizeMode: 'cover' },
+  image: { width, height: 320, resizeMode: 'contain', backgroundColor: '#f3f4f6' },
   paginationContainer: {
     position: 'absolute', bottom: 14,
     flexDirection: 'row', width: '100%', justifyContent: 'center',
