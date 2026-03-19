@@ -89,8 +89,10 @@ const ProfileScreen = ({ navigation }) => {
 
   const renderHeader = () => (
     <View style={styles.headerWrapper}>
-      {/* Cover */}
-      <Image source={coverImg} style={styles.coverImage} />
+      {/* Cover with top status-bar spacing */}
+      <View style={styles.coverWrapper}>
+        <Image source={coverImg} style={styles.coverImage} />
+      </View>
 
       {/* Logout */}
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
@@ -229,9 +231,13 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
   headerWrapper: { backgroundColor: '#f9fafb', marginBottom: 8 },
-  coverImage: { width, height: 160, backgroundColor: '#d1d5db' },
+  coverWrapper: {
+    paddingTop: Platform.OS === 'android' ? 36 : 52,
+    backgroundColor: '#d1d5db',
+  },
+  coverImage: { width, height: 150, backgroundColor: '#d1d5db' },
   logoutBtn: {
-    position: 'absolute', top: Platform.OS === 'android' ? 55 : 16,
+    position: 'absolute', top: Platform.OS === 'android' ? 46 : 62,
     right: 14, backgroundColor: 'rgba(0,0,0,0.45)',
     padding: 8, borderRadius: 20,
   },
