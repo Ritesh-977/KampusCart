@@ -4,16 +4,18 @@ import LostItem from '../models/LostItem.js';
 // @route   POST /api/lost-found
 export const reportItem = async (req, res) => {
     try {
-        const { title, description, category, type, location } = req.body;
-        
+        const { title, description, category, type, location, contact } = req.body;
+
         const newItem = await LostItem.create({
             title,
             description,
             category,
             type,
             location,
+            contact,
             image: req.file ? req.file.path : null, // Handle image if uploaded
-            reporter: req.user.id
+            reporter: req.user.id,
+            campus: req.user.college
         });
 
         res.status(201).json(newItem);
@@ -26,9 +28,10 @@ export const reportItem = async (req, res) => {
 // @route   GET /api/lost-found
 export const getAllLostFound = async (req, res) => {
     try {
-        const { type, category } = req.query;
+        const { type, category, campus } = req.query;
         let query = { status: 'Active' };
 
+        if (campus) query.campus = campus;
         if (type) query.type = type; // Filter by 'Lost' or 'Found'
         if (category) query.category = category;
 
