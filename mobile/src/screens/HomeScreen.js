@@ -140,8 +140,9 @@ const HomeScreen = ({ navigation }) => {
       
       {isWindowShopping && (
         <View style={styles.warningBanner}>
+          <Ionicons name="eye-outline" size={14} color="#f59e0b" style={{ marginRight: 6, marginTop: 1 }} />
           <Text style={styles.warningText}>
-            👀 You are viewing <Text style={{fontWeight: 'bold', color: '#f59e0b'}}>{activeCampus.name}</Text>. Your home campus is <Text style={{fontWeight: 'bold', color: '#f59e0b'}}>{userCampusName}</Text>. You can browse, but cannot contact sellers here.
+            Viewing <Text style={styles.warningHighlight}>{activeCampus.shortName || activeCampus.name}</Text> — browse only, can't contact sellers.
           </Text>
         </View>
       )}
@@ -235,8 +236,9 @@ const styles = StyleSheet.create({
   activeChip: { backgroundColor: '#4f46e5', borderColor: '#4f46e5' },
   chipText: { fontSize: 14, color: '#6b7280', fontWeight: '600' },
   activeChipText: { color: '#ffffff' },
-  warningBanner: { backgroundColor: '#1f2937', padding: 12, marginHorizontal: 16, marginTop: 16, borderRadius: 8, borderWidth: 1, borderColor: '#4b5563' },
-  warningText: { color: '#d1d5db', fontSize: 13, lineHeight: 20 },
+  warningBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1f2937', paddingHorizontal: 12, paddingVertical: 8, marginHorizontal: 16, marginTop: 10, borderRadius: 8, borderWidth: 1, borderColor: '#4b5563' },
+  warningText: { color: '#d1d5db', fontSize: 12, flex: 1 },
+  warningHighlight: { color: '#f59e0b', fontWeight: '700' },
   listContainer: { padding: 16 },
   emptyContainer: { padding: 40, alignItems: 'center' },
   emptyText: { fontSize: 16, color: '#9ca3af', textAlign: 'center' },
