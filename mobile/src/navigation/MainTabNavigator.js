@@ -39,8 +39,8 @@ const MainTabNavigator = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#4f46e5',
-        tabBarInactiveTintColor: '#9ca3af',
+        tabBarActiveTintColor: '#818cf8',
+        tabBarInactiveTintColor: '#475569',
         headerShown: false,
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabBarLabel,
@@ -86,12 +86,12 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     height: 64,
     borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
-    backgroundColor: '#ffffff',
+    borderTopColor: '#1e293b',
+    backgroundColor: '#0f172a',
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.4,
     shadowRadius: 8,
   },
   tabBarLabel: {

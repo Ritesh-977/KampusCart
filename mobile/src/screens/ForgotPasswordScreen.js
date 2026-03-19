@@ -34,7 +34,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.navigate('Login')}>
-            <Ionicons name="arrow-back" size={22} color="#374151" />
+            <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
           </TouchableOpacity>
 
           <View style={styles.successIconCircle}>
@@ -78,7 +78,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         <View style={styles.container}>
 
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={22} color="#374151" />
+            <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
           </TouchableOpacity>
 
           <View style={styles.iconCircle}>
@@ -131,41 +131,41 @@ const ForgotPasswordScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f9fafb' },
+  safeArea: { flex: 1, backgroundColor: '#0f172a' },
   container: { flex: 1, paddingHorizontal: 24, paddingTop: 20 },
   backBtn: { width: 40, height: 40, justifyContent: 'center', marginBottom: 30 },
   iconCircle: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: '#eef2ff', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(79,70,229,0.2)', justifyContent: 'center', alignItems: 'center',
     alignSelf: 'center', marginBottom: 20,
   },
   successIconCircle: {
     width: 100, height: 100, borderRadius: 50,
-    backgroundColor: '#dcfce7', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(22,163,74,0.15)', justifyContent: 'center', alignItems: 'center',
     alignSelf: 'center', marginBottom: 24,
   },
   title: {
-    fontSize: 28, fontWeight: '800', color: '#1f2937',
+    fontSize: 28, fontWeight: '800', color: '#f1f5f9',
     textAlign: 'center', marginBottom: 10,
   },
   subtitle: {
-    fontSize: 15, color: '#6b7280', textAlign: 'center',
+    fontSize: 15, color: '#94a3b8', textAlign: 'center',
     lineHeight: 23, marginBottom: 32,
   },
-  emailText: { fontWeight: '700', color: '#4f46e5' },
+  emailText: { fontWeight: '700', color: '#818cf8' },
   inputGroup: { marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: '600', color: '#94a3b8', marginBottom: 8 },
   inputWrapper: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#d1d5db',
+    backgroundColor: '#1e293b', borderWidth: 1, borderColor: '#334155',
     borderRadius: 12, paddingHorizontal: 14,
   },
-  input: { flex: 1, paddingVertical: 14, fontSize: 16, color: '#1f2937' },
+  input: { flex: 1, paddingVertical: 14, fontSize: 16, color: '#f1f5f9' },
   primaryButton: {
     backgroundColor: '#4f46e5', borderRadius: 12,
     paddingVertical: 16, alignItems: 'center',
     shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
+    shadowOpacity: 0.4, shadowRadius: 8, elevation: 4,
     marginBottom: 16,
   },
   primaryButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
@@ -173,13 +173,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'center',
     alignItems: 'center', paddingVertical: 12,
   },
-  backToLoginText: { color: '#4f46e5', fontSize: 14, fontWeight: '600' },
+  backToLoginText: { color: '#818cf8', fontSize: 14, fontWeight: '600' },
   tipsCard: {
-    backgroundColor: '#fffbeb', padding: 16, borderRadius: 12,
-    borderWidth: 1, borderColor: '#fde68a', marginBottom: 20,
+    backgroundColor: 'rgba(245,158,11,0.1)', padding: 16, borderRadius: 12,
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.25)', marginBottom: 20,
   },
-  tipsTitle: { fontSize: 14, fontWeight: '700', color: '#92400e', marginBottom: 8 },
-  tipItem: { fontSize: 13, color: '#78350f', lineHeight: 22 },
+  tipsTitle: { fontSize: 14, fontWeight: '700', color: '#fbbf24', marginBottom: 8 },
+  tipItem: { fontSize: 13, color: '#94a3b8', lineHeight: 22 },
 });
 
 export default ForgotPasswordScreen;

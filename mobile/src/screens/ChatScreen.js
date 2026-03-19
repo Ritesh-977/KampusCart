@@ -94,7 +94,7 @@ export default function ChatScreen({ route, navigation }) {
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
-      headerStyle: { backgroundColor: '#075e54' },   // WhatsApp-ish dark green — or use your brand colour
+      headerStyle: { backgroundColor: '#0f172a' },
       headerTintColor: '#fff',
       headerLeft: () => (
         <TouchableOpacity
@@ -453,7 +453,7 @@ export default function ChatScreen({ route, navigation }) {
   // ── main render ────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
-      <StatusBar backgroundColor="#075e54" barStyle="light-content" />
+      <StatusBar backgroundColor="#0f172a" barStyle="light-content" />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -463,7 +463,7 @@ export default function ChatScreen({ route, navigation }) {
         {searchVisible && (
           <View style={styles.searchBar}>
             <TouchableOpacity onPress={closeSearch} style={{ padding: 4 }}>
-              <Ionicons name="arrow-back" size={20} color="#374151" />
+              <Ionicons name="arrow-back" size={20} color="#f1f5f9" />
             </TouchableOpacity>
             <TextInput
               ref={searchRef}
@@ -549,7 +549,7 @@ export default function ChatScreen({ route, navigation }) {
         <View style={styles.inputRow}>
           <View style={styles.inputWrap}>
             <TouchableOpacity style={styles.attachBtn} onPress={handleAttach}>
-              <Ionicons name="attach" size={22} color="#6b7280" />
+              <Ionicons name="attach" size={22} color="#94a3b8" />
             </TouchableOpacity>
             <TextInput
               style={styles.input}
@@ -576,7 +576,7 @@ export default function ChatScreen({ route, navigation }) {
 
 // ─── styles ─────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#ece5dd' },   // WhatsApp chat bg
+  safe: { flex: 1, backgroundColor: '#0f172a' },
   flex: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
@@ -590,14 +590,14 @@ const styles = StyleSheet.create({
   // Search bar
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#fff', paddingHorizontal: 10,
-    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#e5e7eb',
+    backgroundColor: '#1e293b', paddingHorizontal: 10,
+    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#334155',
   },
-  searchInput: { flex: 1, fontSize: 15, color: '#1f2937', marginHorizontal: 8 },
+  searchInput: { flex: 1, fontSize: 15, color: '#f1f5f9', marginHorizontal: 8 },
   searchNav: { flexDirection: 'row', alignItems: 'center' },
-  searchCount: { fontSize: 13, color: '#6b7280', marginRight: 4 },
+  searchCount: { fontSize: 13, color: '#94a3b8', marginRight: 4 },
   navBtn: { padding: 4 },
-  noResults: { fontSize: 13, color: '#9ca3af', marginRight: 8 },
+  noResults: { fontSize: 13, color: '#64748b', marginRight: 8 },
 
   // List
   list: { paddingHorizontal: 10, paddingVertical: 12 },
@@ -637,33 +637,30 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   bubbleMe: {
-    backgroundColor: '#dcf8c6',       // WhatsApp green sent
+    backgroundColor: '#4338ca',
     borderTopRightRadius: 18,
     borderBottomRightRadius: 6,
   },
   bubbleOther: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1e293b',
     borderTopLeftRadius: 18,
     borderBottomLeftRadius: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: '#334155',
   },
   // Pointed tail at the top of a new sender group
   tailTopRight: { borderTopRightRadius: 4 },
   tailTopLeft: { borderTopLeftRadius: 4 },
 
   bubbleText: { fontSize: 15, lineHeight: 21 },
-  textMe: { color: '#1f2937' },
-  textOther: { color: '#1f2937' },
+  textMe: { color: '#ffffff' },
+  textOther: { color: '#f1f5f9' },
 
   // Time + tick
   metaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2, marginBottom: 2 },
   metaRight: { justifyContent: 'flex-end', paddingRight: 4 },
   metaLeft: { justifyContent: 'flex-start', paddingLeft: 4 },
-  timeText: { fontSize: 11, color: '#9ca3af' },
+  timeText: { fontSize: 11, color: '#64748b' },
 
   // Image bubble
   imgBubble: { borderRadius: 14, overflow: 'hidden', marginBottom: 1 },
@@ -684,13 +681,12 @@ const styles = StyleSheet.create({
   },
   typingAvatar: { width: 26, height: 26, borderRadius: 13, marginRight: 6 },
   typingBubble: {
-    backgroundColor: '#fff', paddingHorizontal: 14, paddingVertical: 10,
+    backgroundColor: '#1e293b', paddingHorizontal: 14, paddingVertical: 10,
     borderRadius: 18, borderBottomLeftRadius: 4,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06, shadowRadius: 2, elevation: 1,
+    borderWidth: 1, borderColor: '#334155',
   },
   typingDots: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#9ca3af' },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#64748b' },
   d1: { opacity: 0.35 },
   d2: { opacity: 0.65 },
   d3: { opacity: 1 },
@@ -699,34 +695,34 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row', alignItems: 'flex-end',
     paddingHorizontal: 8, paddingVertical: 6,
-    backgroundColor: '#f0f2f5',
+    backgroundColor: '#0f172a',
+    borderTopWidth: 1, borderTopColor: '#1e293b',
   },
   inputWrap: {
     flex: 1, flexDirection: 'row', alignItems: 'flex-end',
-    backgroundColor: '#fff', borderRadius: 24,
+    backgroundColor: '#1e293b', borderRadius: 24,
     paddingHorizontal: 8, paddingVertical: Platform.OS === 'ios' ? 10 : 4,
     marginRight: 8, minHeight: 44,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08, shadowRadius: 2, elevation: 1,
+    borderWidth: 1, borderColor: '#334155',
   },
   attachBtn: { padding: 6, alignSelf: 'flex-end' },
   input: {
-    flex: 1, fontSize: 15, color: '#1f2937',
+    flex: 1, fontSize: 15, color: '#f1f5f9',
     maxHeight: 120, paddingHorizontal: 6,
     paddingVertical: Platform.OS === 'ios' ? 0 : 6,
   },
   sendBtn: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: '#075e54',
+    backgroundColor: '#4f46e5',
     justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2, shadowRadius: 3, elevation: 3,
+    shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4, shadowRadius: 3, elevation: 3,
   },
-  sendOff: { backgroundColor: '#9ca3af' },
+  sendOff: { backgroundColor: '#334155' },
 
   // Empty state
   emptyBox: { alignItems: 'center', paddingTop: 60 },
-  emptyAvatar: { width: 72, height: 72, borderRadius: 36, marginBottom: 12, backgroundColor: '#ddd' },
-  emptyName: { fontSize: 17, fontWeight: '700', color: '#374151', marginBottom: 4 },
-  emptyHint: { fontSize: 14, color: '#9ca3af' },
+  emptyAvatar: { width: 72, height: 72, borderRadius: 36, marginBottom: 12, backgroundColor: '#273549' },
+  emptyName: { fontSize: 17, fontWeight: '700', color: '#f1f5f9', marginBottom: 4 },
+  emptyHint: { fontSize: 14, color: '#64748b' },
 });
