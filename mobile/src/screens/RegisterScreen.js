@@ -94,13 +94,13 @@ const RegisterScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f9fafb" />
+      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.formContainer} keyboardShouldPersistTaps="handled">
 
           {/* Back button */}
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={22} color="#374151" />
+            <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
           </TouchableOpacity>
 
           <Text style={styles.title}>Create Account</Text>
@@ -110,7 +110,7 @@ const RegisterScreen = ({ navigation }) => {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Your Campus</Text>
             <TouchableOpacity style={styles.dropdownButton} onPress={() => setModalVisible(true)}>
-              <Text style={{ color: selectedCollege ? '#1f2937' : '#9ca3af', fontSize: 16, flex: 1 }}>
+              <Text style={{ color: selectedCollege ? '#f1f5f9' : '#64748b', fontSize: 16, flex: 1 }}>
                 {selectedCollege ? `${selectedCollege.emoji} ${selectedCollege.name}` : 'Select your college...'}
               </Text>
               <Ionicons name="chevron-down" size={20} color="#9ca3af" />
@@ -224,7 +224,7 @@ const RegisterScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Campus</Text>
               <TouchableOpacity onPress={() => { setModalVisible(false); setSearchQuery(''); }}>
-                <Ionicons name="close" size={24} color="#374151" />
+                <Ionicons name="close" size={24} color="#94a3b8" />
               </TouchableOpacity>
             </View>
 
@@ -256,72 +256,72 @@ const RegisterScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f9fafb' },
+  safeArea: { flex: 1, backgroundColor: '#0f172a' },
   formContainer: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 40 },
   backBtn: { marginBottom: 20, width: 40, height: 40, justifyContent: 'center' },
-  title: { fontSize: 30, fontWeight: '800', color: '#1f2937', marginBottom: 6 },
-  subtitle: { fontSize: 15, color: '#6b7280', marginBottom: 28 },
+  title: { fontSize: 30, fontWeight: '800', color: '#f1f5f9', marginBottom: 6 },
+  subtitle: { fontSize: 15, color: '#64748b', marginBottom: 28 },
   inputGroup: { marginBottom: 18 },
-  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: '600', color: '#94a3b8', marginBottom: 8 },
   inputWrapper: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#d1d5db',
+    backgroundColor: '#1e293b', borderWidth: 1, borderColor: '#334155',
     borderRadius: 12, paddingHorizontal: 14,
   },
   inputIcon: { marginRight: 10 },
-  input: { flex: 1, paddingVertical: 14, fontSize: 16, color: '#1f2937' },
+  input: { flex: 1, paddingVertical: 14, fontSize: 16, color: '#f1f5f9' },
   eyeIcon: { padding: 4 },
   dropdownButton: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#d1d5db',
+    backgroundColor: '#1e293b', borderWidth: 1, borderColor: '#334155',
     borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
   },
   loginButton: {
     backgroundColor: '#4f46e5', borderRadius: 12,
     paddingVertical: 16, alignItems: 'center', marginTop: 8,
     shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
+    shadowOpacity: 0.4, shadowRadius: 8, elevation: 4,
   },
   loginButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 28 },
-  footerText: { color: '#6b7280', fontSize: 14 },
-  linkText: { color: '#4f46e5', fontSize: 14, fontWeight: 'bold' },
+  footerText: { color: '#64748b', fontSize: 14 },
+  linkText: { color: '#818cf8', fontSize: 14, fontWeight: 'bold' },
 
   // Waitlist
   waitlistCard: {
-    backgroundColor: '#eef2ff', padding: 24, borderRadius: 16,
-    borderWidth: 1, borderColor: '#c7d2fe', alignItems: 'center', marginBottom: 10,
+    backgroundColor: 'rgba(79,70,229,0.15)', padding: 24, borderRadius: 16,
+    borderWidth: 1, borderColor: 'rgba(79,70,229,0.3)', alignItems: 'center', marginBottom: 10,
   },
   waitlistEmoji: { fontSize: 36, marginBottom: 10 },
-  waitlistTitle: { fontSize: 20, fontWeight: 'bold', color: '#3730a3', marginBottom: 8 },
-  waitlistDesc: { fontSize: 14, color: '#4338ca', textAlign: 'center', lineHeight: 22, marginBottom: 16 },
+  waitlistTitle: { fontSize: 20, fontWeight: 'bold', color: '#818cf8', marginBottom: 8 },
+  waitlistDesc: { fontSize: 14, color: '#94a3b8', textAlign: 'center', lineHeight: 22, marginBottom: 16 },
 
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'flex-end' },
   modalContent: {
-    backgroundColor: '#ffffff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 20, maxHeight: '80%',
+    backgroundColor: '#1e293b', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: 20, maxHeight: '80%', borderWidth: 1, borderColor: '#334155',
   },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  modalTitle: { fontSize: 20, fontWeight: '700', color: '#1f2937' },
+  modalTitle: { fontSize: 20, fontWeight: '700', color: '#f1f5f9' },
   searchWrapper: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#f3f4f6', borderRadius: 10, paddingHorizontal: 12,
-    paddingVertical: 10, marginBottom: 12,
+    backgroundColor: '#273549', borderRadius: 10, paddingHorizontal: 12,
+    paddingVertical: 10, marginBottom: 12, borderWidth: 1, borderColor: '#334155',
   },
-  searchInput: { flex: 1, fontSize: 15, color: '#1f2937' },
+  searchInput: { flex: 1, fontSize: 15, color: '#f1f5f9' },
   collegeItem: {
     flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+    paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: '#334155',
   },
   collegeEmoji: { fontSize: 22, marginRight: 12 },
-  collegeItemText: { fontSize: 15, fontWeight: '600', color: '#1f2937' },
-  collegeLocation: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
+  collegeItemText: { fontSize: 15, fontWeight: '600', color: '#f1f5f9' },
+  collegeLocation: { fontSize: 12, color: '#64748b', marginTop: 2 },
   comingSoonBadge: {
-    backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 6, borderWidth: 1, borderColor: '#fcd34d',
+    backgroundColor: 'rgba(245,158,11,0.15)', paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 6, borderWidth: 1, borderColor: 'rgba(245,158,11,0.3)',
   },
-  comingSoonText: { fontSize: 11, color: '#92400e', fontWeight: '600' },
+  comingSoonText: { fontSize: 11, color: '#fbbf24', fontWeight: '600' },
 });
 
 export default RegisterScreen;

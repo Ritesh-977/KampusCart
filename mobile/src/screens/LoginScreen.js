@@ -135,7 +135,7 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#0f172a',
   },
   formContainer: {
     flex: 1,
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: '#eef2ff',
+    backgroundColor: 'rgba(79,70,229,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -160,12 +160,12 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 32,
     fontWeight: '800',
-    color: '#4f46e5',
+    color: '#818cf8',
     letterSpacing: -1,
   },
   subtitle: {
     fontSize: 15,
-    color: '#6b7280',
+    color: '#64748b',
     marginTop: 6,
   },
   inputGroup: {
@@ -180,21 +180,21 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
+    color: '#94a3b8',
     marginBottom: 8,
   },
   forgotText: {
     fontSize: 13,
-    color: '#4f46e5',
+    color: '#818cf8',
     fontWeight: '600',
     marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1e293b',
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: '#334155',
     borderRadius: 12,
     paddingHorizontal: 14,
   },
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#1f2937',
+    color: '#f1f5f9',
   },
   eyeIcon: {
     padding: 4,
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     shadowColor: '#4f46e5',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 4,
   },
@@ -239,11 +239,11 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: '#1e293b',
   },
   dividerText: {
     marginHorizontal: 12,
-    color: '#9ca3af',
+    color: '#475569',
     fontSize: 14,
   },
   guestButton: {
@@ -253,11 +253,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    backgroundColor: '#ffffff',
+    borderColor: '#334155',
+    backgroundColor: '#1e293b',
   },
   guestButtonText: {
-    color: '#4b5563',
+    color: '#94a3b8',
     fontSize: 15,
     fontWeight: '600',
   },
@@ -267,11 +267,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   footerText: {
-    color: '#6b7280',
+    color: '#64748b',
     fontSize: 14,
   },
   linkText: {
-    color: '#4f46e5',
+    color: '#818cf8',
     fontSize: 14,
     fontWeight: 'bold',
   },
