@@ -2,13 +2,13 @@ import React, { useContext } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 import AuthNavigator from './AuthNavigator';
-import HomeScreen from '../screens/HomeScreen'; 
-// Later, HomeScreen will be replaced by a MainTabNavigator!
+
+// 🚨 IMPORT THE NEW TAB NAVIGATOR (Remove the HomeScreen import)
+import MainTabNavigator from './MainTabNavigator'; 
 
 const AppNavigator = () => {
-  const { isLoading, userToken } = useContext(AuthContext);
+  const { isLoading, userToken, isGuest } = useContext(AuthContext);
 
-  // Show a loading spinner while checking for the token on app startup
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -17,9 +17,9 @@ const AppNavigator = () => {
     );
   }
 
-  // THE MASTER SWITCH: 
-  // If we have a token, show the app. If not, show the Login screen!
-  return userToken !== null ? <HomeScreen /> : <AuthNavigator />;
+  // 🚨 IF LOGGED IN, SHOW TABS. IF NOT, SHOW LOGIN.
+  return (userToken !== null || isGuest) ? <MainTabNavigator /> : <AuthNavigator />;
+  
 };
 
 export default AppNavigator;

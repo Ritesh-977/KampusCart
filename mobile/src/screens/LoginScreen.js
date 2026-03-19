@@ -19,7 +19,7 @@ const LoginScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
 
   // 👈 Grab the global login function
-  const { login } = useContext(AuthContext); 
+  const { login, skipLogin } = useContext(AuthContext); 
 
   const handleLogin = async () => {
     // Basic validation
@@ -96,6 +96,13 @@ const LoginScreen = ({ navigation }) => {
             <Text style={styles.loginButtonText}>Sign In</Text>
           )}
         </TouchableOpacity>
+
+          {/* Guest Login */}
+          <TouchableOpacity onPress={skipLogin} style={{ marginTop: 20, alignItems: 'center' }}>
+        <Text style={{ color: '#4b5563', fontSize: 16, fontWeight: '600', textDecorationLine: 'underline' }}>
+          Skip Login & Browse Items
+        </Text>
+      </TouchableOpacity>
 
         {/* Navigation to Register */}
         <View style={styles.footer}>

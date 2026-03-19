@@ -171,7 +171,8 @@ export const getItems = async (req, res) => {
         const items = await getOrSetCache(cacheKey, async () => {
 
             // --- DATA ISOLATION: Match college OR legacy items with no college field ---
-            const collegeFilter = { $or: [{ college: college }, { college: { $exists: false } }] };
+            // --- STRICT DATA ISOLATION: ONLY match the exact requested college ---
+            const collegeFilter = { college: college };
             let query = { ...collegeFilter };
 
             if (search) {
