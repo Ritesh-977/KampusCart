@@ -103,7 +103,7 @@ const WishlistScreen = ({ navigation }) => {
               </Text>
               <TouchableOpacity
                 style={styles.browseBtn}
-                onPress={() => navigation.navigate('HomeFeed')}
+                onPress={() => navigation.getParent()?.navigate('Home')}
               >
                 <Text style={styles.browseBtnText}>Browse Items</Text>
               </TouchableOpacity>
