@@ -1,46 +1,164 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1588508065123-287b28e0141c?w=400&q=80';
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
 
-const ItemCard = ({ item, onPress }) => {
+const CATEGORY_COLORS = {
+  'Cycles': { bg: '#ecfdf5', text: '#059669' },
+  'Electronics': { bg: '#eff6ff', text: '#2563eb' },
+  'Books & Notes': { bg: '#fefce8', text: '#ca8a04' },
+  'Hostel Essentials': { bg: '#fdf4ff', text: '#9333ea' },
+  'Other': { bg: '#f3f4f6', text: '#6b7280' },
+};
+
+const timeAgo = (dateStr) => {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diff = Math.floor((now - date) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+};
+
+const ItemCard = ({ item, onPress, compact = false }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
   let imageUrl = FALLBACK_IMAGE;
-
   if (item.images && item.images.length > 0) {
     const firstImg = item.images[0];
     const rawPath = typeof firstImg === 'string' ? firstImg : firstImg?.url;
-    if (rawPath && rawPath.startsWith('http')) {
-      imageUrl = rawPath;
-    }
+    if (rawPath && rawPath.startsWith('http')) imageUrl = rawPath;
   }
 
+  const catColors = CATEGORY_COLORS[item.category] || CATEGORY_COLORS['Other'];
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, { toValue: 0.96, useNativeDriver: true, speed: 50 }).start();
+  };
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 20 }).start();
+  };
+
+  if (compact) {
+    // 2-column grid card
+    return (
+      <Animated.View style={{ transform: [{ scale: scaleAnim }], width: CARD_WIDTH }}>
+        <TouchableOpacity
+          style={styles.gridCard}
+          onPress={onPress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          activeOpacity={1}
+        >
+          <View style={styles.gridImageWrapper}>
+            <Image source={{ uri: imageUrl }} style={styles.gridImage} resizeMode="cover" />
+            <View style={styles.priceBadge}>
+              <Text style={styles.priceBadgeText}>₹{Number(item.price).toLocaleString('en-IN')}</Text>
+            </View>
+            {item.images && item.images.length > 1 && (
+              <View style={styles.multiImgBadge}>
+                <Ionicons name="images-outline" size={10} color="#fff" />
+                <Text style={styles.multiImgText}>{item.images.length}</Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.gridContent}>
+            <Text style={styles.gridTitle} numberOfLines={2}>{item.title}</Text>
+            <View style={[styles.catBadge, { backgroundColor: catColors.bg }]}>
+              <Text style={[styles.catBadgeText, { color: catColors.text }]} numberOfLines={1}>
+                {item.category || 'General'}
+              </Text>
+            </View>
+            <View style={styles.gridFooter}>
+              <Ionicons name="time-outline" size={11} color="#9ca3af" />
+              <Text style={styles.gridTime}>{timeAgo(item.createdAt)}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  }
+
+  // Full-width card (fallback)
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
-      <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
-      
-      <View style={styles.detailsContainer}>
-        <View style={styles.titleRow}>
-          <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
-          <Text style={styles.price}>₹{item.price}</Text>
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+      >
+        <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
+        <View style={styles.detailsContainer}>
+          <View style={styles.titleRow}>
+            <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+            <Text style={styles.price}>₹{Number(item.price).toLocaleString('en-IN')}</Text>
+          </View>
+          <Text style={styles.category}>{item.category || 'General'}</Text>
+          <View style={styles.footer}>
+            <Text style={styles.collegeText}>📍 {item.college}</Text>
+            <Text style={styles.timeText}>{timeAgo(item.createdAt)}</Text>
+          </View>
         </View>
-        <Text style={styles.category}>{item.category || 'General'}</Text>
-        <View style={styles.footer}>
-          <Text style={styles.collegeText}>📍 {item.college}</Text>
-          <Text style={styles.timeText}>{new Date(item.createdAt).toLocaleDateString()}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#ffffff', borderRadius: 12, marginBottom: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#f3f4f6', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
-  image: { width: '100%', height: 180, backgroundColor: '#f3f4f6' },
-  detailsContainer: { padding: 12 },
-  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  title: { fontSize: 16, fontWeight: 'bold', color: '#1f2937', flex: 1, marginRight: 10 },
-  price: { fontSize: 16, fontWeight: 'bold', color: '#4f46e5' },
-  category: { fontSize: 12, color: '#6b7280', textTransform: 'uppercase', fontWeight: '600', marginBottom: 10 },
+  // Grid card
+  gridCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#4f46e5',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    marginBottom: 16,
+  },
+  gridImageWrapper: { position: 'relative' },
+  gridImage: { width: '100%', height: CARD_WIDTH * 0.85, backgroundColor: '#f3f4f6' },
+  priceBadge: {
+    position: 'absolute', bottom: 8, left: 8,
+    backgroundColor: '#4f46e5', borderRadius: 8,
+    paddingHorizontal: 8, paddingVertical: 3,
+  },
+  priceBadgeText: { color: '#fff', fontWeight: '800', fontSize: 12 },
+  multiImgBadge: {
+    position: 'absolute', top: 8, right: 8,
+    backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 6,
+    paddingHorizontal: 6, paddingVertical: 2,
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+  },
+  multiImgText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  gridContent: { padding: 10 },
+  gridTitle: { fontSize: 13, fontWeight: '700', color: '#1f2937', marginBottom: 6, lineHeight: 18 },
+  catBadge: { alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, marginBottom: 6 },
+  catBadgeText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.3 },
+  gridFooter: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  gridTime: { fontSize: 11, color: '#9ca3af' },
+
+  // Full-width card
+  card: {
+    backgroundColor: '#ffffff', borderRadius: 16, marginBottom: 16,
+    overflow: 'hidden', elevation: 3,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07, shadowRadius: 8,
+  },
+  image: { width: '100%', height: 200, backgroundColor: '#f3f4f6' },
+  detailsContainer: { padding: 14 },
+  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 },
+  title: { fontSize: 16, fontWeight: '700', color: '#1f2937', flex: 1, marginRight: 10 },
+  price: { fontSize: 17, fontWeight: '800', color: '#4f46e5' },
+  category: { fontSize: 11, color: '#6b7280', textTransform: 'uppercase', fontWeight: '700', letterSpacing: 0.5, marginBottom: 10 },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 10 },
   collegeText: { fontSize: 12, color: '#4b5563', fontWeight: '500' },
   timeText: { fontSize: 12, color: '#9ca3af' },

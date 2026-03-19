@@ -156,7 +156,7 @@ const ProfileScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={styles.sectionDivider}
+      <View style={styles.sectionDivider}>
         <Text style={styles.sectionTitle}>Your Listings</Text>
         <Text style={styles.sectionCount}>{myItems.length} items</Text>
       </View>
