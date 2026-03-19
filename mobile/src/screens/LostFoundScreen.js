@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useContext } from 'react';
 import {
   View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView,
   ActivityIndicator, Modal, TextInput, ScrollView, Alert, Image,
@@ -7,6 +7,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
+import { AuthContext } from '../context/AuthContext';
 import API from '../api/axios';
 
 const CATEGORIES = ['All', 'ID Card', 'Keys', 'Electronics', 'Books', 'Other'];
@@ -21,6 +22,7 @@ const CATEGORY_ICONS = {
 };
 
 const LostFoundScreen = ({ navigation }) => {
+  const { isGuest, logout } = useContext(AuthContext);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -227,9 +229,9 @@ const LostFoundScreen = ({ navigation }) => {
           >
             <Ionicons
               name={CATEGORY_ICONS[cat]}
-              size={14}
+              size={12}
               color={activeCategory === cat ? '#ffffff' : '#6b7280'}
-              style={{ marginRight: 4 }}
+              style={{ marginRight: 3 }}
             />
             <Text style={[styles.catChipText, activeCategory === cat && styles.catChipTextActive]}>
               {cat}
@@ -269,7 +271,20 @@ const LostFoundScreen = ({ navigation }) => {
       {/* FAB to Report */}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => setReportModalVisible(true)}
+        onPress={() => {
+          if (isGuest) {
+            Alert.alert(
+              'Login Required',
+              'Please sign in to report a lost or found item.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Sign In', onPress: logout },
+              ]
+            );
+            return;
+          }
+          setReportModalVisible(true);
+        }}
       >
         <Ionicons name="add" size={28} color="#ffffff" />
       </TouchableOpacity>
@@ -428,12 +443,12 @@ const styles = StyleSheet.create({
   categoryRow: { paddingLeft: 16, marginBottom: 8 },
   catChip: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
-    backgroundColor: '#f3f4f6', marginRight: 8, marginBottom: 12,
+    paddingHorizontal: 11, paddingVertical: 5, borderRadius: 20,
+    backgroundColor: '#f3f4f6', marginRight: 7, marginBottom: 10,
     borderWidth: 1, borderColor: '#e5e7eb',
   },
   catChipActive: { backgroundColor: '#4f46e5', borderColor: '#4f46e5' },
-  catChipText: { fontSize: 13, fontWeight: '600', color: '#6b7280' },
+  catChipText: { fontSize: 12, fontWeight: '600', color: '#6b7280' },
   catChipTextActive: { color: '#ffffff' },
 
   list: { padding: 16 },
