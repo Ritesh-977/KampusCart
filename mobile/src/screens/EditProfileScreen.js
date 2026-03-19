@@ -91,7 +91,7 @@ const EditProfileScreen = ({ route, navigation }) => {
     : { uri: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png' };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : null}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#0f172a' }} behavior={Platform.OS === 'ios' ? 'padding' : null}>
       <ScrollView style={styles.container}>
         
         {/* Cover Photo Editor */}
@@ -117,17 +117,17 @@ const EditProfileScreen = ({ route, navigation }) => {
         <View style={styles.formContainer}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Full Name</Text>
-            <TextInput style={styles.input} value={name} onChangeText={setName} />
+            <TextInput style={styles.input} value={name} onChangeText={setName} placeholderTextColor="#64748b" />
           </View>
 
           <View style={styles.row}>
             <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
               <Text style={styles.label}>Phone Number</Text>
-              <TextInput style={styles.input} keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
+              <TextInput style={styles.input} keyboardType="phone-pad" value={phone} onChangeText={setPhone} placeholderTextColor="#64748b" />
             </View>
             <View style={[styles.inputGroup, { flex: 1 }]}>
               <Text style={styles.label}>Academic Year</Text>
-              <TextInput style={styles.input} placeholder="e.g. 3rd Year" value={year} onChangeText={setYear} />
+              <TextInput style={styles.input} placeholder="e.g. 3rd Year" placeholderTextColor="#64748b" value={year} onChangeText={setYear} />
             </View>
           </View>
 
@@ -142,25 +142,27 @@ const EditProfileScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
-  
-  coverImageContainer: { height: 180, width: '100%', backgroundColor: '#d1d5db', position: 'relative' },
+  container: { flex: 1, backgroundColor: '#0f172a' },
+
+  coverImageContainer: { height: 180, width: '100%', backgroundColor: '#1e293b', position: 'relative' },
   coverImage: { width: '100%', height: '100%' },
-  cameraOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+  cameraOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   overlayText: { color: '#fff', fontWeight: 'bold', marginTop: 5 },
 
   avatarWrapper: { alignItems: 'center', marginTop: -60, marginBottom: 20 },
-  avatarContainer: { width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderColor: '#f9fafb', backgroundColor: '#e5e7eb', overflow: 'hidden', position: 'relative' },
+  avatarContainer: { width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderColor: '#0f172a', backgroundColor: '#273549', overflow: 'hidden', position: 'relative' },
   avatarImage: { width: '100%', height: '100%' },
-  avatarCameraOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.5)', height: 35, alignItems: 'center', paddingTop: 3 },
+  avatarCameraOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.55)', height: 35, alignItems: 'center', paddingTop: 3 },
 
   formContainer: { paddingHorizontal: 20, paddingTop: 10 },
   inputGroup: { marginBottom: 20 },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
-  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 },
-  input: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10, padding: 14, fontSize: 16, color: '#1f2937' },
-  
-  submitBtn: { backgroundColor: '#4f46e5', padding: 18, borderRadius: 12, alignItems: 'center', marginTop: 10, marginBottom: 40 },
+  label: { fontSize: 14, fontWeight: '600', color: '#94a3b8', marginBottom: 8 },
+  input: { backgroundColor: '#273549', borderWidth: 1, borderColor: '#334155', borderRadius: 10, padding: 14, fontSize: 16, color: '#f1f5f9' },
+
+  submitBtn: { backgroundColor: '#4f46e5', padding: 18, borderRadius: 12, alignItems: 'center', marginTop: 10, marginBottom: 40,
+    shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 5,
+  },
   submitBtnText: { color: '#ffffff', fontSize: 18, fontWeight: 'bold' }
 });
 

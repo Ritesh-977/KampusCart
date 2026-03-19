@@ -262,75 +262,72 @@ const EditItemScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#f3f4f6' },
+  flex: { flex: 1, backgroundColor: '#0f172a' },
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
 
   // Preview card
   previewCard: {
-    flexDirection: 'row', backgroundColor: '#fff',
+    flexDirection: 'row', backgroundColor: '#1e293b',
     borderRadius: 16, overflow: 'hidden', marginBottom: 12,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07, shadowRadius: 8, elevation: 3,
+    borderWidth: 1, borderColor: '#334155',
   },
   previewImage: { width: 90, height: 90 },
   previewInfo: { flex: 1, padding: 12, justifyContent: 'space-between' },
-  previewTitle: { fontSize: 15, fontWeight: '700', color: '#1f2937', lineHeight: 21 },
+  previewTitle: { fontSize: 15, fontWeight: '700', color: '#f1f5f9', lineHeight: 21 },
   previewMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
   categoryBadge: {
-    backgroundColor: '#eef2ff', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10,
+    backgroundColor: 'rgba(79,70,229,0.2)', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10,
   },
-  categoryText: { fontSize: 12, color: '#4f46e5', fontWeight: '600' },
+  categoryText: { fontSize: 12, color: '#818cf8', fontWeight: '600' },
   statusBadge: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, gap: 5,
   },
-  statusAvail: { backgroundColor: '#d1fae5' },
-  statusSold: { backgroundColor: '#fee2e2' },
+  statusAvail: { backgroundColor: 'rgba(16,185,129,0.15)' },
+  statusSold: { backgroundColor: 'rgba(239,68,68,0.15)' },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
   dotAvail: { backgroundColor: '#10b981' },
   dotSold: { backgroundColor: '#ef4444' },
   statusLabel: { fontSize: 12, fontWeight: '700' },
-  labelAvail: { color: '#065f46' },
-  labelSold: { color: '#b91c1c' },
+  labelAvail: { color: '#34d399' },
+  labelSold: { color: '#f87171' },
 
   // Section card
   section: {
-    backgroundColor: '#fff', borderRadius: 16, padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+    backgroundColor: '#1e293b', borderRadius: 16, padding: 16,
+    marginBottom: 12, borderWidth: 1, borderColor: '#334155',
   },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 14 },
+  sectionTitle: { fontSize: 13, fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 14 },
 
   // Status toggle
   toggleRow: { flexDirection: 'row', gap: 10 },
   toggleBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6, paddingVertical: 11, borderRadius: 12,
-    borderWidth: 1.5, borderColor: '#e5e7eb',
+    borderWidth: 1.5, borderColor: '#334155',
   },
-  toggleActive: { backgroundColor: '#ecfdf5', borderColor: '#10b981' },
-  toggleSoldActive: { backgroundColor: '#fff1f2', borderColor: '#ef4444' },
-  toggleLabel: { fontSize: 14, fontWeight: '600', color: '#9ca3af' },
-  toggleLabelActive: { color: '#059669' },
-  toggleLabelSold: { color: '#ef4444' },
+  toggleActive: { backgroundColor: 'rgba(16,185,129,0.15)', borderColor: '#10b981' },
+  toggleSoldActive: { backgroundColor: 'rgba(239,68,68,0.15)', borderColor: '#ef4444' },
+  toggleLabel: { fontSize: 14, fontWeight: '600', color: '#64748b' },
+  toggleLabelActive: { color: '#34d399' },
+  toggleLabelSold: { color: '#f87171' },
 
   // Form fields
   field: { marginBottom: 14 },
-  label: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 7 },
+  label: { fontSize: 13, fontWeight: '600', color: '#94a3b8', marginBottom: 7 },
   input: {
-    backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#e5e7eb',
+    backgroundColor: '#273549', borderWidth: 1, borderColor: '#334155',
     borderRadius: 10, paddingHorizontal: 14, paddingVertical: Platform.OS === 'ios' ? 13 : 10,
-    fontSize: 15, color: '#1f2937',
+    fontSize: 15, color: '#f1f5f9',
   },
   inputFlex: { flex: 1, borderWidth: 0, backgroundColor: 'transparent', paddingLeft: 0 },
   prefixInput: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#e5e7eb',
+    backgroundColor: '#273549', borderWidth: 1, borderColor: '#334155',
     borderRadius: 10, paddingHorizontal: 14,
   },
-  prefix: { fontSize: 16, color: '#374151', fontWeight: '700', marginRight: 4 },
+  prefix: { fontSize: 16, color: '#94a3b8', fontWeight: '700', marginRight: 4 },
   textArea: { height: 110, paddingTop: 12, lineHeight: 22 },
 
   // Save button
@@ -339,7 +336,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16, borderRadius: 14, alignItems: 'center',
     justifyContent: 'center', marginTop: 4,
     shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.28, shadowRadius: 8, elevation: 5,
+    shadowOpacity: 0.4, shadowRadius: 8, elevation: 5,
   },
   saveBtnDisabled: { opacity: 0.65 },
   saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
