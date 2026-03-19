@@ -101,10 +101,16 @@ const HomeScreen = ({ navigation }) => {
             
       <View style={styles.header}>
         <View style={styles.campusRow}>
-          <Text style={styles.headerSubtitle}>Browsing Campus:</Text>
           <TouchableOpacity style={styles.dropdownButton} onPress={() => setModalVisible(true)}>
             <Text style={styles.headerTitle}>{activeCampus.emoji} {activeCampus.shortName || activeCampus.name}</Text>
             <Ionicons name="chevron-down" size={18} color="#4f46e5" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.lostFoundBtn}
+            onPress={() => navigation.navigate('LostFound')}
+          >
+            <Ionicons name="search" size={16} color="#f59e0b" />
+            <Text style={styles.lostFoundBtnText}>Lost & Found</Text>
           </TouchableOpacity>
         </View>
 
@@ -164,9 +170,12 @@ const HomeScreen = ({ navigation }) => {
                     ]
                   );
                 } else {
-                  navigation.navigate('ItemDetails', { 
-                    item: item,
-                    activeCollege: activeCampus.name 
+                  const isOwner = !isGuest && currentUser &&
+                    (item.seller === currentUser._id || item.seller?._id === currentUser._id);
+                  navigation.navigate('ItemDetails', {
+                    item,
+                    activeCollege: activeCampus.name,
+                    isOwner: !!isOwner,
                   });
                 }
               }} 
@@ -209,9 +218,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 45 : 10, paddingBottom: 10, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  campusRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
-  headerSubtitle: { fontSize: 14, color: '#6b7280', fontWeight: 'bold', marginRight: 8 },
+  campusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15 },
   dropdownButton: { flexDirection: 'row', alignItems: 'center' },
+  lostFoundBtn: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#fffbeb', paddingHorizontal: 10, paddingVertical: 6,
+    borderRadius: 20, borderWidth: 1, borderColor: '#fde68a',
+  },
+  lostFoundBtnText: { fontSize: 12, color: '#92400e', fontWeight: '700', marginLeft: 4 },
   headerTitle: { fontSize: 22, fontWeight: '900', color: '#1f2937', letterSpacing: -0.5, marginRight: 5 },
   searchSection: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f3f4f6', borderRadius: 12, paddingHorizontal: 12, marginBottom: 12 },
   searchIcon: { marginRight: 10 },
