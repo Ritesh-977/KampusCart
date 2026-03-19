@@ -200,7 +200,7 @@ const PostScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : null}>
         <ScrollView
           style={styles.container}
@@ -295,7 +295,7 @@ const PostScreen = ({ navigation }) => {
               <View style={[styles.inputGroup, { flex: 1 }]}>
                 <Text style={styles.label}>Category <Text style={styles.required}>*</Text></Text>
                 <TouchableOpacity style={styles.dropdownBtn} onPress={() => setModalVisible(true)}>
-                  <Text style={{ color: selectedCategory ? '#1f2937' : '#9ca3af', fontSize: 15, flex: 1 }} numberOfLines={1}>
+                  <Text style={{ color: selectedCategory ? '#f1f5f9' : '#64748b', fontSize: 15, flex: 1 }} numberOfLines={1}>
                     {selectedCategory ? selectedCategory.name : 'Select...'}
                   </Text>
                   <Ionicons name="chevron-down" size={18} color="#9ca3af" />
@@ -397,7 +397,7 @@ const PostScreen = ({ navigation }) => {
             </Text>
 
             <TouchableOpacity style={styles.sheetOption} onPress={pickFromCamera} activeOpacity={0.7}>
-              <View style={[styles.sheetOptionIcon, { backgroundColor: '#eff6ff' }]}>
+              <View style={[styles.sheetOptionIcon, { backgroundColor: 'rgba(37,99,235,0.2)' }]}>
                 <Ionicons name="camera" size={22} color="#2563eb" />
               </View>
               <View style={styles.sheetOptionText}>
@@ -408,7 +408,7 @@ const PostScreen = ({ navigation }) => {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.sheetOption} onPress={pickFromGallery} activeOpacity={0.7}>
-              <View style={[styles.sheetOptionIcon, { backgroundColor: '#f0fdf4' }]}>
+              <View style={[styles.sheetOptionIcon, { backgroundColor: 'rgba(22,163,74,0.2)' }]}>
                 <Ionicons name="images" size={22} color="#16a34a" />
               </View>
               <View style={styles.sheetOptionText}>
@@ -462,26 +462,27 @@ const PostScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
+  container: { flex: 1, backgroundColor: '#0f172a' },
   pageHeader: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
-  pageTitle: { fontSize: 26, fontWeight: '800', color: '#1f2937' },
-  pageSubtitle: { fontSize: 14, color: '#6b7280', marginTop: 4 },
+  pageTitle: { fontSize: 26, fontWeight: '800', color: '#f1f5f9' },
+  pageSubtitle: { fontSize: 14, color: '#94a3b8', marginTop: 4 },
 
   sectionCard: {
-    backgroundColor: '#ffffff', marginHorizontal: 16, marginBottom: 16,
+    backgroundColor: '#1e293b', marginHorizontal: 16, marginBottom: 16,
     borderRadius: 16, padding: 16,
+    borderWidth: 1, borderColor: '#334155',
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+    shadowOpacity: 0.2, shadowRadius: 4, elevation: 2,
   },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1f2937', marginBottom: 3 },
-  sectionHint: { fontSize: 12, color: '#9ca3af' },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#f1f5f9', marginBottom: 3 },
+  sectionHint: { fontSize: 12, color: '#64748b' },
   addMoreBtn: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#eef2ff', borderRadius: 8,
+    backgroundColor: 'rgba(79,70,229,0.2)', borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 6, gap: 3,
   },
-  addMoreText: { fontSize: 13, color: '#4f46e5', fontWeight: '700' },
+  addMoreText: { fontSize: 13, color: '#818cf8', fontWeight: '700' },
 
   // Image thumbnails
   imageThumbnailWrapper: {
@@ -489,7 +490,7 @@ const styles = StyleSheet.create({
     position: 'relative', overflow: 'visible',
   },
   imageThumbnail: {
-    width: 112, height: 112, borderRadius: 12, backgroundColor: '#f3f4f6',
+    width: 112, height: 112, borderRadius: 12, backgroundColor: '#273549',
   },
   removeImageBtn: {
     position: 'absolute', top: -9, right: -9, zIndex: 10,
@@ -498,9 +499,9 @@ const styles = StyleSheet.create({
     width: 24, height: 24, borderRadius: 12,
     backgroundColor: '#ef4444',
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: '#fff',
+    borderWidth: 2, borderColor: '#1e293b',
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.25, shadowRadius: 2, elevation: 4,
+    shadowOpacity: 0.4, shadowRadius: 2, elevation: 4,
   },
   coverBadge: {
     position: 'absolute', bottom: 7, left: 7,
@@ -510,60 +511,61 @@ const styles = StyleSheet.create({
   coverBadgeText: { color: '#ffffff', fontSize: 10, fontWeight: '700' },
   addImageBtn: {
     width: 112, height: 112, borderRadius: 12,
-    backgroundColor: '#f8f7ff', borderWidth: 1.5, borderColor: '#c7d2fe',
+    backgroundColor: '#273549', borderWidth: 1.5, borderColor: '#4f46e5',
     borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', gap: 2,
   },
   addImageIcon: {
     width: 46, height: 46, borderRadius: 23,
-    backgroundColor: '#eef2ff', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(79,70,229,0.2)', alignItems: 'center', justifyContent: 'center',
     marginBottom: 4,
   },
-  addImageText: { fontSize: 12, color: '#4f46e5', fontWeight: '700' },
-  addImageSub: { fontSize: 10, color: '#a5b4fc' },
+  addImageText: { fontSize: 12, color: '#818cf8', fontWeight: '700' },
+  addImageSub: { fontSize: 10, color: '#4f46e5' },
 
   // Source picker sheet
-  sheetOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  sheetOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'flex-end' },
   sourceSheet: {
-    backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    backgroundColor: '#1e293b', borderTopLeftRadius: 28, borderTopRightRadius: 28,
     paddingTop: 12, paddingHorizontal: 20, paddingBottom: 40,
+    borderWidth: 1, borderColor: '#334155',
   },
   sheetHandle: {
-    width: 40, height: 4, borderRadius: 2, backgroundColor: '#e2e8f0',
+    width: 40, height: 4, borderRadius: 2, backgroundColor: '#334155',
     alignSelf: 'center', marginBottom: 18,
   },
-  sheetTitle: { fontSize: 18, fontWeight: '800', color: '#1f2937', marginBottom: 3 },
-  sheetSubtitle: { fontSize: 13, color: '#9ca3af', marginBottom: 20 },
+  sheetTitle: { fontSize: 18, fontWeight: '800', color: '#f1f5f9', marginBottom: 3 },
+  sheetSubtitle: { fontSize: 13, color: '#94a3b8', marginBottom: 20 },
   sheetOption: {
     flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#334155',
   },
   sheetOptionIcon: {
     width: 46, height: 46, borderRadius: 12,
     alignItems: 'center', justifyContent: 'center', marginRight: 14,
   },
   sheetOptionText: { flex: 1 },
-  sheetOptionTitle: { fontSize: 15, fontWeight: '700', color: '#1f2937' },
-  sheetOptionDesc: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
+  sheetOptionTitle: { fontSize: 15, fontWeight: '700', color: '#f1f5f9' },
+  sheetOptionDesc: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
   sheetCancel: {
     marginTop: 16, paddingVertical: 14,
-    backgroundColor: '#f3f4f6', borderRadius: 12, alignItems: 'center',
+    backgroundColor: '#273549', borderRadius: 12, alignItems: 'center',
   },
   sheetCancelText: { color: '#ef4444', fontWeight: '700', fontSize: 15 },
 
   // Inputs
   inputGroup: { marginBottom: 16 },
   row: { flexDirection: 'row' },
-  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: '600', color: '#94a3b8', marginBottom: 8 },
   required: { color: '#ef4444' },
   input: {
-    backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#e5e7eb',
-    borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: '#1f2937',
+    backgroundColor: '#273549', borderWidth: 1, borderColor: '#334155',
+    borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: '#f1f5f9',
   },
   textArea: { height: 110, textAlignVertical: 'top' },
-  charCount: { fontSize: 11, color: '#9ca3af', textAlign: 'right', marginTop: 4 },
+  charCount: { fontSize: 11, color: '#64748b', textAlign: 'right', marginTop: 4 },
   dropdownBtn: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#e5e7eb',
+    backgroundColor: '#273549', borderWidth: 1, borderColor: '#334155',
     borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13,
   },
 
@@ -572,21 +574,21 @@ const styles = StyleSheet.create({
     marginHorizontal: 16, paddingVertical: 17,
     borderRadius: 14, alignItems: 'center', justifyContent: 'center',
     shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3, shadowRadius: 8, elevation: 5,
+    shadowOpacity: 0.4, shadowRadius: 8, elevation: 5,
   },
   submitBtnText: { color: '#ffffff', fontSize: 17, fontWeight: '700' },
 
   // Guest
   guestContainer: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
-    paddingHorizontal: 24, backgroundColor: '#f9fafb',
+    paddingHorizontal: 24, backgroundColor: '#0f172a',
   },
   guestIconCircle: {
     width: 90, height: 90, borderRadius: 45,
-    backgroundColor: '#eef2ff', justifyContent: 'center', alignItems: 'center', marginBottom: 16,
+    backgroundColor: 'rgba(79,70,229,0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 16,
   },
-  guestTitle: { fontSize: 22, fontWeight: '800', color: '#1f2937', marginBottom: 8 },
-  guestSubtitle: { textAlign: 'center', color: '#6b7280', lineHeight: 22, marginBottom: 24 },
+  guestTitle: { fontSize: 22, fontWeight: '800', color: '#f1f5f9', marginBottom: 8 },
+  guestSubtitle: { textAlign: 'center', color: '#94a3b8', lineHeight: 22, marginBottom: 24 },
   guestBtn: {
     backgroundColor: '#4f46e5', paddingVertical: 14, borderRadius: 12,
     width: '100%', alignItems: 'center',
@@ -594,22 +596,22 @@ const styles = StyleSheet.create({
   guestBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'flex-end' },
   modalContent: {
-    backgroundColor: '#ffffff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 20, paddingBottom: 36,
+    backgroundColor: '#1e293b', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: 20, paddingBottom: 36, borderWidth: 1, borderColor: '#334155',
   },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#1f2937', marginBottom: 16, textAlign: 'center' },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#f1f5f9', marginBottom: 16, textAlign: 'center' },
   categoryItem: {
     flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f9fafb',
+    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#334155',
   },
   categoryIconBox: {
-    width: 40, height: 40, borderRadius: 10, backgroundColor: '#eef2ff',
+    width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(79,70,229,0.2)',
     justifyContent: 'center', alignItems: 'center', marginRight: 14,
   },
-  categoryItemText: { fontSize: 16, fontWeight: '500', color: '#1f2937', flex: 1 },
-  closeModalBtn: { marginTop: 12, paddingVertical: 14, backgroundColor: '#f3f4f6', borderRadius: 10, alignItems: 'center' },
+  categoryItemText: { fontSize: 16, fontWeight: '500', color: '#f1f5f9', flex: 1 },
+  closeModalBtn: { marginTop: 12, paddingVertical: 14, backgroundColor: '#273549', borderRadius: 10, alignItems: 'center' },
   closeModalText: { color: '#ef4444', fontWeight: '700', fontSize: 15 },
 });
 

@@ -60,7 +60,7 @@ const WishlistScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color="#374151" />
+          <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Wishlist</Text>
         <Text style={styles.headerCount}>{items.length} items</Text>
@@ -75,7 +75,7 @@ const WishlistScreen = ({ navigation }) => {
           data={items}
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4f46e5']} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4f46e5']} tintColor="#4f46e5" progressBackgroundColor="#1e293b" />}
           renderItem={({ item }) => (
             <View>
               <ItemCard
@@ -116,16 +116,16 @@ const WishlistScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
+  container: { flex: 1, backgroundColor: '#0f172a' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 50 : 14,
-    paddingBottom: 14, backgroundColor: '#ffffff',
-    borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+    paddingBottom: 14, backgroundColor: '#1e293b',
+    borderBottomWidth: 1, borderBottomColor: '#334155',
   },
   backBtn: { width: 40, height: 40, justifyContent: 'center' },
-  headerTitle: { fontSize: 20, fontWeight: '800', color: '#1f2937' },
-  headerCount: { fontSize: 14, color: '#6b7280', fontWeight: '600', minWidth: 40, textAlign: 'right' },
+  headerTitle: { fontSize: 20, fontWeight: '800', color: '#f1f5f9' },
+  headerCount: { fontSize: 14, color: '#64748b', fontWeight: '600', minWidth: 40, textAlign: 'right' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   list: { padding: 16 },
 
@@ -133,13 +133,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingBottom: 8, marginTop: -12,
   },
-  removeBtnText: { fontSize: 13, color: '#ef4444', marginLeft: 4, fontWeight: '600' },
+  removeBtnText: { fontSize: 13, color: '#f87171', marginLeft: 4, fontWeight: '600' },
 
   emptyContainer: {
     alignItems: 'center', paddingTop: 60, paddingHorizontal: 32,
   },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#374151', marginBottom: 8 },
-  emptySubtitle: { fontSize: 15, color: '#9ca3af', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#f1f5f9', marginBottom: 8 },
+  emptySubtitle: { fontSize: 15, color: '#64748b', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   browseBtn: {
     backgroundColor: '#4f46e5', paddingVertical: 14, paddingHorizontal: 32, borderRadius: 12,
   },
