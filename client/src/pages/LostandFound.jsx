@@ -3,17 +3,18 @@ import Navbar from '../components/Navbar';
 import API from '../api/axios'; // ✅ IMPORT YOUR AXIOS INSTANCE
 import { ToastContainer, toast } from 'react-toastify';
 
-import { 
-  FaSearch, 
-  FaPlus, 
-  FaMapMarkerAlt, 
-  FaCalendarAlt, 
-  FaTag, 
-  FaTimes, 
-  FaCamera, 
+import {
+  FaSearch,
+  FaPlus,
+  FaMapMarkerAlt,
+  FaCalendarAlt,
+  FaTag,
+  FaTimes,
+  FaCamera,
   FaBullhorn,
   FaSpinner,
-  FaCheck
+  FaCheck,
+  FaWhatsapp
 } from 'react-icons/fa';
 
 const LostAndFound = () => {
@@ -49,8 +50,9 @@ const LostAndFound = () => {
 
   const fetchItems = async () => {
     try {
-      // ✅ FIX: Use API.get
-      const { data } = await API.get('/lost-found');
+      const campus = currentUser?.college;
+      const params = campus ? { campus } : {};
+      const { data } = await API.get('/lost-found', { params });
       setItems(data);
     } catch (error) {
       console.error("Error fetching items:", error);
@@ -96,11 +98,12 @@ const LostAndFound = () => {
     try {
       const formData = new FormData();
       formData.append('title', newItem.title);
-      formData.append('type', newItem.type); 
+      formData.append('type', newItem.type);
       formData.append('category', newItem.category);
       formData.append('location', newItem.location);
-      const fullDescription = `${newItem.description}\n\n📅 Date: ${newItem.date}\n📞 Contact: ${newItem.contact}`;
+      const fullDescription = `${newItem.description}\n\n📅 Date: ${newItem.date}`;
       formData.append('description', fullDescription);
+      formData.append('contact', newItem.contact);
       if (newItem.image) formData.append('image', newItem.image);
 
       // ✅ FIX: Use API.post
@@ -108,12 +111,13 @@ const LostAndFound = () => {
       const { data } = await API.post('/lost-found', formData);
 
       const enrichedItem = {
-        ...data, 
+        ...data,
         reporter: {
-          _id: currentUser._id || currentUser.id, 
+          _id: currentUser._id || currentUser.id,
           name: currentUser.name,
           email: currentUser.email
-        }
+        },
+        contact: newItem.contact
       };
       setItems([enrichedItem, ...items]);
       setIsModalOpen(false);
@@ -251,7 +255,20 @@ const LostAndFound = () => {
                                 {isOwner(item) ? (
                                     <button onClick={() => handleMarkResolved(item._id)} className="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 text-sm font-bold border border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-900/20 px-3 py-1 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/40 transition">Mark Resolved</button>
                                 ) : (
-                                    <a href={`mailto:${item.reporter?.email}`} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-bold flex items-center cursor-pointer">Contact</a>
+                                    <div className="flex items-center gap-2">
+                                        <a href={`mailto:${item.reporter?.email}`} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-bold flex items-center cursor-pointer">Contact</a>
+                                        {item.contact && /^\+?\d[\d\s\-]{6,}$/.test(item.contact.trim()) && (
+                                            <a
+                                                href={`https://wa.me/${item.contact.replace(/[\s\-\+]/g, '')}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-1 px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition"
+                                                title="Chat on WhatsApp"
+                                            >
+                                                <FaWhatsapp size={14} /> WhatsApp
+                                            </a>
+                                        )}
+                                    </div>
                                 )}
                             </>
                         )}

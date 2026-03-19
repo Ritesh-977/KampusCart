@@ -20,11 +20,13 @@ const lostItemSchema = new mongoose.Schema({
         ref: 'User', 
         required: true 
     },
-    status: { 
-        type: String, 
-        enum: ['Active', 'Resolved'], 
-        default: 'Active' 
+    contact: { type: String },
+    status: {
+        type: String,
+        enum: ['Active', 'Resolved'],
+        default: 'Active'
     },
+    campus: { type: String, required: true },
 }, { timestamps: true });
 
 const LostItem = mongoose.model('LostItem', lostItemSchema);
