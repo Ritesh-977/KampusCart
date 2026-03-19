@@ -1,8 +1,8 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
   TouchableOpacity, SafeAreaView, Alert, Linking,
-  ActivityIndicator, Dimensions
+  ActivityIndicator, Dimensions, Modal, Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
@@ -10,18 +10,42 @@ import API from '../api/axios';
 
 const { width } = Dimensions.get('window');
 
+const REPORT_REASONS = [
+  { label: 'Spam or Duplicate',      icon: 'copy-outline',      value: 'Spam or duplicate listing' },
+  { label: 'Inappropriate Content',  icon: 'eye-off-outline',   value: 'Inappropriate content' },
+  { label: 'Wrong Category',         icon: 'pricetag-outline',  value: 'Wrong category' },
+  { label: 'Misleading Price',       icon: 'alert-circle-outline', value: 'Misleading price' },
+];
+
 const ItemDetailsScreen = ({ route, navigation }) => {
   const { item, activeCollege, isOwner } = route.params;
   const { currentUser } = useContext(AuthContext);
 
-  const [isSold, setIsSold] = useState(item.isSold || false);
-  const [loadingAction, setLoadingAction] = useState(false);
+  const [isSold, setIsSold]                   = useState(item.isSold || false);
+  const [loadingAction, setLoadingAction]     = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isWishlisted, setIsWishlisted]       = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [reportVisible, setReportVisible]     = useState(false);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
 
   const isLocalCampus = item.college === activeCollege;
 
-  // ---- WHATSAPP ----
+  // ── Fetch wishlist status on mount ──────────────────────────────────────────
+  useEffect(() => {
+    const checkWishlist = async () => {
+      try {
+        const res = await API.get('/users/wishlist');
+        const ids = (res.data || []).map(w => w._id || w);
+        setIsWishlisted(ids.includes(item._id));
+      } catch (_) {
+        // silent — wishlist state just defaults to false
+      }
+    };
+    if (!isOwner) checkWishlist();
+  }, []);
+
+  // ── WhatsApp ────────────────────────────────────────────────────────────────
   const handleWhatsApp = async () => {
     if (!isLocalCampus) {
       Alert.alert('Window Shopping', `You can only buy from your home campus. This item is at ${item.college}.`);
@@ -31,95 +55,95 @@ const ItemDetailsScreen = ({ route, navigation }) => {
       Alert.alert('No Contact Info', "The seller didn't provide a phone number.");
       return;
     }
-
     let phone = item.contactNumber.replace(/\D/g, '');
     if (phone.length === 10) phone = '91' + phone;
-
     const message = `Hi! I saw your listing for "${item.title}" (₹${item.price}) on KampusCart. Is it still available?`;
     const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
-
     try {
       const canOpen = await Linking.canOpenURL(url);
-      if (canOpen) {
-        await Linking.openURL(url);
-      } else {
-        Alert.alert('WhatsApp Not Found', 'Please install WhatsApp to contact the seller.');
-      }
+      if (canOpen) await Linking.openURL(url);
+      else Alert.alert('WhatsApp Not Found', 'Please install WhatsApp to contact the seller.');
     } catch {
       Alert.alert('Error', 'Could not open WhatsApp.');
     }
   };
 
-  // ---- IN-APP CHAT ----
+  // ── In-app chat ─────────────────────────────────────────────────────────────
   const handleInAppChat = async () => {
     if (!isLocalCampus) {
       Alert.alert('Window Shopping', 'You can only message sellers from your home campus.');
       return;
     }
-
     const sellerId = item.seller?._id || item.seller;
-    if (!sellerId) {
-      Alert.alert('Error', 'Cannot find seller info.');
-      return;
-    }
-
+    if (!sellerId) { Alert.alert('Error', 'Cannot find seller info.'); return; }
     try {
       setLoadingAction(true);
       const response = await API.post('/chat', { userId: sellerId });
       navigation.navigate('ChatTab', {
         screen: 'ChatRoom',
-        params: {
-          chat: response.data,
-          otherUser: { _id: sellerId, name: item.sellerName, profilePic: null },
-        },
+        params: { chat: response.data, otherUser: { _id: sellerId, name: item.sellerName, profilePic: null } },
       });
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Could not open chat. Please try again.');
     } finally {
       setLoadingAction(false);
     }
   };
 
-  // ---- WISHLIST ----
+  // ── Wishlist toggle (with optimistic update) ────────────────────────────────
   const handleToggleWishlist = async () => {
+    if (wishlistLoading) return;
+    setWishlistLoading(true);
+    const prev = isWishlisted;
+    setIsWishlisted(!prev);          // optimistic
     try {
       await API.post('/users/wishlist', { itemId: item._id });
-      setIsWishlisted(prev => !prev);
-    } catch (e) {
+    } catch {
+      setIsWishlisted(prev);         // revert on failure
       Alert.alert('Error', 'Could not update wishlist.');
+    } finally {
+      setWishlistLoading(false);
     }
   };
 
-  // ---- REPORT ----
-  const handleReport = () => {
-    Alert.alert(
-      'Report Listing',
-      'Why are you reporting this listing?',
-      [
-        { text: 'Spam / Duplicate', onPress: () => submitReport('Spam or duplicate listing') },
-        { text: 'Inappropriate Content', onPress: () => submitReport('Inappropriate content') },
-        { text: 'Wrong Category', onPress: () => submitReport('Wrong category') },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+  // ── Share ───────────────────────────────────────────────────────────────────
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        title: item.title,
+        message:
+          `🛒 *${item.title}*\n` +
+          `💰 ₹${Number(item.price).toLocaleString('en-IN')}\n` +
+          `📍 ${item.location || item.college}\n` +
+          `📦 ${item.category || 'General'}\n\n` +
+          `${item.description ? item.description.slice(0, 120) + '…' : ''}\n\n` +
+          `Found on KampusCart — the campus marketplace!`,
+      });
+    } catch {
+      /* user cancelled share */
+    }
   };
 
+  // ── Report ──────────────────────────────────────────────────────────────────
   const submitReport = async (reason) => {
+    setReportSubmitting(true);
     try {
       await API.post(`/items/${item._id}/report`, { reason });
-      Alert.alert('Reported', 'Thanks for helping keep the campus clean!');
-    } catch (e) {
+      setReportVisible(false);
+      Alert.alert('Reported ✓', 'Thanks for helping keep the campus clean!');
+    } catch {
       Alert.alert('Error', 'Could not submit report.');
+    } finally {
+      setReportSubmitting(false);
     }
   };
 
-  // ---- DELETE ----
+  // ── Delete ──────────────────────────────────────────────────────────────────
   const handleDelete = () => {
     Alert.alert('Delete Listing', 'Permanently delete this listing?', [
       { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Delete',
-        style: 'destructive',
+        text: 'Delete', style: 'destructive',
         onPress: async () => {
           try {
             setLoadingAction(true);
@@ -131,12 +155,12 @@ const ItemDetailsScreen = ({ route, navigation }) => {
           } finally {
             setLoadingAction(false);
           }
-        }
-      }
+        },
+      },
     ]);
   };
 
-  // ---- TOGGLE SOLD ----
+  // ── Toggle sold ─────────────────────────────────────────────────────────────
   const handleToggleSold = async () => {
     try {
       setLoadingAction(true);
@@ -158,22 +182,12 @@ const ItemDetailsScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 110 }}>
 
-        {/* IMAGE CAROUSEL */}
+        {/* ── IMAGE CAROUSEL ── */}
         <View style={styles.carouselContainer}>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={onScroll}
-          >
+          <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onMomentumScrollEnd={onScroll}>
             {item.images && item.images.length > 0 ? (
               item.images.map((img, index) => (
-                <Image
-                  key={index}
-                  source={{ uri: img.url || img }}
-                  style={styles.image}
-                  resizeMode="contain"
-                />
+                <Image key={index} source={{ uri: img.url || img }} style={styles.image} resizeMode="contain" />
               ))
             ) : (
               <Image
@@ -186,10 +200,7 @@ const ItemDetailsScreen = ({ route, navigation }) => {
           {item.images && item.images.length > 1 && (
             <View style={styles.paginationContainer}>
               {item.images.map((_, index) => (
-                <View
-                  key={index}
-                  style={[styles.dot, currentImageIndex === index ? styles.activeDot : styles.inactiveDot]}
-                />
+                <View key={index} style={[styles.dot, currentImageIndex === index ? styles.activeDot : styles.inactiveDot]} />
               ))}
             </View>
           )}
@@ -200,98 +211,95 @@ const ItemDetailsScreen = ({ route, navigation }) => {
             </View>
           )}
 
-          {/* Wishlist button (top right) */}
+          {/* Share button — top left */}
+          <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+            <Ionicons name="share-social-outline" size={20} color="#ffffff" />
+          </TouchableOpacity>
+
+          {/* Wishlist button — top right */}
           {!isOwner && (
-            <TouchableOpacity style={styles.wishlistBtn} onPress={handleToggleWishlist}>
+            <TouchableOpacity style={styles.wishlistBtn} onPress={handleToggleWishlist} disabled={wishlistLoading}>
               <Ionicons
                 name={isWishlisted ? 'heart' : 'heart-outline'}
-                size={24}
+                size={22}
                 color={isWishlisted ? '#ef4444' : '#ffffff'}
               />
             </TouchableOpacity>
           )}
         </View>
 
-        {/* DETAILS */}
+        {/* ── DETAILS ── */}
         <View style={styles.detailsContainer}>
 
-          {/* Title + Price */}
           <View style={styles.titleRow}>
-            <Text style={[styles.title, isSold && styles.titleSold]} numberOfLines={2}>
-              {item.title}
-            </Text>
-            <Text style={styles.price}>₹{item.price}</Text>
+            <Text style={[styles.title, isSold && styles.titleSold]} numberOfLines={2}>{item.title}</Text>
+            <Text style={styles.price}>₹{Number(item.price).toLocaleString('en-IN')}</Text>
           </View>
 
           <View style={styles.categoryRow}>
             <View style={styles.categoryBadge}>
               <Text style={styles.categoryText}>{item.category || 'General'}</Text>
             </View>
-            {/* Report button */}
             {!isOwner && (
-              <TouchableOpacity onPress={handleReport} style={styles.reportBtn}>
-                <Ionicons name="flag-outline" size={16} color="#9ca3af" />
-                <Text style={styles.reportText}>Report</Text>
-              </TouchableOpacity>
+              <View style={styles.actionIcons}>
+                <TouchableOpacity style={styles.iconBtn} onPress={handleShare}>
+                  <Ionicons name="share-social-outline" size={17} color="#94a3b8" />
+                  <Text style={styles.iconBtnText}>Share</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.iconBtn} onPress={() => setReportVisible(true)}>
+                  <Ionicons name="flag-outline" size={17} color="#64748b" />
+                  <Text style={styles.iconBtnText}>Report</Text>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
 
-          {/* Location & Time card */}
+          {/* Info card */}
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <Ionicons name="location-outline" size={18} color="#4f46e5" />
+              <Ionicons name="location-outline" size={18} color="#818cf8" />
               <Text style={styles.infoText}>{item.location || item.college}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Ionicons name="time-outline" size={18} color="#4f46e5" />
-              <Text style={styles.infoText}>Listed {new Date(item.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
+              <Ionicons name="time-outline" size={18} color="#818cf8" />
+              <Text style={styles.infoText}>
+                Listed {new Date(item.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </Text>
             </View>
             {item.sellerName && (
-              <View style={styles.infoRow}>
-                <Ionicons name="person-outline" size={18} color="#4f46e5" />
+              <View style={[styles.infoRow, { marginBottom: 0 }]}>
+                <Ionicons name="person-outline" size={18} color="#818cf8" />
                 <Text style={styles.infoText}>Seller: {item.sellerName}</Text>
               </View>
             )}
           </View>
 
-          {/* Description */}
           <Text style={styles.sectionTitle}>Description</Text>
-          <Text style={styles.description}>
-            {item.description || 'No description provided.'}
-          </Text>
+          <Text style={styles.description}>{item.description || 'No description provided.'}</Text>
 
-          {/* Safety tip */}
           <View style={styles.safetyCard}>
-            <Ionicons name="shield-checkmark-outline" size={18} color="#16a34a" />
+            <Ionicons name="shield-checkmark-outline" size={18} color="#4ade80" />
             <Text style={styles.safetyText}>
               Meet in a public place (hostel mess, library) for safe transactions.
             </Text>
           </View>
-
         </View>
       </ScrollView>
 
-      {/* BOTTOM ACTION BAR */}
+      {/* ── BOTTOM ACTION BAR ── */}
       <View style={styles.bottomBar}>
         {isOwner ? (
           <View style={styles.ownerControls}>
-            <TouchableOpacity
-              style={[styles.actionBtn, styles.deleteBtn]}
-              onPress={handleDelete}
-              disabled={loadingAction}
-            >
+            <TouchableOpacity style={[styles.actionBtn, styles.deleteBtn]} onPress={handleDelete} disabled={loadingAction}>
               <Ionicons name="trash-outline" size={18} color="#ffffff" />
               <Text style={styles.actionBtnText}>Delete</Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={[styles.actionBtn, isSold ? styles.availableBtn : styles.soldBtn]}
               onPress={handleToggleSold}
               disabled={loadingAction}
             >
-              {loadingAction ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
+              {loadingAction ? <ActivityIndicator color="#fff" size="small" /> : (
                 <>
                   <Ionicons name={isSold ? 'refresh-outline' : 'checkmark-circle-outline'} size={18} color="#fff" />
                   <Text style={styles.actionBtnText}>{isSold ? 'Mark Available' : 'Mark Sold'}</Text>
@@ -306,16 +314,13 @@ const ItemDetailsScreen = ({ route, navigation }) => {
               onPress={handleInAppChat}
               disabled={!isLocalCampus || isSold || loadingAction}
             >
-              {loadingAction ? (
-                <ActivityIndicator color="#4f46e5" size="small" />
-              ) : (
+              {loadingAction ? <ActivityIndicator color="#818cf8" size="small" /> : (
                 <>
-                  <Ionicons name="chatbubble-outline" size={20} color="#4f46e5" />
+                  <Ionicons name="chatbubble-outline" size={20} color="#818cf8" />
                   <Text style={styles.chatBtnText}>Message</Text>
                 </>
               )}
             </TouchableOpacity>
-
             <TouchableOpacity
               style={[styles.whatsappBtn, (!isLocalCampus || isSold) && styles.btnDisabled]}
               onPress={handleWhatsApp}
@@ -329,6 +334,46 @@ const ItemDetailsScreen = ({ route, navigation }) => {
           </View>
         )}
       </View>
+
+      {/* ── REPORT BOTTOM SHEET ── */}
+      <Modal visible={reportVisible} transparent animationType="slide" onRequestClose={() => setReportVisible(false)}>
+        <TouchableOpacity style={styles.reportOverlay} activeOpacity={1} onPress={() => setReportVisible(false)} />
+        <View style={styles.reportSheet}>
+          {/* Handle + Header */}
+          <View style={styles.reportHandle} />
+          <View style={styles.reportHeader}>
+            <Text style={styles.reportTitle}>Report Listing</Text>
+            <TouchableOpacity style={styles.reportCloseBtn} onPress={() => setReportVisible(false)}>
+              <Ionicons name="close" size={20} color="#94a3b8" />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.reportSubtitle}>Why are you reporting this listing?</Text>
+
+          {REPORT_REASONS.map((r) => (
+            <TouchableOpacity
+              key={r.value}
+              style={styles.reportRow}
+              onPress={() => submitReport(r.value)}
+              disabled={reportSubmitting}
+              activeOpacity={0.7}
+            >
+              <View style={styles.reportIconBox}>
+                <Ionicons name={r.icon} size={18} color="#818cf8" />
+              </View>
+              <Text style={styles.reportRowText}>{r.label}</Text>
+              {reportSubmitting ? (
+                <ActivityIndicator size="small" color="#64748b" />
+              ) : (
+                <Ionicons name="chevron-forward" size={16} color="#334155" />
+              )}
+            </TouchableOpacity>
+          ))}
+
+          <TouchableOpacity style={styles.reportCancelBtn} onPress={() => setReportVisible(false)}>
+            <Text style={styles.reportCancelText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
 
     </SafeAreaView>
   );
@@ -350,10 +395,13 @@ const styles = StyleSheet.create({
   inactiveDot: { backgroundColor: 'rgba(255,255,255,0.35)' },
   soldBadge: {
     position: 'absolute', top: 16, left: 16,
-    backgroundColor: '#ef4444', paddingHorizontal: 14, paddingVertical: 6,
-    borderRadius: 8,
+    backgroundColor: '#ef4444', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8,
   },
   soldBadgeText: { color: '#ffffff', fontWeight: '900', fontSize: 14, letterSpacing: 1 },
+  shareBtn: {
+    position: 'absolute', top: 16, left: 16,
+    backgroundColor: 'rgba(0,0,0,0.5)', padding: 8, borderRadius: 20,
+  },
   wishlistBtn: {
     position: 'absolute', top: 16, right: 16,
     backgroundColor: 'rgba(0,0,0,0.5)', padding: 8, borderRadius: 20,
@@ -369,8 +417,9 @@ const styles = StyleSheet.create({
   categoryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   categoryBadge: { backgroundColor: 'rgba(79,70,229,0.2)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
   categoryText: { fontSize: 13, color: '#818cf8', fontWeight: '700', textTransform: 'uppercase' },
-  reportBtn: { flexDirection: 'row', alignItems: 'center', padding: 4 },
-  reportText: { fontSize: 13, color: '#64748b', marginLeft: 3 },
+  actionIcons: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  iconBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, padding: 4 },
+  iconBtnText: { fontSize: 12, color: '#64748b', fontWeight: '600' },
 
   infoCard: {
     backgroundColor: '#1e293b', padding: 14, borderRadius: 12,
@@ -397,8 +446,6 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.3, shadowRadius: 6, elevation: 8,
   },
-
-  // Owner controls
   ownerControls: { flexDirection: 'row', gap: 10 },
   actionBtn: {
     flex: 1, flexDirection: 'row', paddingVertical: 14, borderRadius: 12,
@@ -408,8 +455,6 @@ const styles = StyleSheet.create({
   soldBtn: { backgroundColor: '#4f46e5' },
   availableBtn: { backgroundColor: '#10b981' },
   actionBtnText: { color: '#fff', fontWeight: '700', fontSize: 15, marginLeft: 6 },
-
-  // Buyer controls
   buyerControls: { flexDirection: 'row', gap: 10 },
   chatBtn: {
     flex: 1, flexDirection: 'row', paddingVertical: 14, borderRadius: 12,
@@ -423,6 +468,46 @@ const styles = StyleSheet.create({
   },
   whatsappBtnText: { color: '#ffffff', fontWeight: '700', fontSize: 15, marginLeft: 6 },
   btnDisabled: { backgroundColor: '#273549', borderColor: '#334155' },
+
+  // Report sheet
+  reportOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  reportSheet: {
+    backgroundColor: '#1e293b',
+    borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    paddingHorizontal: 20, paddingBottom: 36,
+    borderWidth: 1, borderColor: '#334155',
+  },
+  reportHandle: {
+    width: 40, height: 4, borderRadius: 2, backgroundColor: '#334155',
+    alignSelf: 'center', marginTop: 12, marginBottom: 16,
+  },
+  reportHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4,
+  },
+  reportTitle: { fontSize: 18, fontWeight: '800', color: '#f1f5f9' },
+  reportCloseBtn: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: '#273549', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: '#334155',
+  },
+  reportSubtitle: { fontSize: 13, color: '#64748b', marginBottom: 20 },
+  reportRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#273549',
+  },
+  reportIconBox: {
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: 'rgba(79,70,229,0.15)',
+    alignItems: 'center', justifyContent: 'center', marginRight: 14,
+  },
+  reportRowText: { flex: 1, fontSize: 15, color: '#f1f5f9', fontWeight: '500' },
+  reportCancelBtn: {
+    marginTop: 16, paddingVertical: 14,
+    backgroundColor: '#273549', borderRadius: 12, alignItems: 'center',
+  },
+  reportCancelText: { color: '#ef4444', fontWeight: '700', fontSize: 15 },
 });
 
 export default ItemDetailsScreen;
