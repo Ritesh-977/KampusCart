@@ -7,12 +7,14 @@ import HomeStackNavigator from './HomeStackNavigator';
 import PostScreen from '../screens/PostScreen';
 import ChatStackNavigator from './ChatStackNavigator';
 import ProfileStackNavigator from './ProfileStackNavigator';
+import AdminDashboardScreen from '../screens/AdminDashboardScreen';
 import { AuthContext } from '../context/AuthContext';
 
 const Tab = createBottomTabNavigator();
 
 const MainTabNavigator = () => {
-  const { isGuest } = useContext(AuthContext);
+  const { isGuest, currentUser } = useContext(AuthContext);
+  const isAdmin = currentUser?.isAdmin === true;
 
   return (
     <Tab.Navigator
@@ -32,6 +34,9 @@ const MainTabNavigator = () => {
               break;
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
+              break;
+            case 'Admin':
+              iconName = focused ? 'shield-checkmark' : 'shield-checkmark-outline';
               break;
             default:
               iconName = 'ellipse-outline';
@@ -76,6 +81,16 @@ const MainTabNavigator = () => {
         component={ProfileStackNavigator}
         options={{ title: 'Profile' }}
       />
+      {isAdmin && (
+        <Tab.Screen
+          name="Admin"
+          component={AdminDashboardScreen}
+          options={{
+            title: 'Admin',
+            tabBarActiveTintColor: '#818cf8',
+          }}
+        />
+      )}
     </Tab.Navigator>
   );
 };
