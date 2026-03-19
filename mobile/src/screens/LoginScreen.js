@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert, StatusBar
+  KeyboardAvoidingView, Platform, ActivityIndicator, Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import API from '../api/axios';
@@ -41,8 +41,7 @@ const LoginScreen = ({ navigation }) => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <StatusBar barStyle="dark-content" backgroundColor="#f9fafb" />
-      <View style={styles.formContainer}>
+<View style={styles.formContainer}>
 
         {/* Header */}
         <View style={styles.headerContainer}>
