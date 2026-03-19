@@ -5,6 +5,7 @@ import EditItemScreen from '../screens/EditItemScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import WishlistScreen from '../screens/WishlistScreen';
 import LostFoundScreen from '../screens/LostFoundScreen';
+import ItemDetailsScreen from '../screens/ItemDetailsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -42,6 +43,11 @@ const ProfileStackNavigator = () => {
         name="LostFound"
         component={LostFoundScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ItemDetails"
+        component={ItemDetailsScreen}
+        options={{ title: 'Item Details', headerBackTitle: 'Back' }}
       />
     </Stack.Navigator>
   );
