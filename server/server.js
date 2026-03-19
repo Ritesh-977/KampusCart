@@ -34,7 +34,8 @@ const allowedOrigins = [
   "http://localhost:5174",
   "https://www.kampuscart.site",   
   "https://buy-sell-murex.vercel.app",
-  "https://kampuscart.onrender.com"
+  "https://kampuscart.onrender.com",
+  "http://localhost:8081"
 ];
 
 app.use(cors({

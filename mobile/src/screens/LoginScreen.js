@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { 
   View, 
   Text, 
@@ -11,12 +11,15 @@ import {
   Alert
 } from 'react-native';
 import API from '../api/axios';
-import { saveToken } from '../utils/secureStorage';
+import { AuthContext } from '../context/AuthContext'; // 👈 Imported AuthContext
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // 👈 Grab the global login function
+  const { login } = useContext(AuthContext); 
 
   const handleLogin = async () => {
     // Basic validation
@@ -28,18 +31,11 @@ const LoginScreen = ({ navigation }) => {
     try {
       setLoading(true);
       
-      // Hit your actual KampusCart backend!
       const response = await API.post('/auth/login', { email, password });
       
-      // The backend should now be sending the token in the JSON response
       if (response.data.token) {
-        // Securely save the token to the phone
-        await saveToken(response.data.token);
-        
-        // TEMPORARY: Just alert success for now until we build the Home screen
-        Alert.alert("Success!", `Welcome back to ${response.data.user.college}`);
-        
-        // Later, we will use AuthContext here to switch to the Main Tab screen
+        // 🚀 This instantly saves the token AND swaps to the Home Screen!
+        await login(response.data.token); 
       }
     } catch (error) {
       console.error(error);
