@@ -1,14 +1,14 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { getToken, saveToken, removeToken } from '../utils/secureStorage';
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [userToken, setUserToken] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null); 
-  const [isGuest, setIsGuest] = useState(false); // 🚀 NEW: Guest State
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isGuest, setIsGuest] = useState(false);
 
   const checkToken = async () => {
     try {
@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
         setCurrentUser(JSON.parse(userDataStr));
       }
     } catch (error) {
-      console.log("Failed to fetch token", error);
+      console.log('Failed to restore session:', error);
     } finally {
       setIsLoading(false);
     }
@@ -33,13 +33,22 @@ export const AuthProvider = ({ children }) => {
     if (user) {
       await AsyncStorage.setItem('userData', JSON.stringify(user));
       setCurrentUser(user);
+    } else {
+      // Fetch user data if not provided
+      try {
+        const { default: API } = await import('../api/axios');
+        const response = await API.get('/users/profile');
+        await AsyncStorage.setItem('userData', JSON.stringify(response.data));
+        setCurrentUser(response.data);
+      } catch (e) {
+        console.log('Could not fetch user profile:', e);
+      }
     }
     setUserToken(token);
-    setIsGuest(false); // Make sure guest mode is off
+    setIsGuest(false);
     setIsLoading(false);
   };
 
-  // 🚀 NEW: Function to trigger Guest Mode
   const skipLogin = () => {
     setIsGuest(true);
   };
@@ -50,13 +59,20 @@ export const AuthProvider = ({ children }) => {
     await AsyncStorage.removeItem('userData');
     setUserToken(null);
     setCurrentUser(null);
-    setIsGuest(false); // 🚀 Reset guest mode on logout
+    setIsGuest(false);
     setIsLoading(false);
   };
 
-  // 🚀 Expose isGuest and skipLogin to the rest of the app
+  const updateCurrentUser = async (updatedUser) => {
+    await AsyncStorage.setItem('userData', JSON.stringify(updatedUser));
+    setCurrentUser(updatedUser);
+  };
+
   return (
-    <AuthContext.Provider value={{ login, logout, skipLogin, userToken, currentUser, isGuest, isLoading }}>
+    <AuthContext.Provider value={{
+      login, logout, skipLogin, updateCurrentUser,
+      userToken, currentUser, isGuest, isLoading,
+    }}>
       {children}
     </AuthContext.Provider>
   );

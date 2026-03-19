@@ -1,28 +1,16 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 
-// 🚨 CHANGE THIS TO MATCH YOUR AXIOS BASE URL (but without the /api)
-const BACKEND_URL = 'http://192.168.1.25:5000'; 
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1588508065123-287b28e0141c?w=400&q=80';
 
 const ItemCard = ({ item, onPress }) => {
-  // 🚀 SMART IMAGE URL PARSER
-  let imageUrl = 'https://images.unsplash.com/photo-1588508065123-287b28e0141c?w=400&q=80';
+  let imageUrl = FALLBACK_IMAGE;
 
   if (item.images && item.images.length > 0) {
     const firstImg = item.images[0];
-    
-    // Check if the backend sent a string ('uploads/pic.jpg') or an object ({url: '...'})
-    let rawPath = typeof firstImg === 'string' ? firstImg : firstImg.url;
-
-    if (rawPath) {
-      if (rawPath.startsWith('http')) {
-        imageUrl = rawPath; // It's already a full URL (like Cloudinary)
-      } else {
-        // It's a local Multer upload! Fix Windows backslashes and add the server IP
-        const cleanPath = rawPath.replace(/\\/g, '/');
-        // Ensure there's a slash between the URL and the path
-        imageUrl = `${BACKEND_URL}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
-      }
+    const rawPath = typeof firstImg === 'string' ? firstImg : firstImg?.url;
+    if (rawPath && rawPath.startsWith('http')) {
+      imageUrl = rawPath;
     }
   }
 
