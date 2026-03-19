@@ -1,8 +1,8 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   Image, ScrollView, KeyboardAvoidingView, Platform, Alert,
-  ActivityIndicator, Modal, FlatList, SafeAreaView
+  ActivityIndicator, Modal, FlatList, SafeAreaView, Animated,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,30 +29,92 @@ const PostScreen = ({ navigation }) => {
   const [customCategory, setCustomCategory] = useState('');
   const [location, setLocation] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [sourceSheetVisible, setSourceSheetVisible] = useState(false);
   const [images, setImages] = useState([]); // array of URIs
   const [loading, setLoading] = useState(false);
+  const sheetAnim = useRef(new Animated.Value(0)).current;
 
-  const pickImage = async () => {
-    if (images.length >= MAX_IMAGES) {
+  const remaining = MAX_IMAGES - images.length;
+
+  const openSourceSheet = () => {
+    if (remaining <= 0) {
       Alert.alert('Limit Reached', `You can add up to ${MAX_IMAGES} photos.`);
       return;
     }
+    setSourceSheetVisible(true);
+    Animated.spring(sheetAnim, { toValue: 1, useNativeDriver: true, tension: 70, friction: 11 }).start();
+  };
 
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
+  const closeSourceSheet = () => {
+    Animated.timing(sheetAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start(() =>
+      setSourceSheetVisible(false)
+    );
+  };
+
+  // Ask user if they want to crop (returns true/false via Alert)
+  const askCrop = () =>
+    new Promise((resolve) => {
+      Alert.alert(
+        'Crop Image?',
+        'Would you like to crop or adjust this photo before adding it?',
+        [
+          { text: 'Skip', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Crop', onPress: () => resolve(true) },
+        ]
+      );
+    });
+
+  const pickFromCamera = async () => {
+    closeSourceSheet();
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Permission Required', 'Allow camera access to take photos.');
+      return;
+    }
+    const wantCrop = await askCrop();
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: wantCrop,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets?.length > 0) {
+      setImages(prev => [...prev, result.assets[0].uri]);
+    }
+  };
+
+  const pickFromGallery = async () => {
+    closeSourceSheet();
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
       Alert.alert('Permission Required', 'Allow access to your photos to upload images.');
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.75,
-    });
-
-    if (!result.canceled) {
-      setImages(prev => [...prev, result.assets[0].uri]);
+    if (remaining === 1) {
+      // Single pick — offer optional crop
+      const wantCrop = await askCrop();
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: wantCrop,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets?.length > 0) {
+        setImages(prev => [...prev, result.assets[0].uri]);
+      }
+    } else {
+      // Multi-select (crop not available for multi)
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        selectionLimit: remaining,
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets?.length > 0) {
+        const newUris = result.assets.map(a => a.uri);
+        setImages(prev => [...prev, ...newUris].slice(0, MAX_IMAGES));
+      }
     }
   };
 
@@ -153,20 +215,33 @@ const PostScreen = ({ navigation }) => {
           {/* ---- PHOTO UPLOAD SECTION ---- */}
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Photos</Text>
-              <Text style={styles.sectionHint}>{images.length}/{MAX_IMAGES} added</Text>
+              <View>
+                <Text style={styles.sectionTitle}>Photos</Text>
+                <Text style={styles.sectionHint}>
+                  {images.length}/{MAX_IMAGES} added · First photo is the cover
+                </Text>
+              </View>
+              {images.length < MAX_IMAGES && (
+                <TouchableOpacity style={styles.addMoreBtn} onPress={openSourceSheet}>
+                  <Ionicons name="add" size={16} color="#4f46e5" />
+                  <Text style={styles.addMoreText}>Add</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {/* Existing images */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 4 }}>
               {images.map((uri, index) => (
                 <View key={index} style={styles.imageThumbnailWrapper}>
                   <Image source={{ uri }} style={styles.imageThumbnail} />
+                  {/* Clearly visible remove button */}
                   <TouchableOpacity
                     style={styles.removeImageBtn}
                     onPress={() => removeImage(index)}
+                    hitSlop={{ top: 6, right: 6, bottom: 6, left: 6 }}
                   >
-                    <Ionicons name="close-circle" size={22} color="#ef4444" />
+                    <View style={styles.removeImageBtnInner}>
+                      <Ionicons name="close" size={13} color="#fff" />
+                    </View>
                   </TouchableOpacity>
                   {index === 0 && (
                     <View style={styles.coverBadge}>
@@ -176,11 +251,13 @@ const PostScreen = ({ navigation }) => {
                 </View>
               ))}
 
-              {/* Add photo button */}
               {images.length < MAX_IMAGES && (
-                <TouchableOpacity style={styles.addImageBtn} onPress={pickImage}>
-                  <Ionicons name="camera-outline" size={28} color="#9ca3af" />
+                <TouchableOpacity style={styles.addImageBtn} onPress={openSourceSheet}>
+                  <View style={styles.addImageIcon}>
+                    <Ionicons name="camera" size={26} color="#4f46e5" />
+                  </View>
                   <Text style={styles.addImageText}>Add Photo</Text>
+                  <Text style={styles.addImageSub}>{remaining} left</Text>
                 </TouchableOpacity>
               )}
             </ScrollView>
@@ -299,6 +376,57 @@ const PostScreen = ({ navigation }) => {
         </ScrollView>
       </KeyboardAvoidingView>
 
+      {/* ── Image Source Picker Sheet ── */}
+      <Modal visible={sourceSheetVisible} transparent animationType="none" onRequestClose={closeSourceSheet}>
+        <TouchableOpacity style={styles.sheetOverlay} activeOpacity={1} onPress={closeSourceSheet}>
+          <Animated.View
+            style={[
+              styles.sourceSheet,
+              {
+                transform: [{
+                  translateY: sheetAnim.interpolate({ inputRange: [0, 1], outputRange: [300, 0] }),
+                }],
+                opacity: sheetAnim,
+              },
+            ]}
+          >
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Add Photo</Text>
+            <Text style={styles.sheetSubtitle}>
+              {remaining > 1 ? `You can add up to ${remaining} more photo${remaining > 1 ? 's' : ''}` : 'You can add 1 more photo'}
+            </Text>
+
+            <TouchableOpacity style={styles.sheetOption} onPress={pickFromCamera} activeOpacity={0.7}>
+              <View style={[styles.sheetOptionIcon, { backgroundColor: '#eff6ff' }]}>
+                <Ionicons name="camera" size={22} color="#2563eb" />
+              </View>
+              <View style={styles.sheetOptionText}>
+                <Text style={styles.sheetOptionTitle}>Take Photo</Text>
+                <Text style={styles.sheetOptionDesc}>Use your camera • optional crop</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#d1d5db" />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.sheetOption} onPress={pickFromGallery} activeOpacity={0.7}>
+              <View style={[styles.sheetOptionIcon, { backgroundColor: '#f0fdf4' }]}>
+                <Ionicons name="images" size={22} color="#16a34a" />
+              </View>
+              <View style={styles.sheetOptionText}>
+                <Text style={styles.sheetOptionTitle}>Choose from Gallery</Text>
+                <Text style={styles.sheetOptionDesc}>
+                  {remaining > 1 ? `Select up to ${remaining} photos` : 'Select 1 photo • optional crop'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#d1d5db" />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.sheetCancel} onPress={closeSourceSheet}>
+              <Text style={styles.sheetCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
+
       {/* Category Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
@@ -345,28 +473,82 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1f2937', marginBottom: 12 },
-  sectionHint: { fontSize: 13, color: '#9ca3af' },
-
-  // Image upload
-  imageThumbnailWrapper: {
-    width: 110, height: 110, borderRadius: 10, marginRight: 10, position: 'relative', overflow: 'visible',
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1f2937', marginBottom: 3 },
+  sectionHint: { fontSize: 12, color: '#9ca3af' },
+  addMoreBtn: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#eef2ff', borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 6, gap: 3,
   },
-  imageThumbnail: { width: 110, height: 110, borderRadius: 10, backgroundColor: '#f3f4f6' },
-  removeImageBtn: { position: 'absolute', top: -8, right: -8, backgroundColor: '#ffffff', borderRadius: 12 },
+  addMoreText: { fontSize: 13, color: '#4f46e5', fontWeight: '700' },
+
+  // Image thumbnails
+  imageThumbnailWrapper: {
+    width: 112, height: 112, borderRadius: 12,
+    position: 'relative', overflow: 'visible',
+  },
+  imageThumbnail: {
+    width: 112, height: 112, borderRadius: 12, backgroundColor: '#f3f4f6',
+  },
+  removeImageBtn: {
+    position: 'absolute', top: -9, right: -9, zIndex: 10,
+  },
+  removeImageBtnInner: {
+    width: 24, height: 24, borderRadius: 12,
+    backgroundColor: '#ef4444',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: '#fff',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.25, shadowRadius: 2, elevation: 4,
+  },
   coverBadge: {
-    position: 'absolute', bottom: 6, left: 6,
-    backgroundColor: 'rgba(79,70,229,0.85)', borderRadius: 6,
-    paddingHorizontal: 6, paddingVertical: 2,
+    position: 'absolute', bottom: 7, left: 7,
+    backgroundColor: 'rgba(79,70,229,0.88)', borderRadius: 6,
+    paddingHorizontal: 7, paddingVertical: 2,
   },
   coverBadgeText: { color: '#ffffff', fontSize: 10, fontWeight: '700' },
   addImageBtn: {
-    width: 110, height: 110, borderRadius: 10,
-    backgroundColor: '#f3f4f6', borderWidth: 1, borderColor: '#e5e7eb',
-    borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center',
+    width: 112, height: 112, borderRadius: 12,
+    backgroundColor: '#f8f7ff', borderWidth: 1.5, borderColor: '#c7d2fe',
+    borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', gap: 2,
   },
-  addImageText: { fontSize: 12, color: '#9ca3af', marginTop: 4 },
+  addImageIcon: {
+    width: 46, height: 46, borderRadius: 23,
+    backgroundColor: '#eef2ff', alignItems: 'center', justifyContent: 'center',
+    marginBottom: 4,
+  },
+  addImageText: { fontSize: 12, color: '#4f46e5', fontWeight: '700' },
+  addImageSub: { fontSize: 10, color: '#a5b4fc' },
+
+  // Source picker sheet
+  sheetOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  sourceSheet: {
+    backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    paddingTop: 12, paddingHorizontal: 20, paddingBottom: 40,
+  },
+  sheetHandle: {
+    width: 40, height: 4, borderRadius: 2, backgroundColor: '#e2e8f0',
+    alignSelf: 'center', marginBottom: 18,
+  },
+  sheetTitle: { fontSize: 18, fontWeight: '800', color: '#1f2937', marginBottom: 3 },
+  sheetSubtitle: { fontSize: 13, color: '#9ca3af', marginBottom: 20 },
+  sheetOption: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+  },
+  sheetOptionIcon: {
+    width: 46, height: 46, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center', marginRight: 14,
+  },
+  sheetOptionText: { flex: 1 },
+  sheetOptionTitle: { fontSize: 15, fontWeight: '700', color: '#1f2937' },
+  sheetOptionDesc: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
+  sheetCancel: {
+    marginTop: 16, paddingVertical: 14,
+    backgroundColor: '#f3f4f6', borderRadius: 12, alignItems: 'center',
+  },
+  sheetCancelText: { color: '#ef4444', fontWeight: '700', fontSize: 15 },
 
   // Inputs
   inputGroup: { marginBottom: 16 },
