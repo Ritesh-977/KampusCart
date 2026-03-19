@@ -1,7 +1,8 @@
 import React, { useState, useContext, useCallback } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
-  FlatList, ActivityIndicator, RefreshControl, Alert, Image, Dimensions, Platform
+  FlatList, ActivityIndicator, RefreshControl, Alert, Image, Dimensions, Platform,
+  Modal, Pressable, Animated
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -19,6 +20,7 @@ const ProfileScreen = ({ navigation }) => {
   const [wishlistCount, setWishlistCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const fetchProfileData = async () => {
     if (isGuest) { setLoading(false); return; }
@@ -94,9 +96,9 @@ const ProfileScreen = ({ navigation }) => {
         <Image source={coverImg} style={styles.coverImage} />
       </View>
 
-      {/* Logout */}
-      <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={20} color="#fff" />
+      {/* Menu trigger */}
+      <TouchableOpacity style={styles.menuBtn} onPress={() => setMenuVisible(true)}>
+        <Ionicons name="ellipsis-vertical" size={20} color="#fff" />
       </TouchableOpacity>
 
       {/* Profile section */}
@@ -188,8 +190,96 @@ const ProfileScreen = ({ navigation }) => {
     </View>
   );
 
+  const menuItems = [
+    {
+      icon: 'heart-outline', label: 'Wishlist',
+      color: '#ef4444', bg: '#fff1f2',
+      onPress: () => { setMenuVisible(false); navigation.navigate('Wishlist'); },
+    },
+    {
+      icon: 'pricetag-outline', label: 'Sell an Item',
+      color: '#4f46e5', bg: '#eef2ff',
+      onPress: () => { setMenuVisible(false); navigation.navigate('Sell'); },
+    },
+    {
+      icon: 'search-circle-outline', label: 'Lost & Found',
+      color: '#f59e0b', bg: '#fffbeb',
+      onPress: () => { setMenuVisible(false); navigation.navigate('LostFound'); },
+    },
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
+
+      {/* ── Bottom-sheet menu ─────────────────────────────── */}
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="slide"
+        statusBarTranslucent
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <Pressable style={styles.backdrop} onPress={() => setMenuVisible(false)} />
+        <View style={styles.sheet}>
+          {/* Handle */}
+          <View style={styles.sheetHandle} />
+
+          {/* User mini-card */}
+          <View style={styles.sheetUser}>
+            <Image
+              source={{ uri: userProfile?.profilePic || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png' }}
+              style={styles.sheetAvatar}
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sheetName} numberOfLines={1}>
+                {userProfile?.name || currentUser?.name || 'Student'}
+              </Text>
+              <Text style={styles.sheetCollege} numberOfLines={1}>
+                {userProfile?.college || currentUser?.college}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.sheetEditBtn}
+              onPress={() => { setMenuVisible(false); navigation.navigate('EditProfile', { userProfile }); }}
+            >
+              <Text style={styles.sheetEditText}>Edit Profile</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.sheetDivider} />
+
+          {/* Action rows */}
+          {menuItems.map((item) => (
+            <TouchableOpacity key={item.label} style={styles.sheetRow} onPress={item.onPress} activeOpacity={0.7}>
+              <View style={[styles.sheetIconCircle, { backgroundColor: item.bg }]}>
+                <Ionicons name={item.icon} size={20} color={item.color} />
+              </View>
+              <Text style={styles.sheetRowLabel}>{item.label}</Text>
+              <Ionicons name="chevron-forward" size={16} color="#d1d5db" />
+            </TouchableOpacity>
+          ))}
+
+          <View style={styles.sheetDivider} />
+
+          {/* Log out */}
+          <TouchableOpacity
+            style={styles.sheetRow}
+            onPress={() => {
+              setMenuVisible(false);
+              setTimeout(handleLogout, 300);
+            }}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.sheetIconCircle, { backgroundColor: '#fff1f2' }]}>
+              <Ionicons name="log-out-outline" size={20} color="#ef4444" />
+            </View>
+            <Text style={[styles.sheetRowLabel, { color: '#ef4444' }]}>Log Out</Text>
+          </TouchableOpacity>
+
+          <View style={{ height: Platform.OS === 'ios' ? 24 : 12 }} />
+        </View>
+      </Modal>
+
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#4f46e5" />
@@ -236,10 +326,52 @@ const styles = StyleSheet.create({
     backgroundColor: '#d1d5db',
   },
   coverImage: { width, height: 150, backgroundColor: '#d1d5db' },
-  logoutBtn: {
+  menuBtn: {
     position: 'absolute', top: Platform.OS === 'android' ? 46 : 62,
     right: 14, backgroundColor: 'rgba(0,0,0,0.45)',
     padding: 8, borderRadius: 20,
+  },
+
+  // ── Bottom sheet ─────────────────────────────────────────
+  backdrop: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  sheet: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingTop: 12, paddingHorizontal: 20,
+    shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12, shadowRadius: 16, elevation: 20,
+  },
+  sheetHandle: {
+    width: 40, height: 4, borderRadius: 2, backgroundColor: '#e5e7eb',
+    alignSelf: 'center', marginBottom: 18,
+  },
+  sheetUser: {
+    flexDirection: 'row', alignItems: 'center', marginBottom: 18,
+  },
+  sheetAvatar: {
+    width: 48, height: 48, borderRadius: 24,
+    marginRight: 12, backgroundColor: '#e5e7eb',
+  },
+  sheetName: { fontSize: 16, fontWeight: '700', color: '#1f2937', marginBottom: 2 },
+  sheetCollege: { fontSize: 13, color: '#6b7280' },
+  sheetEditBtn: {
+    borderWidth: 1, borderColor: '#d1d5db', paddingVertical: 6,
+    paddingHorizontal: 12, borderRadius: 16,
+  },
+  sheetEditText: { fontSize: 13, fontWeight: '600', color: '#374151' },
+  sheetDivider: { height: 1, backgroundColor: '#f3f4f6', marginVertical: 8 },
+  sheetRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 13,
+  },
+  sheetIconCircle: {
+    width: 40, height: 40, borderRadius: 20,
+    justifyContent: 'center', alignItems: 'center', marginRight: 14,
+  },
+  sheetRowLabel: {
+    flex: 1, fontSize: 15, fontWeight: '600', color: '#1f2937',
   },
 
   profileSection: {
