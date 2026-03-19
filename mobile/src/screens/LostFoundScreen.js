@@ -442,13 +442,13 @@ const styles = StyleSheet.create({
 
   categoryRow: { paddingLeft: 16, marginBottom: 8 },
   catChip: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 11, paddingVertical: 5, borderRadius: 20,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    height: 28, paddingHorizontal: 11, borderRadius: 14,
     backgroundColor: '#f3f4f6', marginRight: 7, marginBottom: 10,
     borderWidth: 1, borderColor: '#e5e7eb',
   },
   catChipActive: { backgroundColor: '#4f46e5', borderColor: '#4f46e5' },
-  catChipText: { fontSize: 12, fontWeight: '600', color: '#6b7280' },
+  catChipText: { fontSize: 12, fontWeight: '600', color: '#6b7280', lineHeight: 16 },
   catChipTextActive: { color: '#ffffff' },
 
   list: { padding: 16 },
