@@ -36,7 +36,7 @@ const ChatListScreen = ({ navigation }) => {
   if (isGuest) {
     return (
       <View style={styles.guestContainer}>
-        <Ionicons name="chatbubbles-outline" size={70} color="#d1d5db" />
+        <Ionicons name="chatbubbles-outline" size={70} color="#334155" />
         <Text style={styles.guestTitle}>Login to Chat</Text>
         <Text style={styles.guestSubtitle}>
           Sign in to message sellers and buy items from your campus.
@@ -125,7 +125,7 @@ const ChatListScreen = ({ navigation }) => {
           contentContainerStyle={chats.length === 0 ? styles.emptyContent : null}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="chatbubble-ellipses-outline" size={70} color="#d1d5db" />
+              <Ionicons name="chatbubble-ellipses-outline" size={70} color="#334155" />
               <Text style={styles.emptyTitle}>No messages yet</Text>
               <Text style={styles.emptySubtitle}>
                 Browse items and tap "Chat with Seller" to start a conversation.
@@ -139,50 +139,51 @@ const ChatListScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
+  container: { flex: 1, backgroundColor: '#0f172a' },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, paddingTop: Platform.OS === 'android' ? 50 : 14,
-    paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
-    backgroundColor: '#ffffff',
+    paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: '#334155',
+    backgroundColor: '#0f172a',
   },
-  headerTitle: { fontSize: 26, fontWeight: '800', color: '#1f2937' },
+  headerTitle: { fontSize: 26, fontWeight: '800', color: '#f1f5f9' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   chatItem: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 20, paddingVertical: 14,
-    borderBottomWidth: 1, borderBottomColor: '#f9fafb',
+    borderBottomWidth: 1, borderBottomColor: '#1e293b',
+    backgroundColor: '#0f172a',
   },
   avatar: {
     width: 52, height: 52, borderRadius: 26,
-    backgroundColor: '#e5e7eb', marginRight: 14,
+    backgroundColor: '#273549', marginRight: 14,
   },
   chatInfo: { flex: 1 },
   chatTopRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  chatName: { fontSize: 16, fontWeight: '500', color: '#1f2937', flex: 1, marginRight: 8 },
+  chatName: { fontSize: 16, fontWeight: '500', color: '#f1f5f9', flex: 1, marginRight: 8 },
   chatNameBold: { fontWeight: '700' },
-  chatTime: { fontSize: 12, color: '#9ca3af' },
+  chatTime: { fontSize: 12, color: '#64748b' },
   chatBottomRow: { flexDirection: 'row', alignItems: 'center' },
-  lastMessage: { fontSize: 14, color: '#9ca3af', flex: 1 },
-  lastMessageBold: { color: '#374151', fontWeight: '600' },
+  lastMessage: { fontSize: 14, color: '#64748b', flex: 1 },
+  lastMessageBold: { color: '#94a3b8', fontWeight: '600' },
   unreadDot: {
     width: 10, height: 10, borderRadius: 5,
-    backgroundColor: '#4f46e5', marginLeft: 8,
+    backgroundColor: '#818cf8', marginLeft: 8,
   },
   emptyContent: { flex: 1 },
   emptyContainer: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
     paddingHorizontal: 32, paddingTop: 80,
   },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#374151', marginTop: 16, marginBottom: 8 },
-  emptySubtitle: { fontSize: 15, color: '#9ca3af', textAlign: 'center', lineHeight: 22 },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#f1f5f9', marginTop: 16, marginBottom: 8 },
+  emptySubtitle: { fontSize: 15, color: '#64748b', textAlign: 'center', lineHeight: 22 },
 
   guestContainer: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
-    padding: 24, backgroundColor: '#f9fafb',
+    padding: 24, backgroundColor: '#0f172a',
   },
-  guestTitle: { fontSize: 22, fontWeight: '800', color: '#1f2937', marginTop: 16, marginBottom: 8 },
-  guestSubtitle: { textAlign: 'center', color: '#6b7280', fontSize: 15, lineHeight: 22, marginBottom: 24 },
+  guestTitle: { fontSize: 22, fontWeight: '800', color: '#f1f5f9', marginTop: 16, marginBottom: 8 },
+  guestSubtitle: { textAlign: 'center', color: '#94a3b8', fontSize: 15, lineHeight: 22, marginBottom: 24 },
   guestBtn: {
     backgroundColor: '#4f46e5', paddingVertical: 14, paddingHorizontal: 40,
     borderRadius: 12, width: '100%', alignItems: 'center',

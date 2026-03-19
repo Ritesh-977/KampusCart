@@ -166,17 +166,17 @@ const ProfileScreen = ({ navigation }) => {
   const menuItems = [
     {
       icon: 'heart-outline', label: 'Wishlist',
-      color: '#ef4444', bg: '#fff1f2',
+      color: '#f87171', bg: 'rgba(239,68,68,0.15)',
       onPress: () => { setMenuVisible(false); navigation.navigate('Wishlist'); },
     },
     {
       icon: 'pricetag-outline', label: 'Sell an Item',
-      color: '#4f46e5', bg: '#eef2ff',
+      color: '#818cf8', bg: 'rgba(79,70,229,0.2)',
       onPress: () => { setMenuVisible(false); navigation.navigate('Sell'); },
     },
     {
       icon: 'search-circle-outline', label: 'Lost & Found',
-      color: '#f59e0b', bg: '#fffbeb',
+      color: '#fbbf24', bg: 'rgba(245,158,11,0.15)',
       onPress: () => { setMenuVisible(false); navigation.navigate('LostFound'); },
     },
   ];
@@ -243,7 +243,7 @@ const ProfileScreen = ({ navigation }) => {
             }}
             activeOpacity={0.7}
           >
-            <View style={[styles.sheetIconCircle, { backgroundColor: '#fff1f2' }]}>
+            <View style={[styles.sheetIconCircle, { backgroundColor: 'rgba(239,68,68,0.15)' }]}>
               <Ionicons name="log-out-outline" size={20} color="#ef4444" />
             </View>
             <Text style={[styles.sheetRowLabel, { color: '#ef4444' }]}>Log Out</Text>
@@ -290,34 +290,34 @@ const ProfileScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#0f172a' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0f172a' },
 
-  headerWrapper: { backgroundColor: '#f9fafb', marginBottom: 8 },
+  headerWrapper: { backgroundColor: '#0f172a', marginBottom: 8 },
   coverWrapper: {
     paddingTop: Platform.OS === 'android' ? 36 : 52,
-    backgroundColor: '#d1d5db',
+    backgroundColor: '#1e293b',
   },
-  coverImage: { width, height: 150, backgroundColor: '#d1d5db' },
+  coverImage: { width, height: 150, backgroundColor: '#1e293b' },
   menuBtn: {
     position: 'absolute', top: Platform.OS === 'android' ? 46 : 62,
-    right: 10, backgroundColor: 'rgba(0,0,0,0.45)',
+    right: 10, backgroundColor: 'rgba(0,0,0,0.55)',
     padding: 8, borderRadius: 20,
   },
 
   // ── Bottom sheet ─────────────────────────────────────────
   backdrop: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.45)',
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.6)',
   },
   sheet: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1e293b',
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingTop: 12, paddingHorizontal: 20,
     shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.12, shadowRadius: 16, elevation: 20,
+    shadowOpacity: 0.4, shadowRadius: 16, elevation: 20,
   },
   sheetHandle: {
-    width: 40, height: 4, borderRadius: 2, backgroundColor: '#e5e7eb',
+    width: 40, height: 4, borderRadius: 2, backgroundColor: '#334155',
     alignSelf: 'center', marginBottom: 18,
   },
   sheetUser: {
@@ -325,16 +325,16 @@ const styles = StyleSheet.create({
   },
   sheetAvatar: {
     width: 48, height: 48, borderRadius: 24,
-    marginRight: 12, backgroundColor: '#e5e7eb',
+    marginRight: 12, backgroundColor: '#273549',
   },
-  sheetName: { fontSize: 16, fontWeight: '700', color: '#1f2937', marginBottom: 2 },
-  sheetCollege: { fontSize: 13, color: '#6b7280' },
+  sheetName: { fontSize: 16, fontWeight: '700', color: '#f1f5f9', marginBottom: 2 },
+  sheetCollege: { fontSize: 13, color: '#94a3b8' },
   sheetEditBtn: {
-    borderWidth: 1, borderColor: '#d1d5db', paddingVertical: 6,
+    borderWidth: 1, borderColor: '#334155', paddingVertical: 6,
     paddingHorizontal: 12, borderRadius: 16,
   },
-  sheetEditText: { fontSize: 13, fontWeight: '600', color: '#374151' },
-  sheetDivider: { height: 1, backgroundColor: '#f3f4f6', marginVertical: 8 },
+  sheetEditText: { fontSize: 13, fontWeight: '600', color: '#94a3b8' },
+  sheetDivider: { height: 1, backgroundColor: '#334155', marginVertical: 8 },
   sheetRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingVertical: 13,
@@ -344,12 +344,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', marginRight: 14,
   },
   sheetRowLabel: {
-    flex: 1, fontSize: 15, fontWeight: '600', color: '#1f2937',
+    flex: 1, fontSize: 15, fontWeight: '600', color: '#f1f5f9',
   },
 
   profileSection: {
-    backgroundColor: '#ffffff', paddingHorizontal: 20,
-    paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+    backgroundColor: '#1e293b', paddingHorizontal: 20,
+    paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: '#334155',
   },
   avatarRow: {
     flexDirection: 'row', justifyContent: 'space-between',
@@ -357,67 +357,67 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     width: 88, height: 88, borderRadius: 44,
-    borderWidth: 4, borderColor: '#ffffff', backgroundColor: '#e5e7eb',
+    borderWidth: 4, borderColor: '#1e293b', backgroundColor: '#273549',
     overflow: 'hidden', elevation: 4,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15, shadowRadius: 4,
+    shadowOpacity: 0.3, shadowRadius: 4,
   },
   avatarImage: { width: '100%', height: '100%' },
   editProfileBtn: {
     flexDirection: 'row', alignItems: 'center',
-    borderWidth: 1, borderColor: '#d1d5db', paddingVertical: 7,
-    paddingHorizontal: 14, borderRadius: 20, backgroundColor: '#ffffff', marginBottom: 4,
+    borderWidth: 1, borderColor: '#334155', paddingVertical: 7,
+    paddingHorizontal: 14, borderRadius: 20, backgroundColor: '#273549', marginBottom: 4,
   },
-  editProfileText: { fontWeight: '600', color: '#374151', fontSize: 13, marginLeft: 4 },
+  editProfileText: { fontWeight: '600', color: '#94a3b8', fontSize: 13, marginLeft: 4 },
 
-  userName: { fontSize: 22, fontWeight: '900', color: '#1f2937', marginBottom: 4 },
-  userCollege: { fontSize: 14, color: '#6b7280', fontWeight: '600', marginBottom: 12 },
+  userName: { fontSize: 22, fontWeight: '900', color: '#f1f5f9', marginBottom: 4 },
+  userCollege: { fontSize: 14, color: '#94a3b8', fontWeight: '600', marginBottom: 12 },
 
   tagsRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 },
   tag: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#eef2ff', paddingHorizontal: 10, paddingVertical: 5,
+    backgroundColor: 'rgba(79,70,229,0.2)', paddingHorizontal: 10, paddingVertical: 5,
     borderRadius: 10, marginRight: 8, marginBottom: 6,
   },
-  tagText: { fontSize: 13, color: '#4f46e5', fontWeight: '600' },
+  tagText: { fontSize: 13, color: '#818cf8', fontWeight: '600' },
 
   statsRow: {
     flexDirection: 'row', alignItems: 'center',
-    borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 16,
+    borderTopWidth: 1, borderTopColor: '#334155', paddingTop: 16,
   },
   statItem: { flex: 1, alignItems: 'center' },
-  statNumber: { fontSize: 20, fontWeight: '800', color: '#1f2937' },
-  statLabel: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
-  statDivider: { width: 1, height: 32, backgroundColor: '#e5e7eb' },
+  statNumber: { fontSize: 20, fontWeight: '800', color: '#f1f5f9' },
+  statLabel: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  statDivider: { width: 1, height: 32, backgroundColor: '#334155' },
 
   sectionDivider: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, paddingVertical: 14,
-    backgroundColor: '#ffffff', marginTop: 8,
-    borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+    backgroundColor: '#0f172a', marginTop: 8,
+    borderBottomWidth: 1, borderBottomColor: '#1e293b',
   },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1f2937' },
-  sectionCount: { fontSize: 14, color: '#9ca3af' },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#f1f5f9' },
+  sectionCount: { fontSize: 14, color: '#64748b' },
 
   listContainer: { paddingHorizontal: 16, paddingBottom: 30 },
 
   emptyContainer: { alignItems: 'center', paddingTop: 40, paddingHorizontal: 32 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#374151', marginTop: 14, marginBottom: 6 },
-  emptySubtitle: { fontSize: 14, color: '#9ca3af', textAlign: 'center', lineHeight: 20, marginBottom: 20 },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#f1f5f9', marginTop: 14, marginBottom: 6 },
+  emptySubtitle: { fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20, marginBottom: 20 },
   startSellingBtn: { backgroundColor: '#4f46e5', paddingVertical: 12, paddingHorizontal: 28, borderRadius: 10 },
   startSellingText: { color: '#ffffff', fontWeight: 'bold', fontSize: 15 },
 
   // Guest
   guestContainer: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
-    paddingHorizontal: 24, backgroundColor: '#f9fafb',
+    paddingHorizontal: 24, backgroundColor: '#0f172a',
   },
   guestIconCircle: {
     width: 90, height: 90, borderRadius: 45,
-    backgroundColor: '#eef2ff', justifyContent: 'center', alignItems: 'center', marginBottom: 16,
+    backgroundColor: 'rgba(79,70,229,0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 16,
   },
-  guestTitle: { fontSize: 22, fontWeight: '800', color: '#1f2937', marginBottom: 8 },
-  guestSubtitle: { textAlign: 'center', color: '#6b7280', fontSize: 15, lineHeight: 22, marginBottom: 24 },
+  guestTitle: { fontSize: 22, fontWeight: '800', color: '#f1f5f9', marginBottom: 8 },
+  guestSubtitle: { textAlign: 'center', color: '#94a3b8', fontSize: 15, lineHeight: 22, marginBottom: 24 },
   guestBtn: {
     backgroundColor: '#4f46e5', paddingVertical: 14, borderRadius: 12,
     width: '100%', alignItems: 'center',

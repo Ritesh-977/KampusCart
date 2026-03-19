@@ -421,7 +421,7 @@ const sk = StyleSheet.create({
 
 // ─── Main styles ──────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f1f5f9' },
+  container: { flex: 1, backgroundColor: '#0f172a' },
 
   // Header
   header: {
@@ -505,17 +505,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: 14,
   },
-  listHeaderText: { fontSize: 17, fontWeight: '800', color: '#1e293b' },
+  listHeaderText: { fontSize: 17, fontWeight: '800', color: '#f1f5f9' },
   listHeaderCount: { fontSize: 13, color: '#64748b', fontWeight: '600' },
 
   // Empty
   emptyWrap: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32 },
   emptyIcon: {
     width: 96, height: 96, borderRadius: 48,
-    backgroundColor: '#e0e7ff', alignItems: 'center', justifyContent: 'center', marginBottom: 20,
+    backgroundColor: 'rgba(79,70,229,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 20,
   },
-  emptyTitle: { fontSize: 20, fontWeight: '800', color: '#1e293b', marginBottom: 8 },
-  emptySubtitle: { fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20 },
+  emptyTitle: { fontSize: 20, fontWeight: '800', color: '#f1f5f9', marginBottom: 8 },
+  emptySubtitle: { fontSize: 14, color: '#94a3b8', textAlign: 'center', lineHeight: 20 },
   clearBtn: {
     marginTop: 20, backgroundColor: '#4f46e5',
     borderRadius: 12, paddingHorizontal: 24, paddingVertical: 10,
@@ -525,35 +525,35 @@ const styles = StyleSheet.create({
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    backgroundColor: '#1e293b', borderTopLeftRadius: 28, borderTopRightRadius: 28,
     paddingTop: 12, paddingHorizontal: 20, paddingBottom: 36, maxHeight: '80%',
   },
   modalHandle: {
-    width: 40, height: 4, borderRadius: 2, backgroundColor: '#e2e8f0',
+    width: 40, height: 4, borderRadius: 2, backgroundColor: '#334155',
     alignSelf: 'center', marginBottom: 16,
   },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a', textAlign: 'center', marginBottom: 4 },
-  modalSubtitle: { fontSize: 13, color: '#64748b', textAlign: 'center', marginBottom: 14 },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: '#f1f5f9', textAlign: 'center', marginBottom: 4 },
+  modalSubtitle: { fontSize: 13, color: '#94a3b8', textAlign: 'center', marginBottom: 14 },
   modalSearch: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#f1f5f9', borderRadius: 12,
+    backgroundColor: '#273549', borderRadius: 12,
     paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12,
-    borderWidth: 1, borderColor: '#e2e8f0',
+    borderWidth: 1, borderColor: '#334155',
   },
-  modalSearchInput: { flex: 1, fontSize: 14, color: '#0f172a', padding: 0 },
+  modalSearchInput: { flex: 1, fontSize: 14, color: '#f1f5f9', padding: 0 },
   collegeList: { flexGrow: 0 },
   collegeRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingVertical: 13, paddingHorizontal: 4,
-    borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+    borderBottomWidth: 1, borderBottomColor: '#334155',
     borderRadius: 12,
   },
-  collegeRowActive: { backgroundColor: '#ede9fe' },
+  collegeRowActive: { backgroundColor: 'rgba(79,70,229,0.2)' },
   collegeEmoji: { fontSize: 22, marginRight: 12 },
   collegeInfo: { flex: 1 },
-  collegeName: { fontSize: 15, fontWeight: '600', color: '#1e293b' },
-  collegeNameActive: { color: '#4f46e5', fontWeight: '800' },
-  collegeLocation: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
+  collegeName: { fontSize: 15, fontWeight: '600', color: '#f1f5f9' },
+  collegeNameActive: { color: '#818cf8', fontWeight: '800' },
+  collegeLocation: { fontSize: 12, color: '#64748b', marginTop: 2 },
   collegeMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   homeBadge: {
     backgroundColor: '#dcfce7', borderRadius: 6,
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
   },
   homeBadgeText: { fontSize: 10, color: '#15803d', fontWeight: '700' },
   modalClose: {
-    marginTop: 16, backgroundColor: '#f1f5f9', borderRadius: 14,
+    marginTop: 16, backgroundColor: '#273549', borderRadius: 14,
     paddingVertical: 14, alignItems: 'center',
   },
   modalCloseText: { color: '#ef4444', fontWeight: '700', fontSize: 15 },

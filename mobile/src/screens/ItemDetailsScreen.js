@@ -335,19 +335,19 @@ const ItemDetailsScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#ffffff' },
-  container: { flex: 1 },
+  safeArea: { flex: 1, backgroundColor: '#0f172a' },
+  container: { flex: 1, backgroundColor: '#0f172a' },
 
   // Carousel
-  carouselContainer: { width, height: 320, backgroundColor: '#f3f4f6' },
-  image: { width, height: 320, resizeMode: 'contain', backgroundColor: '#f3f4f6' },
+  carouselContainer: { width, height: 320, backgroundColor: '#1e293b' },
+  image: { width, height: 320, resizeMode: 'contain', backgroundColor: '#1e293b' },
   paginationContainer: {
     position: 'absolute', bottom: 14,
     flexDirection: 'row', width: '100%', justifyContent: 'center',
   },
   dot: { width: 7, height: 7, borderRadius: 4, marginHorizontal: 3 },
   activeDot: { backgroundColor: '#ffffff', width: 20 },
-  inactiveDot: { backgroundColor: 'rgba(255,255,255,0.5)' },
+  inactiveDot: { backgroundColor: 'rgba(255,255,255,0.35)' },
   soldBadge: {
     position: 'absolute', top: 16, left: 16,
     backgroundColor: '#ef4444', paddingHorizontal: 14, paddingVertical: 6,
@@ -356,46 +356,46 @@ const styles = StyleSheet.create({
   soldBadgeText: { color: '#ffffff', fontWeight: '900', fontSize: 14, letterSpacing: 1 },
   wishlistBtn: {
     position: 'absolute', top: 16, right: 16,
-    backgroundColor: 'rgba(0,0,0,0.4)', padding: 8, borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)', padding: 8, borderRadius: 20,
   },
 
   // Details
-  detailsContainer: { padding: 20 },
+  detailsContainer: { padding: 20, backgroundColor: '#0f172a' },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
-  title: { fontSize: 22, fontWeight: '800', color: '#1f2937', flex: 1, marginRight: 10, lineHeight: 28 },
-  titleSold: { textDecorationLine: 'line-through', color: '#9ca3af' },
-  price: { fontSize: 26, fontWeight: '900', color: '#4f46e5' },
+  title: { fontSize: 22, fontWeight: '800', color: '#f1f5f9', flex: 1, marginRight: 10, lineHeight: 28 },
+  titleSold: { textDecorationLine: 'line-through', color: '#64748b' },
+  price: { fontSize: 26, fontWeight: '900', color: '#818cf8' },
 
   categoryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  categoryBadge: { backgroundColor: '#eef2ff', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  categoryText: { fontSize: 13, color: '#4f46e5', fontWeight: '700', textTransform: 'uppercase' },
+  categoryBadge: { backgroundColor: 'rgba(79,70,229,0.2)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  categoryText: { fontSize: 13, color: '#818cf8', fontWeight: '700', textTransform: 'uppercase' },
   reportBtn: { flexDirection: 'row', alignItems: 'center', padding: 4 },
-  reportText: { fontSize: 13, color: '#9ca3af', marginLeft: 3 },
+  reportText: { fontSize: 13, color: '#64748b', marginLeft: 3 },
 
   infoCard: {
-    backgroundColor: '#f9fafb', padding: 14, borderRadius: 12,
-    marginBottom: 20, borderWidth: 1, borderColor: '#f3f4f6',
+    backgroundColor: '#1e293b', padding: 14, borderRadius: 12,
+    marginBottom: 20, borderWidth: 1, borderColor: '#334155',
   },
   infoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  infoText: { fontSize: 14, color: '#374151', marginLeft: 8, fontWeight: '500' },
+  infoText: { fontSize: 14, color: '#94a3b8', marginLeft: 8, fontWeight: '500' },
 
-  sectionTitle: { fontSize: 17, fontWeight: '700', color: '#1f2937', marginBottom: 8 },
-  description: { fontSize: 15, color: '#4b5563', lineHeight: 24, marginBottom: 20 },
+  sectionTitle: { fontSize: 17, fontWeight: '700', color: '#f1f5f9', marginBottom: 8 },
+  description: { fontSize: 15, color: '#94a3b8', lineHeight: 24, marginBottom: 20 },
 
   safetyCard: {
     flexDirection: 'row', alignItems: 'flex-start',
-    backgroundColor: '#f0fdf4', padding: 12, borderRadius: 10,
-    borderWidth: 1, borderColor: '#bbf7d0',
+    backgroundColor: 'rgba(22,163,74,0.1)', padding: 12, borderRadius: 10,
+    borderWidth: 1, borderColor: 'rgba(22,163,74,0.25)',
   },
-  safetyText: { fontSize: 13, color: '#166534', marginLeft: 8, flex: 1, lineHeight: 18 },
+  safetyText: { fontSize: 13, color: '#4ade80', marginLeft: 8, flex: 1, lineHeight: 18 },
 
   // Bottom Bar
   bottomBar: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    padding: 14, backgroundColor: '#ffffff',
-    borderTopWidth: 1, borderTopColor: '#f3f4f6',
+    padding: 14, backgroundColor: '#1e293b',
+    borderTopWidth: 1, borderTopColor: '#334155',
     shadowColor: '#000', shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.06, shadowRadius: 6, elevation: 8,
+    shadowOpacity: 0.3, shadowRadius: 6, elevation: 8,
   },
 
   // Owner controls
@@ -414,15 +414,15 @@ const styles = StyleSheet.create({
   chatBtn: {
     flex: 1, flexDirection: 'row', paddingVertical: 14, borderRadius: 12,
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#eef2ff', borderWidth: 1.5, borderColor: '#4f46e5',
+    backgroundColor: 'rgba(79,70,229,0.15)', borderWidth: 1.5, borderColor: '#4f46e5',
   },
-  chatBtnText: { color: '#4f46e5', fontWeight: '700', fontSize: 15, marginLeft: 6 },
+  chatBtnText: { color: '#818cf8', fontWeight: '700', fontSize: 15, marginLeft: 6 },
   whatsappBtn: {
     flex: 2, flexDirection: 'row', paddingVertical: 14, borderRadius: 12,
     backgroundColor: '#25D366', alignItems: 'center', justifyContent: 'center',
   },
   whatsappBtnText: { color: '#ffffff', fontWeight: '700', fontSize: 15, marginLeft: 6 },
-  btnDisabled: { backgroundColor: '#e5e7eb', borderColor: '#e5e7eb' },
+  btnDisabled: { backgroundColor: '#273549', borderColor: '#334155' },
 });
 
 export default ItemDetailsScreen;

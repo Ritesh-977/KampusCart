@@ -7,11 +7,11 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
 
 const CATEGORY_COLORS = {
-  'Cycles': { bg: '#ecfdf5', text: '#059669' },
-  'Electronics': { bg: '#eff6ff', text: '#2563eb' },
-  'Books & Notes': { bg: '#fefce8', text: '#ca8a04' },
-  'Hostel Essentials': { bg: '#fdf4ff', text: '#9333ea' },
-  'Other': { bg: '#f3f4f6', text: '#6b7280' },
+  'Cycles': { bg: 'rgba(5,150,105,0.18)', text: '#34d399' },
+  'Electronics': { bg: 'rgba(37,99,235,0.18)', text: '#60a5fa' },
+  'Books & Notes': { bg: 'rgba(202,138,4,0.18)', text: '#fbbf24' },
+  'Hostel Essentials': { bg: 'rgba(147,51,234,0.18)', text: '#c084fc' },
+  'Other': { bg: 'rgba(100,116,139,0.18)', text: '#94a3b8' },
 };
 
 const timeAgo = (dateStr) => {
@@ -114,18 +114,20 @@ const ItemCard = ({ item, onPress, compact = false }) => {
 const styles = StyleSheet.create({
   // Grid card
   gridCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1e293b',
     borderRadius: 16,
     overflow: 'hidden',
     elevation: 3,
-    shadowColor: '#4f46e5',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
   },
   gridImageWrapper: { position: 'relative' },
-  gridImage: { width: '100%', height: CARD_WIDTH * 0.85, backgroundColor: '#f3f4f6' },
+  gridImage: { width: '100%', height: CARD_WIDTH * 0.85, backgroundColor: '#273549' },
   priceBadge: {
     position: 'absolute', bottom: 8, left: 8,
     backgroundColor: '#4f46e5', borderRadius: 8,
@@ -140,28 +142,29 @@ const styles = StyleSheet.create({
   },
   multiImgText: { color: '#fff', fontSize: 10, fontWeight: '700' },
   gridContent: { padding: 10 },
-  gridTitle: { fontSize: 13, fontWeight: '700', color: '#1f2937', marginBottom: 6, lineHeight: 18 },
+  gridTitle: { fontSize: 13, fontWeight: '700', color: '#f1f5f9', marginBottom: 6, lineHeight: 18 },
   catBadge: { alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, marginBottom: 6 },
   catBadgeText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.3 },
   gridFooter: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  gridTime: { fontSize: 11, color: '#9ca3af' },
+  gridTime: { fontSize: 11, color: '#64748b' },
 
   // Full-width card
   card: {
-    backgroundColor: '#ffffff', borderRadius: 16, marginBottom: 16,
+    backgroundColor: '#1e293b', borderRadius: 16, marginBottom: 16,
     overflow: 'hidden', elevation: 3,
+    borderWidth: 1, borderColor: '#334155',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07, shadowRadius: 8,
+    shadowOpacity: 0.3, shadowRadius: 8,
   },
-  image: { width: '100%', height: 200, backgroundColor: '#f3f4f6' },
+  image: { width: '100%', height: 200, backgroundColor: '#273549' },
   detailsContainer: { padding: 14 },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 },
-  title: { fontSize: 16, fontWeight: '700', color: '#1f2937', flex: 1, marginRight: 10 },
-  price: { fontSize: 17, fontWeight: '800', color: '#4f46e5' },
-  category: { fontSize: 11, color: '#6b7280', textTransform: 'uppercase', fontWeight: '700', letterSpacing: 0.5, marginBottom: 10 },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 10 },
-  collegeText: { fontSize: 12, color: '#4b5563', fontWeight: '500' },
-  timeText: { fontSize: 12, color: '#9ca3af' },
+  title: { fontSize: 16, fontWeight: '700', color: '#f1f5f9', flex: 1, marginRight: 10 },
+  price: { fontSize: 17, fontWeight: '800', color: '#818cf8' },
+  category: { fontSize: 11, color: '#64748b', textTransform: 'uppercase', fontWeight: '700', letterSpacing: 0.5, marginBottom: 10 },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#334155', paddingTop: 10 },
+  collegeText: { fontSize: 12, color: '#94a3b8', fontWeight: '500' },
+  timeText: { fontSize: 12, color: '#64748b' },
 });
 
 export default ItemCard;
