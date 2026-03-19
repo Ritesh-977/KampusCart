@@ -16,6 +16,7 @@ const EditItemScreen = ({ route, navigation }) => {
   const [price, setPrice] = useState(item.price ? item.price.toString() : '');
   const [description, setDescription] = useState(item.description);
   const [contact, setContact] = useState(item.contactNumber ? item.contactNumber.toString() : '');
+  const [location, setLocation] = useState(item.location || '');
   const [isSold, setIsSold] = useState(item.isSold);
   const [loading, setLoading] = useState(false);
 
@@ -47,6 +48,7 @@ const EditItemScreen = ({ route, navigation }) => {
       formData.append('description', description);
       formData.append('contactNumber', contact);
       formData.append('category', item.category);
+      formData.append('location', location.trim());
       if (item.images) {
         formData.append('existingImages', JSON.stringify(item.images));
       }
@@ -207,6 +209,18 @@ const EditItemScreen = ({ route, navigation }) => {
               onChangeText={setContact}
               placeholder="Your phone number"
               placeholderTextColor="#9ca3af"
+            />
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>Pickup Location</Text>
+            <TextInput
+              style={styles.input}
+              value={location}
+              onChangeText={setLocation}
+              placeholder="e.g. Hostel 5, Room 203 or Library Gate"
+              placeholderTextColor="#9ca3af"
+              maxLength={80}
             />
           </View>
 
