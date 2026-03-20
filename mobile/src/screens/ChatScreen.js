@@ -474,7 +474,7 @@ export default function ChatScreen({ route, navigation }) {
       <StatusBar backgroundColor="#0f172a" barStyle="light-content" />
       
       <KeyboardAvoidingView
-        style={[styles.flex, Platform.OS === 'android' && { marginBottom: keyboardHeight }]}
+        style={[styles.flex, Platform.OS === 'android' && { marginBottom: keyboardHeight > 0 ? keyboardHeight - insets.bottom : 0 }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
       >
@@ -566,7 +566,7 @@ export default function ChatScreen({ route, navigation }) {
 
         {/* ── Input bar ──────────────────────────────────────────────── */}
         {/* We add dynamic paddingBottom so it sits above the Android swipe gesture bar */}
-        <View style={[styles.inputRow, { paddingBottom: Platform.OS === 'android' ? (keyboardHeight > 0 ? 6 : Math.max(insets.bottom, 6)) : Math.max(insets.bottom, 6) }]}>
+        <View style={[styles.inputRow, { paddingBottom: Platform.OS === 'android' ? (keyboardHeight > 0 ? 0 : Math.max(insets.bottom, 6)) : Math.max(insets.bottom, 6) }]}>
           <View style={styles.inputWrap}>
             <TouchableOpacity style={styles.attachBtn} onPress={handleAttach}>
               <Ionicons name="attach" size={22} color="#94a3b8" />
