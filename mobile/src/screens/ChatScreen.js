@@ -4,7 +4,7 @@ import {
   Platform, ActivityIndicator, Image, Alert, StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
@@ -40,8 +40,6 @@ export default function ChatScreen({ route, navigation }) {
   const { currentUser } = useContext(AuthContext);
   const { socketRef, connected, onlineUsers } = useContext(SocketContext);
 
-  const keyboard = useAnimatedKeyboard({ isStatusBarTranslucentAndroid: true });
-  const kbStyle = useAnimatedStyle(() => ({ paddingBottom: keyboard.height.value }));
 
   const myId = useMemo(
     () => String(currentUser?._id || currentUser?.id || ''),
@@ -432,7 +430,7 @@ export default function ChatScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       <StatusBar backgroundColor="#1e293b" barStyle="light-content" />
-      <Animated.View style={[styles.flex, kbStyle]}>
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
         {searchVisible && (
           <View style={styles.searchBar}>
             <TouchableOpacity onPress={closeSearch} style={{ padding: 4 }}>
@@ -522,7 +520,7 @@ export default function ChatScreen({ route, navigation }) {
             <Ionicons name="send" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
-      </Animated.View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
