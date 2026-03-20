@@ -7,13 +7,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { Ionicons } from '@expo/vector-icons';
-import { io } from 'socket.io-client';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
+import { SocketContext } from '../context/SocketContext';
 import API from '../api/axios';
-import { getToken } from '../utils/secureStorage';
 
-const SOCKET_URL = 'https://api.kampuscart.site';
 const FALLBACK_AVATAR =
   'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
 
@@ -37,21 +35,11 @@ const formatTime = (dateStr) => {
   });
 };
 
-const formatLastSeen = (dateStr) => {
-  if (!dateStr) return '';
-  const diff = Date.now() - new Date(dateStr);
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-};
-
 // ─── component ──────────────────────────────────────────────────────────────
 export default function ChatScreen({ route, navigation }) {
   const { chat, otherUser } = route.params;
   const { currentUser } = useContext(AuthContext);
+  const { socket, onlineUsers } = useContext(SocketContext);
 
   const headerHeight = useHeaderHeight();
 
@@ -69,13 +57,17 @@ export default function ChatScreen({ route, navigation }) {
     [myId]
   );
 
+  // Derive online status directly from the shared context — updates in real time
+  const isOnline = useMemo(
+    () => (otherUser?._id ? onlineUsers.has(String(otherUser._id)) : false),
+    [onlineUsers, otherUser]
+  );
+
   // ── state ──
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
-  const [isOnline, setIsOnline] = useState(false);
-  const [lastSeen, setLastSeen] = useState(otherUser?.lastSeen || null);
 
   // search
   const [searchVisible, setSearchVisible] = useState(false);
@@ -84,7 +76,6 @@ export default function ChatScreen({ route, navigation }) {
   const [currentMatch, setCurrentMatch] = useState(0);
 
   // refs
-  const socketRef = useRef(null);
   const flatListRef = useRef(null);
   const typingTimerRef = useRef(null);
   const searchRef = useRef(null);
@@ -132,10 +123,8 @@ export default function ChatScreen({ route, navigation }) {
               <Text style={styles.headerStatusTyping}>typing…</Text>
             ) : isOnline ? (
               <Text style={styles.headerStatusOnline}>Online</Text>
-            ) : lastSeen ? (
-              <Text style={styles.headerStatusOffline}>last seen {formatLastSeen(lastSeen)}</Text>
             ) : (
-              <Text style={styles.headerStatusOffline}>tap to view profile</Text>
+              <Text style={styles.headerStatusOffline}>Offline</Text>
             )}
           </View>
         </TouchableOpacity>
@@ -151,66 +140,49 @@ export default function ChatScreen({ route, navigation }) {
         </TouchableOpacity>
       ),
     });
-  }, [otherUser, isOnline, isTyping, lastSeen, searchVisible]);
+  }, [isOnline, isTyping, searchVisible]);
 
-  // ── socket ─────────────────────────────────────────────────────────────────
+  // ── fetch messages ──────────────────────────────────────────────────────────
   useEffect(() => {
     fetchMessages();
-    initSocket();
-    return () => {
-      socketRef.current?.disconnect();
-      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-    };
   }, []);
 
-  const initSocket = async () => {
-    const socket = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
-    });
+  // ── socket room + listeners ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!socket) return;
 
-    socket.on('connect', () => {
-      // Send only _id — matches what the web client sends
-      socket.emit('setup', { _id: myId });
-    });
+    // Join the chat room — if socket already connected (likely, since it connects at app start)
+    const joinRoom = () => socket.emit('join chat', chat._id);
+    if (socket.connected) joinRoom();
+    // Also handle the case where setup is still being acknowledged
+    socket.on('connected', joinRoom);
 
-    // Server confirms identity → join the chat room
-    socket.on('connected', () => {
-      socket.emit('join chat', chat._id);
-    });
-
-    // Fallback: if 'connected' never fires within 2s, join anyway
-    const fallbackTimer = setTimeout(() => {
-      if (socket.connected) socket.emit('join chat', chat._id);
-    }, 2000);
-    socket.once('connected', () => clearTimeout(fallbackTimer));
-
-    // ── online_users: backend broadcasts full list on every connect/disconnect ──
-    // NOTE: backend event is 'online_users' (array of user ID strings)
-    socket.on('online_users', (userIds) => {
-      const otherId = String(otherUser?._id || '');
-      const online = otherId ? userIds.map(String).includes(otherId) : false;
-      setIsOnline(online);
-      if (online) setLastSeen(null);
-    });
-
-    // ── incoming message: backend event name is 'message received' (with space) ──
-    socket.on('message received', (msg) => {
+    // Incoming messages
+    const handleMessage = (msg) => {
       const senderId = normalizeId(msg?.sender?._id) || normalizeId(msg?.sender);
-      if (myId && senderId === myId) return;
+      if (myId && senderId === myId) return; // skip own (already added optimistically)
       setMessages((prev) => {
         if (prev.find((m) => m._id === msg._id)) return prev;
         return [...prev, msg];
       });
       API.put('/message/read', { chatId: chat._id }).catch(() => {});
-    });
+    };
 
-    // ── typing: backend emits with no data, just to the room ──
-    socket.on('typing', () => setIsTyping(true));
-    socket.on('stop typing', () => setIsTyping(false));
+    const handleTyping = () => setIsTyping(true);
+    const handleStopTyping = () => setIsTyping(false);
 
-    socket.on('connect_error', (e) => console.warn('[socket] connect_error:', e.message));
-    socketRef.current = socket;
-  };
+    socket.on('message received', handleMessage);
+    socket.on('typing', handleTyping);
+    socket.on('stop typing', handleStopTyping);
+
+    return () => {
+      socket.off('connected', joinRoom);
+      socket.off('message received', handleMessage);
+      socket.off('typing', handleTyping);
+      socket.off('stop typing', handleStopTyping);
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    };
+  }, [socket, myId]);
 
   // ── fetch ──────────────────────────────────────────────────────────────────
   const fetchMessages = async () => {
@@ -230,25 +202,22 @@ export default function ChatScreen({ route, navigation }) {
     const text = newMessage.trim();
     if (!text) return;
     setNewMessage('');
-    // Backend event: 'stop typing' (with space)
-    socketRef.current?.emit('stop typing', chat._id);
+    socket?.emit('stop typing', chat._id);
 
     const tempId = `tmp_${Date.now()}`;
-    const optimistic = {
+    setMessages((prev) => [...prev, {
       _id: tempId,
       content: text,
       sender: { _id: myId, name: currentUser?.name },
       chat: { _id: chat._id, users: chat.users },
       createdAt: new Date().toISOString(),
       _pending: true,
-    };
-    setMessages((prev) => [...prev, optimistic]);
+    }]);
 
     try {
       const res = await API.post('/message', { content: text, chatId: chat._id });
       setMessages((prev) => prev.map((m) => (m._id === tempId ? res.data : m)));
-      // Backend event: 'new message' (with space)
-      socketRef.current?.emit('new message', res.data);
+      socket?.emit('new message', res.data);
     } catch {
       setMessages((prev) =>
         prev.map((m) => (m._id === tempId ? { ...m, _failed: true, _pending: false } : m))
@@ -275,18 +244,15 @@ export default function ChatScreen({ route, navigation }) {
     const type = ext ? `image/${ext[1]}` : 'image/jpeg';
 
     const tempId = `tmp_img_${Date.now()}`;
-    setMessages((prev) => [
-      ...prev,
-      {
-        _id: tempId,
-        content: uri,
-        isImage: true,
-        sender: { _id: myId },
-        chat: { _id: chat._id, users: chat.users },
-        createdAt: new Date().toISOString(),
-        _pending: true,
-      },
-    ]);
+    setMessages((prev) => [...prev, {
+      _id: tempId,
+      content: uri,
+      isImage: true,
+      sender: { _id: myId },
+      chat: { _id: chat._id, users: chat.users },
+      createdAt: new Date().toISOString(),
+      _pending: true,
+    }]);
 
     try {
       const form = new FormData();
@@ -299,7 +265,7 @@ export default function ChatScreen({ route, navigation }) {
       setMessages((prev) =>
         prev.map((m) => (m._id === tempId ? { ...res.data, isImage: true } : m))
       );
-      socketRef.current?.emit('new message', { ...res.data, isImage: true });
+      socket?.emit('new message', { ...res.data, isImage: true });
     } catch {
       setMessages((prev) => prev.filter((m) => m._id !== tempId));
       Alert.alert('Failed', 'Could not send image.');
@@ -309,11 +275,11 @@ export default function ChatScreen({ route, navigation }) {
   // ── typing ─────────────────────────────────────────────────────────────────
   const handleChangeText = (text) => {
     setNewMessage(text);
-    if (!socketRef.current) return;
-    socketRef.current.emit('typing', chat._id);
+    if (!socket) return;
+    socket.emit('typing', chat._id);
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     typingTimerRef.current = setTimeout(() => {
-      socketRef.current?.emit('stop typing', chat._id);
+      socket?.emit('stop typing', chat._id);
     }, 2000);
   };
 
@@ -332,16 +298,10 @@ export default function ChatScreen({ route, navigation }) {
 
   const handleSearch = (q) => {
     setSearchQuery(q);
-    if (!q.trim()) {
-      setMatchIndices([]);
-      setCurrentMatch(0);
-      return;
-    }
+    if (!q.trim()) { setMatchIndices([]); setCurrentMatch(0); return; }
     const lower = q.toLowerCase();
     const indices = messages.reduce((acc, msg, i) => {
-      if (typeof msg.content === 'string' && msg.content.toLowerCase().includes(lower)) {
-        acc.push(i);
-      }
+      if (typeof msg.content === 'string' && msg.content.toLowerCase().includes(lower)) acc.push(i);
       return acc;
     }, []);
     setMatchIndices(indices);
@@ -371,9 +331,7 @@ export default function ChatScreen({ route, navigation }) {
   const renderHighlightedText = useCallback(
     (text, mine, isCurrentMatchItem) => {
       const baseStyle = [styles.bubbleText, mine ? styles.textMe : styles.textOther];
-      if (!searchQuery || !text) {
-        return <Text style={baseStyle}>{text}</Text>;
-      }
+      if (!searchQuery || !text) return <Text style={baseStyle}>{text}</Text>;
       const lower = text.toLowerCase();
       const lowerQuery = searchQuery.toLowerCase();
       const segments = [];
@@ -388,11 +346,9 @@ export default function ChatScreen({ route, navigation }) {
       return (
         <Text style={baseStyle}>
           {segments.map((seg, i) =>
-            seg.h ? (
-              <Text key={i} style={isCurrentMatchItem ? styles.matchCurrent : styles.matchOther}>
-                {seg.t}
-              </Text>
-            ) : seg.t
+            seg.h
+              ? <Text key={i} style={isCurrentMatchItem ? styles.matchCurrent : styles.matchOther}>{seg.t}</Text>
+              : seg.t
           )}
         </Text>
       );
@@ -410,60 +366,37 @@ export default function ChatScreen({ route, navigation }) {
       const groupedWithNext = thisSender === nextSender;
       const showTime = !groupedWithNext;
       const showAvatar = !mine && !groupedWithNext;
-
       const isImg = item.isImage || isImageUrl(item.content);
-
       const isHighlighted = searchQuery && matchIndices.includes(index);
       const isCurrentMatch = isHighlighted && matchIndices[currentMatch] === index;
 
       return (
-        <View
-          style={[
-            styles.row,
-            mine ? styles.rowRight : styles.rowLeft,
-            !groupedWithNext && styles.rowSpaced,
-          ]}
-        >
+        <View style={[styles.row, mine ? styles.rowRight : styles.rowLeft, !groupedWithNext && styles.rowSpaced]}>
           {!mine && (
             <View style={styles.avatarSlot}>
               {showAvatar && (
-                <Image
-                  source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }}
-                  style={styles.msgAvatar}
-                />
+                <Image source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }} style={styles.msgAvatar} />
               )}
             </View>
           )}
-
           <View style={[styles.bubbleCol, mine ? styles.bubbleColRight : styles.bubbleColLeft]}>
             {isImg ? (
-              <View style={[
-                styles.imgBubble,
-                mine ? styles.imgBubbleMe : styles.imgBubbleOther,
-                isCurrentMatch && styles.imgBubbleCurrentMatch,
-              ]}>
+              <View style={[styles.imgBubble, mine ? styles.imgBubbleMe : styles.imgBubbleOther, isCurrentMatch && styles.imgBubbleCurrentMatch]}>
                 <Image source={{ uri: item.content }} style={styles.chatImage} resizeMode="cover" />
                 {item._pending && (
-                  <View style={styles.imgOverlay}>
-                    <ActivityIndicator color="#fff" />
-                  </View>
+                  <View style={styles.imgOverlay}><ActivityIndicator color="#fff" /></View>
                 )}
               </View>
             ) : (
-              <View
-                style={[
-                  styles.bubble,
-                  mine ? styles.bubbleMe : styles.bubbleOther,
-                  mine
-                    ? prevSender !== thisSender ? styles.tailTopRight : null
-                    : prevSender !== thisSender ? styles.tailTopLeft : null,
-                  isCurrentMatch && styles.bubbleCurrentMatch,
-                ]}
-              >
+              <View style={[
+                styles.bubble,
+                mine ? styles.bubbleMe : styles.bubbleOther,
+                mine ? (prevSender !== thisSender ? styles.tailTopRight : null) : (prevSender !== thisSender ? styles.tailTopLeft : null),
+                isCurrentMatch && styles.bubbleCurrentMatch,
+              ]}>
                 {renderHighlightedText(item.content, mine, isCurrentMatch)}
               </View>
             )}
-
             {showTime && (
               <View style={[styles.metaRow, mine ? styles.metaRight : styles.metaLeft]}>
                 <Text style={styles.timeText}>{formatTime(item.createdAt)}</Text>
@@ -488,13 +421,11 @@ export default function ChatScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       <StatusBar backgroundColor="#1e293b" barStyle="light-content" />
-
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
       >
-        {/* ── Search bar ─────────────────────────────────────────────── */}
         {searchVisible && (
           <View style={styles.searchBar}>
             <TouchableOpacity onPress={closeSearch} style={{ padding: 4 }}>
@@ -510,9 +441,7 @@ export default function ChatScreen({ route, navigation }) {
             />
             {matchIndices.length > 0 ? (
               <View style={styles.searchNav}>
-                <Text style={styles.searchCount}>
-                  {currentMatch + 1}/{matchIndices.length}
-                </Text>
+                <Text style={styles.searchCount}>{currentMatch + 1}/{matchIndices.length}</Text>
                 <TouchableOpacity onPress={goToPrevMatch} style={styles.navBtn}>
                   <Ionicons name="chevron-up" size={20} color="#4f46e5" />
                 </TouchableOpacity>
@@ -526,11 +455,8 @@ export default function ChatScreen({ route, navigation }) {
           </View>
         )}
 
-        {/* ── Messages ───────────────────────────────────────────────── */}
         {loading ? (
-          <View style={styles.center}>
-            <ActivityIndicator size="large" color="#4f46e5" />
-          </View>
+          <View style={styles.center}><ActivityIndicator size="large" color="#4f46e5" /></View>
         ) : (
           <FlatList
             ref={flatListRef}
@@ -538,23 +464,14 @@ export default function ChatScreen({ route, navigation }) {
             keyExtractor={(item) => item._id}
             renderItem={renderMessage}
             contentContainerStyle={styles.list}
-            onContentSizeChange={() =>
-              !searchVisible && flatListRef.current?.scrollToEnd({ animated: true })
-            }
-            onLayout={() =>
-              !searchVisible && flatListRef.current?.scrollToEnd({ animated: false })
-            }
+            onContentSizeChange={() => !searchVisible && flatListRef.current?.scrollToEnd({ animated: true })}
+            onLayout={() => !searchVisible && flatListRef.current?.scrollToEnd({ animated: false })}
             onScrollToIndexFailed={(info) => {
-              setTimeout(() => {
-                flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
-              }, 300);
+              setTimeout(() => flatListRef.current?.scrollToIndex({ index: info.index, animated: true }), 300);
             }}
             ListEmptyComponent={
               <View style={styles.emptyBox}>
-                <Image
-                  source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }}
-                  style={styles.emptyAvatar}
-                />
+                <Image source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }} style={styles.emptyAvatar} />
                 <Text style={styles.emptyName}>{otherUser?.name}</Text>
                 <Text style={styles.emptyHint}>Say hello! 👋</Text>
               </View>
@@ -562,13 +479,9 @@ export default function ChatScreen({ route, navigation }) {
           />
         )}
 
-        {/* ── Typing indicator ───────────────────────────────────────── */}
         {isTyping && (
           <View style={styles.typingRow}>
-            <Image
-              source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }}
-              style={styles.typingAvatar}
-            />
+            <Image source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }} style={styles.typingAvatar} />
             <View style={styles.typingBubble}>
               <View style={styles.typingDots}>
                 <View style={[styles.dot, styles.d1]} />
@@ -579,7 +492,6 @@ export default function ChatScreen({ route, navigation }) {
           </View>
         )}
 
-        {/* ── Input bar ──────────────────────────────────────────────── */}
         <View style={styles.inputRow}>
           <View style={styles.inputWrap}>
             <TouchableOpacity style={styles.attachBtn} onPress={handleAttach}>
@@ -614,7 +526,6 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
-  // Header
   headerAvatarWrapper: { position: 'relative', marginRight: 10 },
   headerAvatar: { width: 38, height: 38, borderRadius: 19 },
   headerOnlineDot: {
@@ -625,9 +536,8 @@ const styles = StyleSheet.create({
   headerName: { fontSize: 15, fontWeight: '700', color: '#f1f5f9', maxWidth: 180 },
   headerStatusTyping: { fontSize: 12, color: '#6ee7b7', fontStyle: 'italic', marginTop: 1 },
   headerStatusOnline: { fontSize: 12, color: '#22c55e', marginTop: 1 },
-  headerStatusOffline: { fontSize: 11, color: '#94a3b8', marginTop: 1 },
+  headerStatusOffline: { fontSize: 11, color: '#475569', marginTop: 1 },
 
-  // Search bar
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#1e293b', paddingHorizontal: 10,
@@ -639,10 +549,8 @@ const styles = StyleSheet.create({
   navBtn: { padding: 4 },
   noResults: { fontSize: 13, color: '#64748b', marginRight: 8 },
 
-  // List
   list: { paddingHorizontal: 10, paddingVertical: 12 },
 
-  // Message row
   row: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 2 },
   rowLeft: { justifyContent: 'flex-start' },
   rowRight: { justifyContent: 'flex-end' },
@@ -655,13 +563,11 @@ const styles = StyleSheet.create({
   bubbleColLeft: { alignItems: 'flex-start' },
   bubbleColRight: { alignItems: 'flex-end' },
 
-  // Search highlights — inline word-level
   matchCurrent: { backgroundColor: '#fbbf24', color: '#0f172a', borderRadius: 3 },
   matchOther: { backgroundColor: 'rgba(251, 191, 36, 0.35)', borderRadius: 3 },
   bubbleCurrentMatch: { borderWidth: 2, borderColor: '#fbbf24' },
   imgBubbleCurrentMatch: { borderWidth: 2, borderColor: '#fbbf24', borderRadius: 14 },
 
-  // Text bubble
   bubble: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, marginBottom: 1 },
   bubbleMe: { backgroundColor: '#4338ca', borderTopRightRadius: 18, borderBottomRightRadius: 6 },
   bubbleOther: {
@@ -675,13 +581,11 @@ const styles = StyleSheet.create({
   textMe: { color: '#ffffff' },
   textOther: { color: '#f1f5f9' },
 
-  // Time + tick
   metaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2, marginBottom: 2 },
   metaRight: { justifyContent: 'flex-end', paddingRight: 4 },
   metaLeft: { justifyContent: 'flex-start', paddingLeft: 4 },
   timeText: { fontSize: 11, color: '#64748b' },
 
-  // Image bubble
   imgBubble: { borderRadius: 14, overflow: 'hidden', marginBottom: 1 },
   imgBubbleMe: { borderBottomRightRadius: 4 },
   imgBubbleOther: { borderBottomLeftRadius: 4 },
@@ -692,7 +596,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
 
-  // Typing
   typingRow: { flexDirection: 'row', alignItems: 'flex-end', paddingLeft: 12, paddingBottom: 8 },
   typingAvatar: { width: 26, height: 26, borderRadius: 13, marginRight: 6 },
   typingBubble: {
@@ -705,7 +608,6 @@ const styles = StyleSheet.create({
   d2: { opacity: 0.65 },
   d3: { opacity: 1 },
 
-  // Input bar
   inputRow: {
     flexDirection: 'row', alignItems: 'flex-end',
     paddingHorizontal: 8, paddingVertical: 6,
@@ -731,7 +633,6 @@ const styles = StyleSheet.create({
   },
   sendOff: { backgroundColor: '#334155' },
 
-  // Empty state
   emptyBox: { alignItems: 'center', paddingTop: 60 },
   emptyAvatar: { width: 72, height: 72, borderRadius: 36, marginBottom: 12, backgroundColor: '#273549' },
   emptyName: { fontSize: 17, fontWeight: '700', color: '#f1f5f9', marginBottom: 4 },
