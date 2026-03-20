@@ -1,12 +1,16 @@
-import React, { useState, useContext, useCallback } from 'react';
+import React, { useState, useContext, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
   SafeAreaView, ActivityIndicator, Image, Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { io } from 'socket.io-client';
 import { AuthContext } from '../context/AuthContext';
 import API from '../api/axios';
+import { getToken } from '../utils/secureStorage';
+
+const SOCKET_URL = 'https://api.kampuscart.site';
 
 const FALLBACK_AVATAR = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
 
@@ -14,11 +18,19 @@ const ChatListScreen = ({ navigation }) => {
   const { currentUser, isGuest, logout } = useContext(AuthContext);
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const socketRef = useRef(null);
 
   const fetchChats = async () => {
     try {
       const response = await API.get('/chat');
-      setChats(response.data);
+      // Sort by most recent message/activity
+      const sorted = (response.data || []).sort((a, b) => {
+        const aTime = new Date(a.latestMessage?.createdAt || a.updatedAt || a.createdAt);
+        const bTime = new Date(b.latestMessage?.createdAt || b.updatedAt || b.createdAt);
+        return bTime - aTime;
+      });
+      setChats(sorted);
     } catch (error) {
       console.error('Error fetching chats:', error);
     } finally {
@@ -26,10 +38,62 @@ const ChatListScreen = ({ navigation }) => {
     }
   };
 
+  const initSocket = async () => {
+    const token = await getToken();
+    const socket = io(SOCKET_URL, {
+      transports: ['websocket'],
+      extraHeaders: { Authorization: `Bearer ${token}` },
+      reconnection: true,
+    });
+
+    socket.on('connect', () => socket.emit('setup', currentUser));
+
+    socket.on('user_online', (userId) => {
+      const id = typeof userId === 'object' ? String(userId._id || userId.id || '') : String(userId);
+      setOnlineUsers(prev => new Set([...prev, id]));
+    });
+    socket.on('user_offline', ({ userId }) => {
+      const id = typeof userId === 'object' ? String(userId._id || userId.id || '') : String(userId);
+      setOnlineUsers(prev => { const next = new Set(prev); next.delete(id); return next; });
+    });
+    socket.on('online_status', ({ userId, online }) => {
+      const id = typeof userId === 'object' ? String(userId._id || userId.id || '') : String(userId);
+      setOnlineUsers(prev => {
+        const next = new Set(prev);
+        if (online) next.add(id); else next.delete(id);
+        return next;
+      });
+    });
+
+    socketRef.current = socket;
+  };
+
+  // After chats load + socket connects, check online status for each user
+  useEffect(() => {
+    if (!chats.length || !socketRef.current) return;
+    const checkAll = () => {
+      chats.forEach(chat => {
+        const other = chat.users?.find(u => u._id !== currentUser?._id);
+        if (other?._id) socketRef.current?.emit('check_online', other._id);
+      });
+    };
+    if (socketRef.current.connected) checkAll();
+    else socketRef.current.once('connected', checkAll);
+  }, [chats]);
+
   useFocusEffect(
     useCallback(() => {
-      if (!isGuest) fetchChats();
-      else setLoading(false);
+      if (!isGuest) {
+        fetchChats();
+        initSocket();
+      } else {
+        setLoading(false);
+      }
+      return () => {
+        socketRef.current?.disconnect();
+        socketRef.current = null;
+        setOnlineUsers(new Set());
+      };
     }, [isGuest])
   );
 
@@ -77,13 +141,18 @@ const ChatListScreen = ({ navigation }) => {
     const isUnread = lastMsg && lastMsg.sender?._id !== currentUser?._id &&
       !lastMsg.readBy?.includes(currentUser?._id);
 
+    const isUserOnline = onlineUsers.has(otherUser?._id);
+
     return (
       <TouchableOpacity
         style={styles.chatItem}
         onPress={() => navigation.navigate('ChatRoom', { chat: item, otherUser })}
         activeOpacity={0.7}
       >
-        <Image source={{ uri: avatarUri }} style={styles.avatar} />
+        <View style={styles.avatarWrapper}>
+          <Image source={{ uri: avatarUri }} style={styles.avatar} />
+          {isUserOnline && <View style={styles.onlineDot} />}
+        </View>
 
         <View style={styles.chatInfo}>
           <View style={styles.chatTopRow}>
@@ -94,11 +163,13 @@ const ChatListScreen = ({ navigation }) => {
           </View>
           <View style={styles.chatBottomRow}>
             <Text style={[styles.lastMessage, isUnread && styles.lastMessageBold]} numberOfLines={1}>
-              {lastMsg
-                ? (lastMsg.sender?._id === currentUser?._id ? 'You: ' : '') + lastMsg.content
-                : 'Start a conversation...'}
+              {isUserOnline
+                ? <Text style={styles.onlineText}>● Online</Text>
+                : lastMsg
+                  ? (lastMsg.sender?._id === currentUser?._id ? 'You: ' : '') + lastMsg.content
+                  : 'Start a conversation...'}
             </Text>
-            {isUnread && <View style={styles.unreadDot} />}
+            {isUnread && !isUserOnline && <View style={styles.unreadDot} />}
           </View>
         </View>
       </TouchableOpacity>
@@ -154,10 +225,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#1e293b',
     backgroundColor: '#0f172a',
   },
-  avatar: {
-    width: 52, height: 52, borderRadius: 26,
-    backgroundColor: '#273549', marginRight: 14,
+  avatarWrapper: { position: 'relative', marginRight: 14 },
+  avatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#273549' },
+  onlineDot: {
+    position: 'absolute', bottom: 1, right: 1,
+    width: 13, height: 13, borderRadius: 7,
+    backgroundColor: '#22c55e', borderWidth: 2, borderColor: '#0f172a',
   },
+  onlineText: { color: '#22c55e', fontSize: 13, fontWeight: '500' },
   chatInfo: { flex: 1 },
   chatTopRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
   chatName: { fontSize: 16, fontWeight: '500', color: '#f1f5f9', flex: 1, marginRight: 8 },

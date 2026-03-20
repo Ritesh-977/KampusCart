@@ -97,42 +97,53 @@ export default function ChatScreen({ route, navigation }) {
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
-      headerStyle: { backgroundColor: '#0f172a' },
+      headerStyle: { backgroundColor: '#0f172a', elevation: 0, shadowOpacity: 0 },
       headerTintColor: '#fff',
       headerLeft: () => (
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 4 }}
+          style={{ paddingLeft: 4, paddingRight: 2 }}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
           <Ionicons name="arrow-back" size={22} color="#fff" />
-          <Image
-            source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }}
-            style={styles.headerAvatar}
-          />
         </TouchableOpacity>
       ),
       headerTitle: () => (
-        <TouchableOpacity activeOpacity={0.8}>
-          <Text style={styles.headerName} numberOfLines={1}>
-            {otherUser?.name || 'Chat'}
-          </Text>
-          {isTyping ? (
-            <Text style={styles.headerStatusTyping}>typing…</Text>
-          ) : isOnline ? (
-            <Text style={styles.headerStatusOnline}>online</Text>
-          ) : lastSeen ? (
-            <Text style={styles.headerStatusOffline}>last seen {formatLastSeen(lastSeen)}</Text>
-          ) : null}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={{ flexDirection: 'row', alignItems: 'center' }}
+        >
+          <View style={styles.headerAvatarWrapper}>
+            <Image
+              source={{ uri: otherUser?.profilePic || FALLBACK_AVATAR }}
+              style={styles.headerAvatar}
+            />
+            {isOnline && <View style={styles.headerOnlineDot} />}
+          </View>
+          <View style={{ justifyContent: 'center' }}>
+            <Text style={styles.headerName} numberOfLines={1}>
+              {otherUser?.name || 'Chat'}
+            </Text>
+            {isTyping ? (
+              <Text style={styles.headerStatusTyping}>typing…</Text>
+            ) : isOnline ? (
+              <Text style={styles.headerStatusOnline}>Online</Text>
+            ) : lastSeen ? (
+              <Text style={styles.headerStatusOffline}>last seen {formatLastSeen(lastSeen)}</Text>
+            ) : (
+              <Text style={styles.headerStatusOffline}>tap to view profile</Text>
+            )}
+          </View>
         </TouchableOpacity>
       ),
+      headerTitleAlign: 'left',
       headerRight: () => (
         <TouchableOpacity
           onPress={openSearch}
-          style={{ marginRight: 12 }}
+          style={{ marginRight: 14, padding: 4 }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="search" size={22} color="#fff" />
+          <Ionicons name="search-outline" size={22} color="#94a3b8" />
         </TouchableOpacity>
       ),
     });
@@ -586,11 +597,17 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
   // Header
-  headerAvatar: { width: 36, height: 36, borderRadius: 18, marginLeft: 10 },
-  headerName: { fontSize: 16, fontWeight: '700', color: '#fff' },
-  headerStatusTyping: { fontSize: 12, color: '#a7f3d0', fontStyle: 'italic' },
-  headerStatusOnline: { fontSize: 12, color: '#a7f3d0' },
-  headerStatusOffline: { fontSize: 12, color: 'rgba(255,255,255,0.7)' },
+  headerAvatarWrapper: { position: 'relative', marginRight: 10 },
+  headerAvatar: { width: 38, height: 38, borderRadius: 19 },
+  headerOnlineDot: {
+    position: 'absolute', bottom: 0, right: 0,
+    width: 11, height: 11, borderRadius: 6,
+    backgroundColor: '#22c55e', borderWidth: 2, borderColor: '#0f172a',
+  },
+  headerName: { fontSize: 15, fontWeight: '700', color: '#f1f5f9', maxWidth: 180 },
+  headerStatusTyping: { fontSize: 12, color: '#6ee7b7', fontStyle: 'italic', marginTop: 1 },
+  headerStatusOnline: { fontSize: 12, color: '#22c55e', marginTop: 1 },
+  headerStatusOffline: { fontSize: 11, color: '#64748b', marginTop: 1 },
 
   // Search bar
   searchBar: {
