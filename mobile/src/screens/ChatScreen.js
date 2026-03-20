@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } 
 import {
   View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ActivityIndicator,
-  Image, Alert, StatusBar, Keyboard
+  Image, Alert, StatusBar
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'; // <-- Added useSafeAreaInsets
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { Ionicons } from '@expo/vector-icons';
 import { io } from 'socket.io-client';
@@ -54,7 +54,6 @@ export default function ChatScreen({ route, navigation }) {
   const { currentUser } = useContext(AuthContext);
 
   const headerHeight = useHeaderHeight();
-  const insets = useSafeAreaInsets(); // <-- Get safe area insets
 
   // Compute my ID once; try every possible key the backend might use
   const myId = useMemo(
@@ -87,20 +86,6 @@ export default function ChatScreen({ route, navigation }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [matchIndices, setMatchIndices] = useState([]); // indices in `messages`
   const [currentMatch, setCurrentMatch] = useState(0);
-
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  // ── keyboard listener (Android edge-to-edge) ───────────────────────────────
-  useEffect(() => {
-    if (Platform.OS !== 'android') return;
-    const show = Keyboard.addListener('keyboardDidShow', (e) =>
-      setKeyboardHeight(e.endCoordinates.height)
-    );
-    const hide = Keyboard.addListener('keyboardDidHide', () =>
-      setKeyboardHeight(0)
-    );
-    return () => { show.remove(); hide.remove(); };
-  }, []);
 
   // refs
   const socketRef = useRef(null);
@@ -472,11 +457,10 @@ export default function ChatScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       <StatusBar backgroundColor="#0f172a" barStyle="light-content" />
-      
       <KeyboardAvoidingView
-        style={[styles.flex, Platform.OS === 'android' && { marginBottom: keyboardHeight }]}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
+        style={styles.flex}
+        behavior="padding"
+        keyboardVerticalOffset={headerHeight}
       >
         {/* ── Search bar ─────────────────────────────────────────────── */}
         {searchVisible && (
@@ -565,8 +549,7 @@ export default function ChatScreen({ route, navigation }) {
         )}
 
         {/* ── Input bar ──────────────────────────────────────────────── */}
-        {/* We add dynamic paddingBottom so it sits above the Android swipe gesture bar */}
-        <View style={[styles.inputRow, { paddingBottom: Platform.OS === 'android' ? (keyboardHeight > 0 ? 6 : Math.max(insets.bottom, 6)) : Math.max(insets.bottom, 6) }]}>
+        <View style={styles.inputRow}>
           <View style={styles.inputWrap}>
             <TouchableOpacity style={styles.attachBtn} onPress={handleAttach}>
               <Ionicons name="attach" size={22} color="#94a3b8" />
@@ -714,7 +697,7 @@ const styles = StyleSheet.create({
   // Input bar
   inputRow: {
     flexDirection: 'row', alignItems: 'flex-end',
-    paddingHorizontal: 8, paddingTop: 6, // Changed top padding slightly
+    paddingHorizontal: 8, paddingVertical: 6,
     backgroundColor: '#0f172a',
     borderTopWidth: 1, borderTopColor: '#1e293b',
   },
