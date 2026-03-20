@@ -359,6 +359,11 @@ export default function ChatScreen({ route, navigation }) {
   );
 
   // ── render message ─────────────────────────────────────────────────────────
+  const otherUserId = useMemo(
+    () => String(otherUser?._id || otherUser?.id || ''),
+    [otherUser]
+  );
+
   const renderMessage = useCallback(
     ({ item, index }) => {
       const mine = checkIsMe(item);
@@ -371,6 +376,10 @@ export default function ChatScreen({ route, navigation }) {
       const isImg = item.isImage || isImageUrl(item.content);
       const isHighlighted = searchQuery && matchIndices.includes(index);
       const isCurrentMatch = isHighlighted && matchIndices[currentMatch] === index;
+
+      // Read receipt: true if the other user's ID is in readBy
+      const isRead = mine && !item._pending && !item._failed && otherUserId
+        && (item.readBy || []).some((id) => String(id) === otherUserId);
 
       return (
         <View style={[styles.row, mine ? styles.rowRight : styles.rowLeft, !groupedWithNext && styles.rowSpaced]}>
@@ -406,7 +415,7 @@ export default function ChatScreen({ route, navigation }) {
                   <Ionicons
                     name={item._pending ? 'time-outline' : item._failed ? 'alert-circle-outline' : 'checkmark-done-outline'}
                     size={13}
-                    color={item._failed ? '#ef4444' : '#9ca3af'}
+                    color={item._failed ? '#ef4444' : isRead ? '#818cf8' : '#475569'}
                     style={{ marginLeft: 3 }}
                   />
                 )}
@@ -416,7 +425,7 @@ export default function ChatScreen({ route, navigation }) {
         </View>
       );
     },
-    [checkIsMe, messages, searchQuery, matchIndices, currentMatch, otherUser, renderHighlightedText]
+    [checkIsMe, messages, searchQuery, matchIndices, currentMatch, otherUser, otherUserId, renderHighlightedText]
   );
 
   // ── main render ────────────────────────────────────────────────────────────

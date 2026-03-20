@@ -1,4 +1,4 @@
-import React, { useState, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
   SafeAreaView, ActivityIndicator, Image, Platform
@@ -11,21 +11,25 @@ import API from '../api/axios';
 
 const FALLBACK_AVATAR = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
 
+const sortByLatest = (arr) =>
+  [...arr].sort((a, b) => {
+    const aTime = new Date(a.latestMessage?.createdAt || a.updatedAt || a.createdAt);
+    const bTime = new Date(b.latestMessage?.createdAt || b.updatedAt || b.createdAt);
+    return bTime - aTime;
+  });
+
 const ChatListScreen = ({ navigation }) => {
   const { currentUser, isGuest, logout } = useContext(AuthContext);
-  const { onlineUsers, connected } = useContext(SocketContext);
+  const { socketRef, onlineUsers, connected } = useContext(SocketContext);
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const myId = String(currentUser?._id || currentUser?.id || '');
 
   const fetchChats = async () => {
     try {
       const response = await API.get('/chat');
-      const sorted = (response.data || []).sort((a, b) => {
-        const aTime = new Date(a.latestMessage?.createdAt || a.updatedAt || a.createdAt);
-        const bTime = new Date(b.latestMessage?.createdAt || b.updatedAt || b.createdAt);
-        return bTime - aTime;
-      });
-      setChats(sorted);
+      setChats(sortByLatest(response.data || []));
     } catch (error) {
       console.error('Error fetching chats:', error);
     } finally {
@@ -33,12 +37,38 @@ const ChatListScreen = ({ navigation }) => {
     }
   };
 
+  // Re-fetch on screen focus (handles coming back from ChatScreen with read status updated)
   useFocusEffect(
     useCallback(() => {
       if (!isGuest) fetchChats();
       else setLoading(false);
     }, [isGuest])
   );
+
+  // Real-time: update chat list when a new message arrives
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket || !connected) return;
+
+    const handleNewMessage = (msg) => {
+      const incomingChatId = String(msg.chat?._id || msg.chat || '');
+      if (!incomingChatId) return;
+      setChats((prev) => {
+        const idx = prev.findIndex((c) => String(c._id) === incomingChatId);
+        if (idx === -1) {
+          // Chat not in list yet — refetch to get full chat object
+          fetchChats();
+          return prev;
+        }
+        const updated = [...prev];
+        updated[idx] = { ...updated[idx], latestMessage: msg };
+        return sortByLatest(updated);
+      });
+    };
+
+    socket.on('message received', handleNewMessage);
+    return () => socket.off('message received', handleNewMessage);
+  }, [connected]);
 
   if (isGuest) {
     return (
@@ -55,11 +85,9 @@ const ChatListScreen = ({ navigation }) => {
     );
   }
 
-  // Get the other user in a 1-on-1 chat
   const getOtherUser = (chat) => {
     if (!chat.users || !currentUser) return null;
-    const myId = String(currentUser._id || currentUser.id || '');
-    return chat.users.find(u => String(u._id || u.id) !== myId) || chat.users[0];
+    return chat.users.find((u) => String(u._id || u.id) !== myId) || chat.users[0];
   };
 
   const formatTime = (dateStr) => {
@@ -68,34 +96,34 @@ const ChatListScreen = ({ navigation }) => {
     const now = new Date();
     const diff = now - date;
     const hours = diff / (1000 * 60 * 60);
-
-    if (hours < 24) {
-      return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-    } else if (hours < 48) {
-      return 'Yesterday';
-    } else {
-      return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-    }
+    if (hours < 24) return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    if (hours < 48) return 'Yesterday';
+    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   };
 
   const renderChatItem = ({ item }) => {
     const otherUser = getOtherUser(item);
     const avatarUri = otherUser?.profilePic || FALLBACK_AVATAR;
     const lastMsg = item.latestMessage;
-    const myId = String(currentUser?._id || currentUser?.id || '');
-    const isUnread = lastMsg
-      && String(lastMsg.sender?._id) !== myId
-      && !(lastMsg.readBy || []).some(id => String(id) === myId);
 
-    const otherUserId = otherUser?._id || otherUser?.id;
-    const isUserOnline = otherUserId ? onlineUsers.has(String(otherUserId)) : false;
+    const isUnread = lastMsg
+      && String(lastMsg.sender?._id || lastMsg.sender?.id) !== myId
+      && !(lastMsg.readBy || []).some((id) => String(id) === myId);
+
+    const otherUserId = String(otherUser?._id || otherUser?.id || '');
+    const isUserOnline = otherUserId ? onlineUsers.has(otherUserId) : false;
+
+    const isMine = lastMsg && String(lastMsg.sender?._id || lastMsg.sender?.id) === myId;
 
     return (
       <TouchableOpacity
-        style={styles.chatItem}
+        style={[styles.chatItem, isUnread && styles.chatItemUnread]}
         onPress={() => navigation.navigate('ChatRoom', { chat: item, otherUser })}
         activeOpacity={0.7}
       >
+        {/* Unread accent bar */}
+        {isUnread && <View style={styles.unreadBar} />}
+
         <View style={styles.avatarWrapper}>
           <Image source={{ uri: avatarUri }} style={styles.avatar} />
           {isUserOnline && <View style={styles.onlineDot} />}
@@ -103,18 +131,27 @@ const ChatListScreen = ({ navigation }) => {
 
         <View style={styles.chatInfo}>
           <View style={styles.chatTopRow}>
-            <Text style={[styles.chatName, isUnread && styles.chatNameBold]} numberOfLines={1}>
+            <Text style={[styles.chatName, isUnread && styles.chatNameUnread]} numberOfLines={1}>
               {otherUser?.name || 'KampusCart User'}
             </Text>
-            <Text style={styles.chatTime}>{formatTime(lastMsg?.createdAt)}</Text>
+            <Text style={[styles.chatTime, isUnread && styles.chatTimeUnread]}>
+              {formatTime(lastMsg?.createdAt)}
+            </Text>
           </View>
           <View style={styles.chatBottomRow}>
-            <Text style={[styles.lastMessage, isUnread && styles.lastMessageBold]} numberOfLines={1}>
+            {!isUnread && isMine && (
+              <Ionicons name="checkmark-done-outline" size={14} color="#475569" style={{ marginRight: 4 }} />
+            )}
+            <Text style={[styles.lastMessage, isUnread && styles.lastMessageUnread]} numberOfLines={1}>
               {lastMsg
-                ? (String(lastMsg.sender?._id || lastMsg.sender?.id) === String(currentUser?._id || currentUser?.id) ? 'You: ' : '') + lastMsg.content
+                ? (isMine ? 'You: ' : '') + lastMsg.content
                 : 'Start a conversation...'}
             </Text>
-            {isUnread && <View style={styles.unreadDot} />}
+            {isUnread && (
+              <View style={styles.unreadBadge}>
+                <View style={styles.unreadDot} />
+              </View>
+            )}
           </View>
         </View>
       </TouchableOpacity>
@@ -123,7 +160,6 @@ const ChatListScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Messages</Text>
         <Ionicons name="chatbubbles" size={24} color="#4f46e5" />
@@ -164,12 +200,22 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 26, fontWeight: '800', color: '#f1f5f9' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
   chatItem: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 20, paddingVertical: 14,
     borderBottomWidth: 1, borderBottomColor: '#1e293b',
     backgroundColor: '#0f172a',
+    position: 'relative',
   },
+  chatItemUnread: {
+    backgroundColor: '#131f2e',
+  },
+  unreadBar: {
+    position: 'absolute', left: 0, top: 0, bottom: 0,
+    width: 3, backgroundColor: '#6366f1', borderRadius: 2,
+  },
+
   avatarWrapper: { position: 'relative', marginRight: 14 },
   avatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#273549' },
   onlineDot: {
@@ -177,19 +223,26 @@ const styles = StyleSheet.create({
     width: 13, height: 13, borderRadius: 7,
     backgroundColor: '#22c55e', borderWidth: 2, borderColor: '#0f172a',
   },
-  onlineText: { color: '#22c55e', fontSize: 13, fontWeight: '500' },
+
   chatInfo: { flex: 1 },
-  chatTopRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  chatName: { fontSize: 16, fontWeight: '500', color: '#f1f5f9', flex: 1, marginRight: 8 },
-  chatNameBold: { fontWeight: '700' },
-  chatTime: { fontSize: 12, color: '#64748b' },
+  chatTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+
+  chatName: { fontSize: 16, fontWeight: '500', color: '#94a3b8', flex: 1, marginRight: 8 },
+  chatNameUnread: { color: '#f1f5f9', fontWeight: '700' },
+
+  chatTime: { fontSize: 12, color: '#475569' },
+  chatTimeUnread: { color: '#6366f1', fontWeight: '600' },
+
   chatBottomRow: { flexDirection: 'row', alignItems: 'center' },
-  lastMessage: { fontSize: 14, color: '#64748b', flex: 1 },
-  lastMessageBold: { color: '#94a3b8', fontWeight: '600' },
+  lastMessage: { fontSize: 14, color: '#475569', flex: 1 },
+  lastMessageUnread: { color: '#94a3b8', fontWeight: '600' },
+
+  unreadBadge: { marginLeft: 8, justifyContent: 'center', alignItems: 'center' },
   unreadDot: {
     width: 10, height: 10, borderRadius: 5,
-    backgroundColor: '#818cf8', marginLeft: 8,
+    backgroundColor: '#6366f1',
   },
+
   emptyContent: { flex: 1 },
   emptyContainer: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
