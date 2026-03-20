@@ -633,15 +633,15 @@ const styles = StyleSheet.create({
   d3: { opacity: 1 },
 
   inputRow: {
-    flexDirection: 'row', alignItems: 'flex-end',
-    paddingHorizontal: 8, paddingVertical: 6,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 8, paddingVertical: 4,
     backgroundColor: '#0f172a', borderTopWidth: 1, borderTopColor: '#1e293b',
   },
   inputWrap: {
-    flex: 1, flexDirection: 'row', alignItems: 'flex-end',
-    backgroundColor: '#1e293b', borderRadius: 24,
-    paddingHorizontal: 8, paddingVertical: Platform.OS === 'ios' ? 10 : 4,
-    marginRight: 8, minHeight: 44, borderWidth: 1, borderColor: '#334155',
+    flex: 1, flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#1e293b', borderRadius: 20,
+    paddingHorizontal: 8, paddingVertical: Platform.OS === 'ios' ? 6 : 2,
+    marginRight: 8, minHeight: 36, borderWidth: 1, borderColor: '#334155',
   },
   attachBtn: { padding: 6, alignSelf: 'flex-end' },
   input: {
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === 'ios' ? 0 : 6,
   },
   sendBtn: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: '#4f46e5',
+    width: 36, height: 36, borderRadius: 18, backgroundColor: '#4f46e5',
     justifyContent: 'center', alignItems: 'center',
     shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4, shadowRadius: 3, elevation: 3,
