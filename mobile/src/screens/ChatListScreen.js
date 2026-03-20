@@ -20,6 +20,7 @@ const ChatListScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const socketRef = useRef(null);
+  const chatsRef = useRef([]);
 
   const fetchChats = async () => {
     try {
@@ -30,6 +31,7 @@ const ChatListScreen = ({ navigation }) => {
         const bTime = new Date(b.latestMessage?.createdAt || b.updatedAt || b.createdAt);
         return bTime - aTime;
       });
+      chatsRef.current = sorted;
       setChats(sorted);
     } catch (error) {
       console.error('Error fetching chats:', error);
@@ -46,7 +48,16 @@ const ChatListScreen = ({ navigation }) => {
       reconnection: true,
     });
 
-    socket.on('connect', () => socket.emit('setup', currentUser));
+    socket.on('connect', () => {
+      socket.emit('setup', currentUser);
+      // Fallback: check all users online after setup is likely processed
+      setTimeout(() => {
+        chatsRef.current.forEach(chat => {
+          const other = chat.users?.find(u => u._id !== currentUser?._id);
+          if (other?._id) socket.emit('check_online', other._id);
+        });
+      }, 600);
+    });
 
     socket.on('user_online', (userId) => {
       const id = typeof userId === 'object' ? String(userId._id || userId.id || '') : String(userId);
@@ -68,17 +79,13 @@ const ChatListScreen = ({ navigation }) => {
     socketRef.current = socket;
   };
 
-  // After chats load + socket connects, check online status for each user
+  // When chats load, immediately check online if socket is already connected
   useEffect(() => {
-    if (!chats.length || !socketRef.current) return;
-    const checkAll = () => {
-      chats.forEach(chat => {
-        const other = chat.users?.find(u => u._id !== currentUser?._id);
-        if (other?._id) socketRef.current?.emit('check_online', other._id);
-      });
-    };
-    if (socketRef.current.connected) checkAll();
-    else socketRef.current.once('connected', checkAll);
+    if (!chats.length || !socketRef.current?.connected) return;
+    chats.forEach(chat => {
+      const other = chat.users?.find(u => u._id !== currentUser?._id);
+      if (other?._id) socketRef.current.emit('check_online', other._id);
+    });
   }, [chats]);
 
   useFocusEffect(
