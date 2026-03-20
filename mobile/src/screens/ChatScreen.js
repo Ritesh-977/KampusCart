@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { useHeaderHeight } from '@react-navigation/elements';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
@@ -40,7 +39,6 @@ export default function ChatScreen({ route, navigation }) {
   const { chat, otherUser } = route.params;
   const { currentUser } = useContext(AuthContext);
   const { socketRef, connected, onlineUsers } = useContext(SocketContext);
-  const headerHeight = useHeaderHeight();
 
 
   const myId = useMemo(
@@ -432,7 +430,7 @@ export default function ChatScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       <StatusBar backgroundColor="#1e293b" barStyle="light-content" />
-      <KeyboardAvoidingView style={styles.flex} behavior="padding" keyboardVerticalOffset={headerHeight}>
+      <KeyboardAvoidingView style={styles.flex} behavior="padding" keyboardVerticalOffset={0}>
         {searchVisible && (
           <View style={styles.searchBar}>
             <TouchableOpacity onPress={closeSearch} style={{ padding: 4 }}>
