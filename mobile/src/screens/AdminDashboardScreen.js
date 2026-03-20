@@ -45,7 +45,7 @@ const AdminDashboardScreen = () => {
         API.get('/admin/reports'),
       ]);
       setStats(sRes.data);
-      setUsers(uRes.data);
+      setUsers((uRes.data || []).filter(u => u.isVerified));
       setItems(iRes.data);
       setReports(rRes.data);
     } catch (e) {
@@ -78,7 +78,7 @@ const AdminDashboardScreen = () => {
   const handleBan = async (type) => {
     if (!banTarget) return;
     try {
-      await API.put(`/admin/users/${banTarget._id}/ban`, { type });
+      await API.put(`/admin/users/${banTarget._id}/ban`, { banType: type });
       setUsers(prev => prev.map(u =>
         u._id === banTarget._id
           ? { ...u, isBanned: type !== 'unban' }
@@ -121,9 +121,9 @@ const AdminDashboardScreen = () => {
     >
       <Text style={styles.sectionHeading}>Platform Overview</Text>
       <View style={styles.statsGrid}>
-        <StatCard icon="people-outline" label="Users" value={stats?.totalUsers} color="#818cf8" />
-        <StatCard icon="pricetag-outline" label="Listings" value={stats?.totalItems} color="#34d399" />
-        <StatCard icon="checkmark-circle-outline" label="Sold" value={stats?.soldItems} color="#fbbf24" />
+        <StatCard icon="people-outline" label="Users" value={stats?.usersCount} color="#818cf8" />
+        <StatCard icon="pricetag-outline" label="Listings" value={stats?.itemsCount} color="#34d399" />
+        <StatCard icon="checkmark-circle-outline" label="Sold" value={stats?.soldItemsCount} color="#fbbf24" />
         <StatCard icon="flag-outline" label="Reports" value={reports.length} color="#f87171" />
       </View>
 
