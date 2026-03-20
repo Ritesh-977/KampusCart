@@ -1,29 +1,25 @@
-import React, { useState, useContext, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useContext, useCallback } from 'react';
 import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
   SafeAreaView, ActivityIndicator, Image, Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { io } from 'socket.io-client';
 import { AuthContext } from '../context/AuthContext';
+import { SocketContext } from '../context/SocketContext';
 import API from '../api/axios';
-
-const SOCKET_URL = 'https://api.kampuscart.site';
 
 const FALLBACK_AVATAR = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
 
 const ChatListScreen = ({ navigation }) => {
   const { currentUser, isGuest, logout } = useContext(AuthContext);
+  const { onlineUsers } = useContext(SocketContext);
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [onlineUsers, setOnlineUsers] = useState(new Set());
-  const socketRef = useRef(null);
 
   const fetchChats = async () => {
     try {
       const response = await API.get('/chat');
-      // Sort by most recent message/activity
       const sorted = (response.data || []).sort((a, b) => {
         const aTime = new Date(a.latestMessage?.createdAt || a.updatedAt || a.createdAt);
         const bTime = new Date(b.latestMessage?.createdAt || b.updatedAt || b.createdAt);
@@ -37,37 +33,10 @@ const ChatListScreen = ({ navigation }) => {
     }
   };
 
-  const initSocket = async () => {
-    const socket = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
-    });
-
-    socket.on('connect', () => {
-      // Send only _id — matches what the web client sends
-      socket.emit('setup', { _id: currentUser?._id });
-    });
-
-    // Backend broadcasts the full list of online user IDs whenever someone connects/disconnects
-    socket.on('online_users', (userIds) => {
-      setOnlineUsers(new Set(userIds.map(String)));
-    });
-
-    socketRef.current = socket;
-  };
-
   useFocusEffect(
     useCallback(() => {
-      if (!isGuest) {
-        fetchChats();
-        initSocket();
-      } else {
-        setLoading(false);
-      }
-      return () => {
-        socketRef.current?.disconnect();
-        socketRef.current = null;
-        setOnlineUsers(new Set());
-      };
+      if (!isGuest) fetchChats();
+      else setLoading(false);
     }, [isGuest])
   );
 
@@ -139,13 +108,11 @@ const ChatListScreen = ({ navigation }) => {
           </View>
           <View style={styles.chatBottomRow}>
             <Text style={[styles.lastMessage, isUnread && styles.lastMessageBold]} numberOfLines={1}>
-              {isUserOnline
-                ? <Text style={styles.onlineText}>● Online</Text>
-                : lastMsg
-                  ? (lastMsg.sender?._id === currentUser?._id ? 'You: ' : '') + lastMsg.content
-                  : 'Start a conversation...'}
+              {lastMsg
+                ? (lastMsg.sender?._id === currentUser?._id ? 'You: ' : '') + lastMsg.content
+                : 'Start a conversation...'}
             </Text>
-            {isUnread && !isUserOnline && <View style={styles.unreadDot} />}
+            {isUnread && <View style={styles.unreadDot} />}
           </View>
         </View>
       </TouchableOpacity>
