@@ -434,8 +434,8 @@ export default function ChatScreen({ route, navigation }) {
       <StatusBar backgroundColor="#1e293b" barStyle="light-content" />
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
+        behavior="padding"
+        keyboardVerticalOffset={headerHeight}
       >
         {searchVisible && (
           <View style={styles.searchBar}>
