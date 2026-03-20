@@ -3,7 +3,7 @@ import {
   View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet,
   Platform, ActivityIndicator, Image, Alert, StatusBar
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -39,6 +39,7 @@ export default function ChatScreen({ route, navigation }) {
   const { chat, otherUser } = route.params;
   const { currentUser } = useContext(AuthContext);
   const { socketRef, connected, onlineUsers } = useContext(SocketContext);
+  const { bottom: bottomInset } = useSafeAreaInsets();
 
 
   const myId = useMemo(
@@ -430,7 +431,7 @@ export default function ChatScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       <StatusBar backgroundColor="#1e293b" barStyle="light-content" />
-      <KeyboardAvoidingView style={styles.flex} behavior="padding" keyboardVerticalOffset={0}>
+      <KeyboardAvoidingView style={styles.flex} behavior="padding" keyboardVerticalOffset={bottomInset}>
         {searchVisible && (
           <View style={styles.searchBar}>
             <TouchableOpacity onPress={closeSearch} style={{ padding: 4 }}>
