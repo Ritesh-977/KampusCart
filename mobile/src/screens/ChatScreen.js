@@ -79,7 +79,8 @@ export default function ChatScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
-  const [lastSeen, setLastSeen] = useState(null);
+  // Pre-fill lastSeen from the user object passed in route params
+  const [lastSeen, setLastSeen] = useState(otherUser?.lastSeen || null);
 
   // search
   const [searchVisible, setSearchVisible] = useState(false);
@@ -157,6 +158,10 @@ export default function ChatScreen({ route, navigation }) {
     });
   }, [otherUser, isOnline, isTyping, lastSeen, searchVisible]);
 
+  // Keep myId in a ref so socket callbacks always see the current value
+  const myIdRef = useRef(myId);
+  useEffect(() => { myIdRef.current = myId; }, [myId]);
+
   // ── socket ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     fetchMessages();
@@ -168,32 +173,49 @@ export default function ChatScreen({ route, navigation }) {
     };
   }, []);
 
+  const joinRoom = (socket) => {
+    socket.emit('join_chat', chat._id);
+    if (otherUser?._id) socket.emit('check_online', otherUser._id);
+  };
+
   const initSocket = async () => {
     const token = await getToken();
     const socket = io(SOCKET_URL, {
-      transports: ['websocket'],
+      // Allow polling fallback — WebSocket-only silently fails on many campus/mobile networks
+      transports: ['websocket', 'polling'],
+      auth: { token },
       extraHeaders: { Authorization: `Bearer ${token}` },
       reconnection: true,
-      reconnectionDelay: 1500,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 10,
     });
 
+    // On initial connect: identify ourselves to the server
     socket.on('connect', () => {
       socket.emit('setup', currentUser);
-      // Fallback: emit check_online after setup is likely processed
-      setTimeout(() => {
-        socket.emit('join_chat', chat._id);
-        if (otherUser?._id) socket.emit('check_online', otherUser._id);
-      }, 500);
     });
 
+    // Server confirms our identity → now join the room
     socket.on('connected', () => {
-      socket.emit('join_chat', chat._id);
-      if (otherUser?._id) socket.emit('check_online', otherUser._id);
+      joinRoom(socket);
     });
+
+    // Reconnect after a drop → re-identify and re-join
+    socket.on('reconnect', () => {
+      socket.emit('setup', currentUser);
+      setTimeout(() => joinRoom(socket), 400);
+    });
+
+    // Fallback: if server never sends 'connected' within 2s, join anyway
+    const fallbackTimer = setTimeout(() => {
+      if (socket.connected) joinRoom(socket);
+    }, 2000);
+    socket.once('connected', () => clearTimeout(fallbackTimer));
 
     socket.on('message_received', (msg) => {
       const senderId = normalizeId(msg?.sender?._id) || normalizeId(msg?.sender);
-      if (senderId === myId) return; // already added optimistically
+      // Use ref so this always compares against the current user ID
+      if (myIdRef.current && senderId === myIdRef.current) return;
       setMessages((prev) => {
         if (prev.find((m) => m._id === msg._id)) return prev;
         return [...prev, msg];
@@ -224,10 +246,12 @@ export default function ChatScreen({ route, navigation }) {
       if (normalizeId(userId) === normalizeId(otherUser?._id)) {
         setIsOnline(online);
         if (!online && ls) setLastSeen(ls);
+        else if (online) setLastSeen(null);
       }
     });
 
-    socket.on('connect_error', (e) => console.warn('socket error:', e.message));
+    socket.on('connect_error', (e) => console.warn('[socket] connect_error:', e.message));
+    socket.on('disconnect', (reason) => console.warn('[socket] disconnected:', reason));
     socketRef.current = socket;
   };
 

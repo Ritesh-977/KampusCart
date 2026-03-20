@@ -43,7 +43,8 @@ const ChatListScreen = ({ navigation }) => {
   const initSocket = async () => {
     const token = await getToken();
     const socket = io(SOCKET_URL, {
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],
+      auth: { token },
       extraHeaders: { Authorization: `Bearer ${token}` },
       reconnection: true,
     });
@@ -145,8 +146,10 @@ const ChatListScreen = ({ navigation }) => {
     const otherUser = getOtherUser(item);
     const avatarUri = otherUser?.profilePic || FALLBACK_AVATAR;
     const lastMsg = item.latestMessage;
-    const isUnread = lastMsg && lastMsg.sender?._id !== currentUser?._id &&
-      !lastMsg.readBy?.includes(currentUser?._id);
+    const myId = String(currentUser?._id || '');
+    const isUnread = lastMsg
+      && String(lastMsg.sender?._id) !== myId
+      && !(lastMsg.readBy || []).some(id => String(id) === myId);
 
     const isUserOnline = onlineUsers.has(otherUser?._id);
 
