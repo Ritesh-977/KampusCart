@@ -39,7 +39,7 @@ const formatTime = (dateStr) => {
 export default function ChatScreen({ route, navigation }) {
   const { chat, otherUser } = route.params;
   const { currentUser } = useContext(AuthContext);
-  const { socket, onlineUsers } = useContext(SocketContext);
+  const { socketRef, connected, onlineUsers } = useContext(SocketContext);
 
   const headerHeight = useHeaderHeight();
 
@@ -148,19 +148,18 @@ export default function ChatScreen({ route, navigation }) {
   }, []);
 
   // ── socket room + listeners ─────────────────────────────────────────────────
+  // Re-runs whenever the socket connects (or reconnects)
   useEffect(() => {
-    if (!socket) return;
+    const socket = socketRef.current;
+    if (!socket || !connected) return;
 
-    // Join the chat room — if socket already connected (likely, since it connects at app start)
-    const joinRoom = () => socket.emit('join chat', chat._id);
-    if (socket.connected) joinRoom();
-    // Also handle the case where setup is still being acknowledged
-    socket.on('connected', joinRoom);
+    console.log('[ChatScreen] Socket connected, joining room:', chat._id);
+    socket.emit('join chat', chat._id);
 
-    // Incoming messages
     const handleMessage = (msg) => {
+      console.log('[ChatScreen] message received:', msg?._id);
       const senderId = normalizeId(msg?.sender?._id) || normalizeId(msg?.sender);
-      if (myId && senderId === myId) return; // skip own (already added optimistically)
+      if (myId && senderId === myId) return;
       setMessages((prev) => {
         if (prev.find((m) => m._id === msg._id)) return prev;
         return [...prev, msg];
@@ -176,13 +175,12 @@ export default function ChatScreen({ route, navigation }) {
     socket.on('stop typing', handleStopTyping);
 
     return () => {
-      socket.off('connected', joinRoom);
       socket.off('message received', handleMessage);
       socket.off('typing', handleTyping);
       socket.off('stop typing', handleStopTyping);
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     };
-  }, [socket, myId]);
+  }, [connected, myId]);
 
   // ── fetch ──────────────────────────────────────────────────────────────────
   const fetchMessages = async () => {
@@ -202,7 +200,7 @@ export default function ChatScreen({ route, navigation }) {
     const text = newMessage.trim();
     if (!text) return;
     setNewMessage('');
-    socket?.emit('stop typing', chat._id);
+    socketRef.current?.emit('stop typing', chat._id);
 
     const tempId = `tmp_${Date.now()}`;
     setMessages((prev) => [...prev, {
@@ -217,7 +215,8 @@ export default function ChatScreen({ route, navigation }) {
     try {
       const res = await API.post('/message', { content: text, chatId: chat._id });
       setMessages((prev) => prev.map((m) => (m._id === tempId ? res.data : m)));
-      socket?.emit('new message', res.data);
+      console.log('[ChatScreen] Emitting new message');
+      socketRef.current?.emit('new message', res.data);
     } catch {
       setMessages((prev) =>
         prev.map((m) => (m._id === tempId ? { ...m, _failed: true, _pending: false } : m))
@@ -265,7 +264,7 @@ export default function ChatScreen({ route, navigation }) {
       setMessages((prev) =>
         prev.map((m) => (m._id === tempId ? { ...res.data, isImage: true } : m))
       );
-      socket?.emit('new message', { ...res.data, isImage: true });
+      socketRef.current?.emit('new message', { ...res.data, isImage: true });
     } catch {
       setMessages((prev) => prev.filter((m) => m._id !== tempId));
       Alert.alert('Failed', 'Could not send image.');
@@ -275,11 +274,11 @@ export default function ChatScreen({ route, navigation }) {
   // ── typing ─────────────────────────────────────────────────────────────────
   const handleChangeText = (text) => {
     setNewMessage(text);
-    if (!socket) return;
-    socket.emit('typing', chat._id);
+    if (!socketRef.current) return;
+    socketRef.current.emit('typing', chat._id);
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     typingTimerRef.current = setTimeout(() => {
-      socket?.emit('stop typing', chat._id);
+      socketRef.current?.emit('stop typing', chat._id);
     }, 2000);
   };
 

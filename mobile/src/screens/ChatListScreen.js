@@ -13,7 +13,11 @@ const FALLBACK_AVATAR = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-pr
 
 const ChatListScreen = ({ navigation }) => {
   const { currentUser, isGuest, logout } = useContext(AuthContext);
-  const { onlineUsers } = useContext(SocketContext);
+  const { onlineUsers, connected } = useContext(SocketContext);
+  // Log so we can see the state in the console
+  React.useEffect(() => {
+    console.log('[ChatList] connected:', connected, '| onlineUsers:', [...onlineUsers]);
+  }, [connected, onlineUsers]);
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
 
