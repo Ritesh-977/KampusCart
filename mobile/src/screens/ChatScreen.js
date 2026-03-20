@@ -55,12 +55,8 @@ export default function ChatScreen({ route, navigation }) {
 
   const headerHeight = useHeaderHeight();
 
-  // Compute my ID once; try every possible key the backend might use
   const myId = useMemo(
-    () =>
-      normalizeId(currentUser?._id) ||
-      normalizeId(currentUser?.id) ||
-      '',
+    () => normalizeId(currentUser?._id) || normalizeId(currentUser?.id) || '',
     [currentUser]
   );
 
@@ -79,13 +75,12 @@ export default function ChatScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
-  // Pre-fill lastSeen from the user object passed in route params
   const [lastSeen, setLastSeen] = useState(otherUser?.lastSeen || null);
 
   // search
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [matchIndices, setMatchIndices] = useState([]); // indices in `messages`
+  const [matchIndices, setMatchIndices] = useState([]);
   const [currentMatch, setCurrentMatch] = useState(0);
 
   // refs
@@ -158,64 +153,50 @@ export default function ChatScreen({ route, navigation }) {
     });
   }, [otherUser, isOnline, isTyping, lastSeen, searchVisible]);
 
-  // Keep myId in a ref so socket callbacks always see the current value
-  const myIdRef = useRef(myId);
-  useEffect(() => { myIdRef.current = myId; }, [myId]);
-
   // ── socket ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     fetchMessages();
     initSocket();
     return () => {
-      socketRef.current?.emit('leave_chat', chat._id);
       socketRef.current?.disconnect();
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     };
   }, []);
 
-  const joinRoom = (socket) => {
-    socket.emit('join_chat', chat._id);
-    if (otherUser?._id) socket.emit('check_online', otherUser._id);
-  };
-
   const initSocket = async () => {
-    const token = await getToken();
     const socket = io(SOCKET_URL, {
-      // Allow polling fallback — WebSocket-only silently fails on many campus/mobile networks
       transports: ['websocket', 'polling'],
-      auth: { token },
-      extraHeaders: { Authorization: `Bearer ${token}` },
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 10,
     });
 
-    // On initial connect: identify ourselves to the server
     socket.on('connect', () => {
-      socket.emit('setup', currentUser);
+      // Send only _id — matches what the web client sends
+      socket.emit('setup', { _id: myId });
     });
 
-    // Server confirms our identity → now join the room
+    // Server confirms identity → join the chat room
     socket.on('connected', () => {
-      joinRoom(socket);
+      socket.emit('join chat', chat._id);
     });
 
-    // Reconnect after a drop → re-identify and re-join
-    socket.on('reconnect', () => {
-      socket.emit('setup', currentUser);
-      setTimeout(() => joinRoom(socket), 400);
-    });
-
-    // Fallback: if server never sends 'connected' within 2s, join anyway
+    // Fallback: if 'connected' never fires within 2s, join anyway
     const fallbackTimer = setTimeout(() => {
-      if (socket.connected) joinRoom(socket);
+      if (socket.connected) socket.emit('join chat', chat._id);
     }, 2000);
     socket.once('connected', () => clearTimeout(fallbackTimer));
 
-    socket.on('message_received', (msg) => {
+    // ── online_users: backend broadcasts full list on every connect/disconnect ──
+    // NOTE: backend event is 'online_users' (array of user ID strings)
+    socket.on('online_users', (userIds) => {
+      const otherId = String(otherUser?._id || '');
+      const online = otherId ? userIds.map(String).includes(otherId) : false;
+      setIsOnline(online);
+      if (online) setLastSeen(null);
+    });
+
+    // ── incoming message: backend event name is 'message received' (with space) ──
+    socket.on('message received', (msg) => {
       const senderId = normalizeId(msg?.sender?._id) || normalizeId(msg?.sender);
-      // Use ref so this always compares against the current user ID
-      if (myIdRef.current && senderId === myIdRef.current) return;
+      if (myId && senderId === myId) return;
       setMessages((prev) => {
         if (prev.find((m) => m._id === msg._id)) return prev;
         return [...prev, msg];
@@ -223,35 +204,11 @@ export default function ChatScreen({ route, navigation }) {
       API.put('/message/read', { chatId: chat._id }).catch(() => {});
     });
 
-    socket.on('typing', (chatId) => {
-      if (chatId === chat._id) setIsTyping(true);
-    });
-    socket.on('stop_typing', (chatId) => {
-      if (chatId === chat._id) setIsTyping(false);
-    });
-
-    socket.on('user_online', (userId) => {
-      if (normalizeId(userId) === normalizeId(otherUser?._id)) {
-        setIsOnline(true);
-        setLastSeen(null);
-      }
-    });
-    socket.on('user_offline', ({ userId, lastSeen: ls }) => {
-      if (normalizeId(userId) === normalizeId(otherUser?._id)) {
-        setIsOnline(false);
-        if (ls) setLastSeen(ls);
-      }
-    });
-    socket.on('online_status', ({ userId, online, lastSeen: ls }) => {
-      if (normalizeId(userId) === normalizeId(otherUser?._id)) {
-        setIsOnline(online);
-        if (!online && ls) setLastSeen(ls);
-        else if (online) setLastSeen(null);
-      }
-    });
+    // ── typing: backend emits with no data, just to the room ──
+    socket.on('typing', () => setIsTyping(true));
+    socket.on('stop typing', () => setIsTyping(false));
 
     socket.on('connect_error', (e) => console.warn('[socket] connect_error:', e.message));
-    socket.on('disconnect', (reason) => console.warn('[socket] disconnected:', reason));
     socketRef.current = socket;
   };
 
@@ -273,14 +230,15 @@ export default function ChatScreen({ route, navigation }) {
     const text = newMessage.trim();
     if (!text) return;
     setNewMessage('');
-    socketRef.current?.emit('stop_typing', chat._id);
+    // Backend event: 'stop typing' (with space)
+    socketRef.current?.emit('stop typing', chat._id);
 
     const tempId = `tmp_${Date.now()}`;
     const optimistic = {
       _id: tempId,
       content: text,
       sender: { _id: myId, name: currentUser?.name },
-      chat: chat._id,
+      chat: { _id: chat._id, users: chat.users },
       createdAt: new Date().toISOString(),
       _pending: true,
     };
@@ -289,7 +247,8 @@ export default function ChatScreen({ route, navigation }) {
     try {
       const res = await API.post('/message', { content: text, chatId: chat._id });
       setMessages((prev) => prev.map((m) => (m._id === tempId ? res.data : m)));
-      socketRef.current?.emit('new_message', res.data);
+      // Backend event: 'new message' (with space)
+      socketRef.current?.emit('new message', res.data);
     } catch {
       setMessages((prev) =>
         prev.map((m) => (m._id === tempId ? { ...m, _failed: true, _pending: false } : m))
@@ -323,7 +282,7 @@ export default function ChatScreen({ route, navigation }) {
         content: uri,
         isImage: true,
         sender: { _id: myId },
-        chat: chat._id,
+        chat: { _id: chat._id, users: chat.users },
         createdAt: new Date().toISOString(),
         _pending: true,
       },
@@ -340,7 +299,7 @@ export default function ChatScreen({ route, navigation }) {
       setMessages((prev) =>
         prev.map((m) => (m._id === tempId ? { ...res.data, isImage: true } : m))
       );
-      socketRef.current?.emit('new_message', { ...res.data, isImage: true });
+      socketRef.current?.emit('new message', { ...res.data, isImage: true });
     } catch {
       setMessages((prev) => prev.filter((m) => m._id !== tempId));
       Alert.alert('Failed', 'Could not send image.');
@@ -354,7 +313,7 @@ export default function ChatScreen({ route, navigation }) {
     socketRef.current.emit('typing', chat._id);
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     typingTimerRef.current = setTimeout(() => {
-      socketRef.current?.emit('stop_typing', chat._id);
+      socketRef.current?.emit('stop typing', chat._id);
     }, 2000);
   };
 
@@ -454,7 +413,6 @@ export default function ChatScreen({ route, navigation }) {
 
       const isImg = item.isImage || isImageUrl(item.content);
 
-      // Search highlight
       const isHighlighted = searchQuery && matchIndices.includes(index);
       const isCurrentMatch = isHighlighted && matchIndices[currentMatch] === index;
 
@@ -466,7 +424,6 @@ export default function ChatScreen({ route, navigation }) {
             !groupedWithNext && styles.rowSpaced,
           ]}
         >
-          {/* Avatar slot (left side only) */}
           {!mine && (
             <View style={styles.avatarSlot}>
               {showAvatar && (
@@ -507,7 +464,6 @@ export default function ChatScreen({ route, navigation }) {
               </View>
             )}
 
-            {/* Time + status */}
             {showTime && (
               <View style={[styles.metaRow, mine ? styles.metaRight : styles.metaLeft]}>
                 <Text style={styles.timeText}>{formatTime(item.createdAt)}</Text>
@@ -531,9 +487,8 @@ export default function ChatScreen({ route, navigation }) {
   // ── main render ────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safe} edges={['left', 'right']}>
-      <StatusBar backgroundColor="#0f172a" barStyle="light-content" />
-      
-      {/* Conditionally apply behavior and offset only for iOS */}
+      <StatusBar backgroundColor="#1e293b" barStyle="light-content" />
+
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -590,7 +545,6 @@ export default function ChatScreen({ route, navigation }) {
               !searchVisible && flatListRef.current?.scrollToEnd({ animated: false })
             }
             onScrollToIndexFailed={(info) => {
-              // Fallback if index is not yet measured
               setTimeout(() => {
                 flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
               }, 300);
@@ -671,7 +625,7 @@ const styles = StyleSheet.create({
   headerName: { fontSize: 15, fontWeight: '700', color: '#f1f5f9', maxWidth: 180 },
   headerStatusTyping: { fontSize: 12, color: '#6ee7b7', fontStyle: 'italic', marginTop: 1 },
   headerStatusOnline: { fontSize: 12, color: '#22c55e', marginTop: 1 },
-  headerStatusOffline: { fontSize: 11, color: '#64748b', marginTop: 1 },
+  headerStatusOffline: { fontSize: 11, color: '#94a3b8', marginTop: 1 },
 
   // Search bar
   searchBar: {
@@ -701,47 +655,19 @@ const styles = StyleSheet.create({
   bubbleColLeft: { alignItems: 'flex-start' },
   bubbleColRight: { alignItems: 'flex-end' },
 
-  // Search highlights — inline word-level highlight
-  matchCurrent: {
-    backgroundColor: '#fbbf24',
-    color: '#0f172a',
-    borderRadius: 3,
-  },
-  matchOther: {
-    backgroundColor: 'rgba(251, 191, 36, 0.35)',
-    borderRadius: 3,
-  },
-  // Bubble-level tint for the current match
-  bubbleCurrentMatch: {
-    borderWidth: 2,
-    borderColor: '#fbbf24',
-  },
-  imgBubbleCurrentMatch: {
-    borderWidth: 2,
-    borderColor: '#fbbf24',
-    borderRadius: 14,
-  },
+  // Search highlights — inline word-level
+  matchCurrent: { backgroundColor: '#fbbf24', color: '#0f172a', borderRadius: 3 },
+  matchOther: { backgroundColor: 'rgba(251, 191, 36, 0.35)', borderRadius: 3 },
+  bubbleCurrentMatch: { borderWidth: 2, borderColor: '#fbbf24' },
+  imgBubbleCurrentMatch: { borderWidth: 2, borderColor: '#fbbf24', borderRadius: 14 },
 
   // Text bubble
-  bubble: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 18,
-    marginBottom: 1,
-  },
-  bubbleMe: {
-    backgroundColor: '#4338ca',
-    borderTopRightRadius: 18,
-    borderBottomRightRadius: 6,
-  },
+  bubble: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, marginBottom: 1 },
+  bubbleMe: { backgroundColor: '#4338ca', borderTopRightRadius: 18, borderBottomRightRadius: 6 },
   bubbleOther: {
-    backgroundColor: '#1e293b',
-    borderTopLeftRadius: 18,
-    borderBottomLeftRadius: 6,
-    borderWidth: 1,
-    borderColor: '#334155',
+    backgroundColor: '#1e293b', borderTopLeftRadius: 18, borderBottomLeftRadius: 6,
+    borderWidth: 1, borderColor: '#334155',
   },
-  // Pointed tail at the top of a new sender group
   tailTopRight: { borderTopRightRadius: 4 },
   tailTopLeft: { borderTopLeftRadius: 4 },
 
@@ -763,20 +689,15 @@ const styles = StyleSheet.create({
   imgOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
 
   // Typing
-  typingRow: {
-    flexDirection: 'row', alignItems: 'flex-end',
-    paddingLeft: 12, paddingBottom: 8,
-  },
+  typingRow: { flexDirection: 'row', alignItems: 'flex-end', paddingLeft: 12, paddingBottom: 8 },
   typingAvatar: { width: 26, height: 26, borderRadius: 13, marginRight: 6 },
   typingBubble: {
     backgroundColor: '#1e293b', paddingHorizontal: 14, paddingVertical: 10,
-    borderRadius: 18, borderBottomLeftRadius: 4,
-    borderWidth: 1, borderColor: '#334155',
+    borderRadius: 18, borderBottomLeftRadius: 4, borderWidth: 1, borderColor: '#334155',
   },
   typingDots: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#64748b' },
@@ -788,15 +709,13 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row', alignItems: 'flex-end',
     paddingHorizontal: 8, paddingVertical: 6,
-    backgroundColor: '#0f172a',
-    borderTopWidth: 1, borderTopColor: '#1e293b',
+    backgroundColor: '#0f172a', borderTopWidth: 1, borderTopColor: '#1e293b',
   },
   inputWrap: {
     flex: 1, flexDirection: 'row', alignItems: 'flex-end',
     backgroundColor: '#1e293b', borderRadius: 24,
     paddingHorizontal: 8, paddingVertical: Platform.OS === 'ios' ? 10 : 4,
-    marginRight: 8, minHeight: 44,
-    borderWidth: 1, borderColor: '#334155',
+    marginRight: 8, minHeight: 44, borderWidth: 1, borderColor: '#334155',
   },
   attachBtn: { padding: 6, alignSelf: 'flex-end' },
   input: {
@@ -805,8 +724,7 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === 'ios' ? 0 : 6,
   },
   sendBtn: {
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: '#4f46e5',
+    width: 44, height: 44, borderRadius: 22, backgroundColor: '#4f46e5',
     justifyContent: 'center', alignItems: 'center',
     shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4, shadowRadius: 3, elevation: 3,

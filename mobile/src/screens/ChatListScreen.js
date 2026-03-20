@@ -8,7 +8,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { io } from 'socket.io-client';
 import { AuthContext } from '../context/AuthContext';
 import API from '../api/axios';
-import { getToken } from '../utils/secureStorage';
 
 const SOCKET_URL = 'https://api.kampuscart.site';
 
@@ -20,7 +19,6 @@ const ChatListScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const socketRef = useRef(null);
-  const chatsRef = useRef([]);
 
   const fetchChats = async () => {
     try {
@@ -31,7 +29,6 @@ const ChatListScreen = ({ navigation }) => {
         const bTime = new Date(b.latestMessage?.createdAt || b.updatedAt || b.createdAt);
         return bTime - aTime;
       });
-      chatsRef.current = sorted;
       setChats(sorted);
     } catch (error) {
       console.error('Error fetching chats:', error);
@@ -41,53 +38,22 @@ const ChatListScreen = ({ navigation }) => {
   };
 
   const initSocket = async () => {
-    const token = await getToken();
     const socket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
-      auth: { token },
-      extraHeaders: { Authorization: `Bearer ${token}` },
-      reconnection: true,
     });
 
     socket.on('connect', () => {
-      socket.emit('setup', currentUser);
-      // Fallback: check all users online after setup is likely processed
-      setTimeout(() => {
-        chatsRef.current.forEach(chat => {
-          const other = chat.users?.find(u => u._id !== currentUser?._id);
-          if (other?._id) socket.emit('check_online', other._id);
-        });
-      }, 600);
+      // Send only _id — matches what the web client sends
+      socket.emit('setup', { _id: currentUser?._id });
     });
 
-    socket.on('user_online', (userId) => {
-      const id = typeof userId === 'object' ? String(userId._id || userId.id || '') : String(userId);
-      setOnlineUsers(prev => new Set([...prev, id]));
-    });
-    socket.on('user_offline', ({ userId }) => {
-      const id = typeof userId === 'object' ? String(userId._id || userId.id || '') : String(userId);
-      setOnlineUsers(prev => { const next = new Set(prev); next.delete(id); return next; });
-    });
-    socket.on('online_status', ({ userId, online }) => {
-      const id = typeof userId === 'object' ? String(userId._id || userId.id || '') : String(userId);
-      setOnlineUsers(prev => {
-        const next = new Set(prev);
-        if (online) next.add(id); else next.delete(id);
-        return next;
-      });
+    // Backend broadcasts the full list of online user IDs whenever someone connects/disconnects
+    socket.on('online_users', (userIds) => {
+      setOnlineUsers(new Set(userIds.map(String)));
     });
 
     socketRef.current = socket;
   };
-
-  // When chats load, immediately check online if socket is already connected
-  useEffect(() => {
-    if (!chats.length || !socketRef.current?.connected) return;
-    chats.forEach(chat => {
-      const other = chat.users?.find(u => u._id !== currentUser?._id);
-      if (other?._id) socketRef.current.emit('check_online', other._id);
-    });
-  }, [chats]);
 
   useFocusEffect(
     useCallback(() => {
@@ -151,7 +117,7 @@ const ChatListScreen = ({ navigation }) => {
       && String(lastMsg.sender?._id) !== myId
       && !(lastMsg.readBy || []).some(id => String(id) === myId);
 
-    const isUserOnline = onlineUsers.has(otherUser?._id);
+    const isUserOnline = otherUser?._id ? onlineUsers.has(String(otherUser._id)) : false;
 
     return (
       <TouchableOpacity
