@@ -97,7 +97,15 @@ export default function ChatScreen({ route, navigation }) {
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
-      headerStyle: { backgroundColor: '#0f172a', elevation: 0, shadowOpacity: 0 },
+      headerStyle: {
+        backgroundColor: '#1e293b',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOpacity: 0.3,
+        shadowOffset: { width: 0, height: 2 },
+        borderBottomWidth: 1,
+        borderBottomColor: '#2d3f5f',
+      },
       headerTintColor: '#fff',
       headerLeft: () => (
         <TouchableOpacity
@@ -171,11 +179,16 @@ export default function ChatScreen({ route, navigation }) {
 
     socket.on('connect', () => {
       socket.emit('setup', currentUser);
+      // Fallback: emit check_online after setup is likely processed
+      setTimeout(() => {
+        socket.emit('join_chat', chat._id);
+        if (otherUser?._id) socket.emit('check_online', otherUser._id);
+      }, 500);
     });
 
     socket.on('connected', () => {
       socket.emit('join_chat', chat._id);
-      socket.emit('check_online', otherUser?._id);
+      if (otherUser?._id) socket.emit('check_online', otherUser._id);
     });
 
     socket.on('message_received', (msg) => {
@@ -371,6 +384,39 @@ export default function ChatScreen({ route, navigation }) {
     scrollToMatch(matchIndices[next]);
   };
 
+  // ── render highlighted text ────────────────────────────────────────────────
+  const renderHighlightedText = useCallback(
+    (text, mine, isCurrentMatchItem) => {
+      const baseStyle = [styles.bubbleText, mine ? styles.textMe : styles.textOther];
+      if (!searchQuery || !text) {
+        return <Text style={baseStyle}>{text}</Text>;
+      }
+      const lower = text.toLowerCase();
+      const lowerQuery = searchQuery.toLowerCase();
+      const segments = [];
+      let pos = 0;
+      while (pos < text.length) {
+        const idx = lower.indexOf(lowerQuery, pos);
+        if (idx === -1) { segments.push({ t: text.slice(pos), h: false }); break; }
+        if (idx > pos) segments.push({ t: text.slice(pos, idx), h: false });
+        segments.push({ t: text.slice(idx, idx + searchQuery.length), h: true });
+        pos = idx + searchQuery.length;
+      }
+      return (
+        <Text style={baseStyle}>
+          {segments.map((seg, i) =>
+            seg.h ? (
+              <Text key={i} style={isCurrentMatchItem ? styles.matchCurrent : styles.matchOther}>
+                {seg.t}
+              </Text>
+            ) : seg.t
+          )}
+        </Text>
+      );
+    },
+    [searchQuery]
+  );
+
   // ── render message ─────────────────────────────────────────────────────────
   const renderMessage = useCallback(
     ({ item, index }) => {
@@ -409,12 +455,12 @@ export default function ChatScreen({ route, navigation }) {
           )}
 
           <View style={[styles.bubbleCol, mine ? styles.bubbleColRight : styles.bubbleColLeft]}>
-            {/* Highlight wrapper */}
-            {isCurrentMatch && <View style={styles.currentMatchHighlight} />}
-            {isHighlighted && !isCurrentMatch && <View style={styles.matchHighlight} />}
-
             {isImg ? (
-              <View style={[styles.imgBubble, mine ? styles.imgBubbleMe : styles.imgBubbleOther]}>
+              <View style={[
+                styles.imgBubble,
+                mine ? styles.imgBubbleMe : styles.imgBubbleOther,
+                isCurrentMatch && styles.imgBubbleCurrentMatch,
+              ]}>
                 <Image source={{ uri: item.content }} style={styles.chatImage} resizeMode="cover" />
                 {item._pending && (
                   <View style={styles.imgOverlay}>
@@ -427,19 +473,13 @@ export default function ChatScreen({ route, navigation }) {
                 style={[
                   styles.bubble,
                   mine ? styles.bubbleMe : styles.bubbleOther,
-                  // tail shaping
                   mine
-                    ? prevSender !== thisSender
-                      ? styles.tailTopRight
-                      : null
-                    : prevSender !== thisSender
-                    ? styles.tailTopLeft
-                    : null,
+                    ? prevSender !== thisSender ? styles.tailTopRight : null
+                    : prevSender !== thisSender ? styles.tailTopLeft : null,
+                  isCurrentMatch && styles.bubbleCurrentMatch,
                 ]}
               >
-                <Text style={[styles.bubbleText, mine ? styles.textMe : styles.textOther]}>
-                  {item.content}
-                </Text>
+                {renderHighlightedText(item.content, mine, isCurrentMatch)}
               </View>
             )}
 
@@ -461,7 +501,7 @@ export default function ChatScreen({ route, navigation }) {
         </View>
       );
     },
-    [checkIsMe, messages, searchQuery, matchIndices, currentMatch, otherUser]
+    [checkIsMe, messages, searchQuery, matchIndices, currentMatch, otherUser, renderHighlightedText]
   );
 
   // ── main render ────────────────────────────────────────────────────────────
@@ -602,7 +642,7 @@ const styles = StyleSheet.create({
   headerOnlineDot: {
     position: 'absolute', bottom: 0, right: 0,
     width: 11, height: 11, borderRadius: 6,
-    backgroundColor: '#22c55e', borderWidth: 2, borderColor: '#0f172a',
+    backgroundColor: '#22c55e', borderWidth: 2, borderColor: '#1e293b',
   },
   headerName: { fontSize: 15, fontWeight: '700', color: '#f1f5f9', maxWidth: 180 },
   headerStatusTyping: { fontSize: 12, color: '#6ee7b7', fontStyle: 'italic', marginTop: 1 },
@@ -637,18 +677,25 @@ const styles = StyleSheet.create({
   bubbleColLeft: { alignItems: 'flex-start' },
   bubbleColRight: { alignItems: 'flex-end' },
 
-  // Search highlights (absolutely behind bubble)
-  currentMatchHighlight: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 214, 0, 0.45)',
-    borderRadius: 14,
-    zIndex: -1,
+  // Search highlights — inline word-level highlight
+  matchCurrent: {
+    backgroundColor: '#fbbf24',
+    color: '#0f172a',
+    borderRadius: 3,
   },
-  matchHighlight: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 214, 0, 0.2)',
+  matchOther: {
+    backgroundColor: 'rgba(251, 191, 36, 0.35)',
+    borderRadius: 3,
+  },
+  // Bubble-level tint for the current match
+  bubbleCurrentMatch: {
+    borderWidth: 2,
+    borderColor: '#fbbf24',
+  },
+  imgBubbleCurrentMatch: {
+    borderWidth: 2,
+    borderColor: '#fbbf24',
     borderRadius: 14,
-    zIndex: -1,
   },
 
   // Text bubble
