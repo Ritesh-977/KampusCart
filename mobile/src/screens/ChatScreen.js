@@ -4,7 +4,8 @@ import {
   KeyboardAvoidingView, Platform, ActivityIndicator,
   Image, Alert, StatusBar
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'; // <-- Added useSafeAreaInsets
+import { useHeaderHeight } from '@react-navigation/elements';
 import { Ionicons } from '@expo/vector-icons';
 import { io } from 'socket.io-client';
 import * as ImagePicker from 'expo-image-picker';
@@ -51,6 +52,9 @@ const formatLastSeen = (dateStr) => {
 export default function ChatScreen({ route, navigation }) {
   const { chat, otherUser } = route.params;
   const { currentUser } = useContext(AuthContext);
+
+  const headerHeight = useHeaderHeight();
+  const insets = useSafeAreaInsets(); // <-- Get safe area insets
 
   // Compute my ID once; try every possible key the backend might use
   const myId = useMemo(
@@ -452,12 +456,14 @@ export default function ChatScreen({ route, navigation }) {
 
   // ── main render ────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
+    <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       <StatusBar backgroundColor="#0f172a" barStyle="light-content" />
+      
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        behavior="padding"
+        enabled={Platform.OS === 'ios'}
+        keyboardVerticalOffset={headerHeight}
       >
         {/* ── Search bar ─────────────────────────────────────────────── */}
         {searchVisible && (
@@ -546,7 +552,8 @@ export default function ChatScreen({ route, navigation }) {
         )}
 
         {/* ── Input bar ──────────────────────────────────────────────── */}
-        <View style={styles.inputRow}>
+        {/* We add dynamic paddingBottom so it sits above the Android swipe gesture bar */}
+        <View style={[styles.inputRow, { paddingBottom: Math.max(insets.bottom, 6) }]}>
           <View style={styles.inputWrap}>
             <TouchableOpacity style={styles.attachBtn} onPress={handleAttach}>
               <Ionicons name="attach" size={22} color="#94a3b8" />
@@ -694,7 +701,7 @@ const styles = StyleSheet.create({
   // Input bar
   inputRow: {
     flexDirection: 'row', alignItems: 'flex-end',
-    paddingHorizontal: 8, paddingVertical: 6,
+    paddingHorizontal: 8, paddingTop: 6, // Changed top padding slightly
     backgroundColor: '#0f172a',
     borderTopWidth: 1, borderTopColor: '#1e293b',
   },
