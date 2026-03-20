@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } 
 import {
   View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ActivityIndicator,
-  Image, Alert, StatusBar
+  Image, Alert, StatusBar, Keyboard
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'; // <-- Added useSafeAreaInsets
 import { useHeaderHeight } from '@react-navigation/elements';
@@ -87,6 +87,20 @@ export default function ChatScreen({ route, navigation }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [matchIndices, setMatchIndices] = useState([]); // indices in `messages`
   const [currentMatch, setCurrentMatch] = useState(0);
+
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // ── keyboard listener (Android edge-to-edge) ───────────────────────────────
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const show = Keyboard.addListener('keyboardDidShow', (e) =>
+      setKeyboardHeight(e.endCoordinates.height)
+    );
+    const hide = Keyboard.addListener('keyboardDidHide', () =>
+      setKeyboardHeight(0)
+    );
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   // refs
   const socketRef = useRef(null);
@@ -460,10 +474,9 @@ export default function ChatScreen({ route, navigation }) {
       <StatusBar backgroundColor="#0f172a" barStyle="light-content" />
       
       <KeyboardAvoidingView
-        style={styles.flex}
-        behavior="padding"
-        enabled={Platform.OS === 'ios'}
-        keyboardVerticalOffset={headerHeight}
+        style={[styles.flex, Platform.OS === 'android' && { marginBottom: keyboardHeight }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
       >
         {/* ── Search bar ─────────────────────────────────────────────── */}
         {searchVisible && (
@@ -553,7 +566,7 @@ export default function ChatScreen({ route, navigation }) {
 
         {/* ── Input bar ──────────────────────────────────────────────── */}
         {/* We add dynamic paddingBottom so it sits above the Android swipe gesture bar */}
-        <View style={[styles.inputRow, { paddingBottom: Math.max(insets.bottom, 6) }]}>
+        <View style={[styles.inputRow, { paddingBottom: Platform.OS === 'android' ? (keyboardHeight > 0 ? 6 : Math.max(insets.bottom, 6)) : Math.max(insets.bottom, 6) }]}>
           <View style={styles.inputWrap}>
             <TouchableOpacity style={styles.attachBtn} onPress={handleAttach}>
               <Ionicons name="attach" size={22} color="#94a3b8" />
