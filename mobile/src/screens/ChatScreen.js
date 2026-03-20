@@ -457,10 +457,12 @@ export default function ChatScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       <StatusBar backgroundColor="#0f172a" barStyle="light-content" />
+      
+      {/* Conditionally apply behavior and offset only for iOS */}
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior="padding"
-        keyboardVerticalOffset={headerHeight}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
       >
         {/* ── Search bar ─────────────────────────────────────────────── */}
         {searchVisible && (
