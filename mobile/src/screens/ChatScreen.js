@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet,
-  Platform, ActivityIndicator, Image, Alert, StatusBar
+  Platform, ActivityIndicator, Image, Alert, StatusBar,
+  Animated, Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useKeyboardAnimation } from 'react-native-keyboard-controller';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
-
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
@@ -41,8 +39,25 @@ export default function ChatScreen({ route, navigation }) {
   const { chat, otherUser } = route.params;
   const { currentUser } = useContext(AuthContext);
   const { socketRef, connected, onlineUsers } = useContext(SocketContext);
-  const { height: kbHeight } = useKeyboardAnimation();
-  const kbStyle = useAnimatedStyle(() => ({ paddingBottom: kbHeight.value }));
+  const kbOffset = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const onShow = Keyboard.addListener('keyboardDidShow', (e) => {
+      Animated.timing(kbOffset, {
+        toValue: e.endCoordinates.height,
+        duration: 0,
+        useNativeDriver: false,
+      }).start();
+    });
+    const onHide = Keyboard.addListener('keyboardDidHide', () => {
+      Animated.timing(kbOffset, {
+        toValue: 0,
+        duration: 0,
+        useNativeDriver: false,
+      }).start();
+    });
+    return () => { onShow.remove(); onHide.remove(); };
+  }, []);
 
 
   const myId = useMemo(
@@ -434,7 +449,7 @@ export default function ChatScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       <StatusBar backgroundColor="#1e293b" barStyle="light-content" />
-      <Animated.View style={[styles.flex, kbStyle]}>
+      <Animated.View style={[styles.flex, { paddingBottom: kbOffset }]}>
         {searchVisible && (
           <View style={styles.searchBar}>
             <TouchableOpacity onPress={closeSearch} style={{ padding: 4 }}>
