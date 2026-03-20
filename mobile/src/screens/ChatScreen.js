@@ -40,7 +40,7 @@ export default function ChatScreen({ route, navigation }) {
   const { currentUser } = useContext(AuthContext);
   const { socketRef, connected, onlineUsers } = useContext(SocketContext);
 
-  const keyboard = useAnimatedKeyboard();
+  const keyboard = useAnimatedKeyboard({ isStatusBarTranslucentAndroid: true });
   const kbStyle = useAnimatedStyle(() => ({ paddingBottom: keyboard.height.value }));
 
   const myId = useMemo(
