@@ -158,6 +158,9 @@ export default function ChatScreen({ route, navigation }) {
 
     const handleMessage = (msg) => {
       console.log('[ChatScreen] message received:', msg?._id);
+      // Only handle messages for this chat
+      const msgChatId = normalizeId(msg?.chat?._id) || normalizeId(msg?.chat);
+      if (msgChatId && msgChatId !== chat._id) return;
       const senderId = normalizeId(msg?.sender?._id) || normalizeId(msg?.sender);
       if (myId && senderId === myId) return;
       setMessages((prev) => {

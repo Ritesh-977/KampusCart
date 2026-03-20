@@ -40,12 +40,12 @@ export const SocketProvider = ({ children }) => {
 
     socket.on('connect', () => {
       console.log('[SocketContext] Socket connected, id:', socket.id);
+      setConnected(true);
       socket.emit('setup', { _id: String(currentUser._id) });
     });
 
     socket.on('connected', () => {
-      console.log('[SocketContext] Server acknowledged setup (connected event)');
-      setConnected(true);
+      console.log('[SocketContext] Server acknowledged setup');
     });
 
     socket.on('online_users', (userIds) => {
@@ -56,11 +56,6 @@ export const SocketProvider = ({ children }) => {
     socket.on('disconnect', (reason) => {
       console.log('[SocketContext] Socket disconnected:', reason);
       setConnected(false);
-    });
-
-    socket.on('reconnect', () => {
-      console.log('[SocketContext] Socket reconnected');
-      socket.emit('setup', { _id: String(currentUser._id) });
     });
 
     socket.on('connect_error', (e) => {
