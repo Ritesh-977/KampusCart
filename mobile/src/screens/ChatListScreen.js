@@ -85,7 +85,7 @@ const ChatListScreen = ({ navigation }) => {
     const otherUser = getOtherUser(item);
     const avatarUri = otherUser?.profilePic || FALLBACK_AVATAR;
     const lastMsg = item.latestMessage;
-    const myId = String(currentUser?._id || '');
+    const myId = String(currentUser?._id || currentUser?.id || '');
     const isUnread = lastMsg
       && String(lastMsg.sender?._id) !== myId
       && !(lastMsg.readBy || []).some(id => String(id) === myId);
@@ -113,7 +113,7 @@ const ChatListScreen = ({ navigation }) => {
           <View style={styles.chatBottomRow}>
             <Text style={[styles.lastMessage, isUnread && styles.lastMessageBold]} numberOfLines={1}>
               {lastMsg
-                ? (lastMsg.sender?._id === currentUser?._id ? 'You: ' : '') + lastMsg.content
+                ? (String(lastMsg.sender?._id || lastMsg.sender?.id) === String(currentUser?._id || currentUser?.id) ? 'You: ' : '') + lastMsg.content
                 : 'Start a conversation...'}
             </Text>
             {isUnread && <View style={styles.unreadDot} />}
