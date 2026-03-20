@@ -21,11 +21,7 @@ export const SocketProvider = ({ children }) => {
 
   const userId = currentUser?._id || currentUser?.id;
 
-  // DIAGNOSTIC: log on every render
-  console.log('[SocketContext] render → currentUser:', JSON.stringify(currentUser), '| userId:', userId, '| userToken:', !!userToken);
-
   useEffect(() => {
-    console.log('[SocketContext] effect → userId:', userId, '| userToken:', !!userToken);
     if (!userId || !userToken) {
       socketRef.current?.disconnect();
       socketRef.current = null;

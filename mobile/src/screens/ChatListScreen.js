@@ -14,10 +14,6 @@ const FALLBACK_AVATAR = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-pr
 const ChatListScreen = ({ navigation }) => {
   const { currentUser, isGuest, logout } = useContext(AuthContext);
   const { onlineUsers, connected } = useContext(SocketContext);
-  // Log so we can see the state in the console
-  React.useEffect(() => {
-    console.log('[ChatList] connected:', connected, '| onlineUsers:', [...onlineUsers]);
-  }, [connected, onlineUsers]);
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,7 +58,8 @@ const ChatListScreen = ({ navigation }) => {
   // Get the other user in a 1-on-1 chat
   const getOtherUser = (chat) => {
     if (!chat.users || !currentUser) return null;
-    return chat.users.find(u => u._id !== currentUser._id) || chat.users[0];
+    const myId = String(currentUser._id || currentUser.id || '');
+    return chat.users.find(u => String(u._id || u.id) !== myId) || chat.users[0];
   };
 
   const formatTime = (dateStr) => {
@@ -92,7 +89,6 @@ const ChatListScreen = ({ navigation }) => {
 
     const otherUserId = otherUser?._id || otherUser?.id;
     const isUserOnline = otherUserId ? onlineUsers.has(String(otherUserId)) : false;
-    console.log('[ChatList] item check → otherUserId:', otherUserId, '| onlineUsers:', [...onlineUsers], '| isOnline:', isUserOnline);
 
     return (
       <TouchableOpacity
