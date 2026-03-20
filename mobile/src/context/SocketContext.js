@@ -19,8 +19,10 @@ export const SocketProvider = ({ children }) => {
   const [connected, setConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
 
+  const userId = currentUser?._id || currentUser?.id;
+
   useEffect(() => {
-    if (!currentUser?._id || !userToken) {
+    if (!userId || !userToken) {
       socketRef.current?.disconnect();
       socketRef.current = null;
       setConnected(false);
@@ -28,7 +30,7 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    console.log('[SocketContext] Creating socket for user:', currentUser._id);
+    console.log('[SocketContext] Creating socket for user:', userId);
 
     const socket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
@@ -41,7 +43,7 @@ export const SocketProvider = ({ children }) => {
     socket.on('connect', () => {
       console.log('[SocketContext] Socket connected, id:', socket.id);
       setConnected(true);
-      socket.emit('setup', { _id: String(currentUser._id) });
+      socket.emit('setup', { _id: String(userId) });
     });
 
     socket.on('connected', () => {
@@ -69,7 +71,7 @@ export const SocketProvider = ({ children }) => {
       setConnected(false);
       setOnlineUsers(new Set());
     };
-  }, [currentUser?._id, userToken]);
+  }, [userId, userToken]);
 
   return (
     <SocketContext.Provider value={{ socketRef, connected, onlineUsers }}>

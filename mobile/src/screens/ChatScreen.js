@@ -44,7 +44,7 @@ export default function ChatScreen({ route, navigation }) {
   const headerHeight = useHeaderHeight();
 
   const myId = useMemo(
-    () => normalizeId(currentUser?._id) || normalizeId(currentUser?.id) || '',
+    () => String(currentUser?._id || currentUser?.id || ''),
     [currentUser]
   );
 
