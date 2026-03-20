@@ -3,8 +3,10 @@ import {
   View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet,
   Platform, ActivityIndicator, Image, Alert, StatusBar
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useKeyboardAnimation } from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
@@ -39,7 +41,8 @@ export default function ChatScreen({ route, navigation }) {
   const { chat, otherUser } = route.params;
   const { currentUser } = useContext(AuthContext);
   const { socketRef, connected, onlineUsers } = useContext(SocketContext);
-  const { bottom: bottomInset } = useSafeAreaInsets();
+  const { height: kbHeight } = useKeyboardAnimation();
+  const kbStyle = useAnimatedStyle(() => ({ paddingBottom: kbHeight.value }));
 
 
   const myId = useMemo(
@@ -431,7 +434,7 @@ export default function ChatScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       <StatusBar backgroundColor="#1e293b" barStyle="light-content" />
-      <KeyboardAvoidingView style={styles.flex} behavior="padding" keyboardVerticalOffset={bottomInset}>
+      <Animated.View style={[styles.flex, kbStyle]}>
         {searchVisible && (
           <View style={styles.searchBar}>
             <TouchableOpacity onPress={closeSearch} style={{ padding: 4 }}>
@@ -521,7 +524,7 @@ export default function ChatScreen({ route, navigation }) {
             <Ionicons name="send" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
+      </Animated.View>
     </SafeAreaView>
   );
 }
