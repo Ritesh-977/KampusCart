@@ -90,7 +90,9 @@ const ChatListScreen = ({ navigation }) => {
       && String(lastMsg.sender?._id) !== myId
       && !(lastMsg.readBy || []).some(id => String(id) === myId);
 
-    const isUserOnline = otherUser?._id ? onlineUsers.has(String(otherUser._id)) : false;
+    const otherUserId = otherUser?._id || otherUser?.id;
+    const isUserOnline = otherUserId ? onlineUsers.has(String(otherUserId)) : false;
+    console.log('[ChatList] item check → otherUserId:', otherUserId, '| onlineUsers:', [...onlineUsers], '| isOnline:', isUserOnline);
 
     return (
       <TouchableOpacity
