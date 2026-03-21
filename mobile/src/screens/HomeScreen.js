@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api/axios';
 import ItemCard from '../components/ItemCard';
 import { colleges } from '../utils/colleges';
@@ -55,6 +56,16 @@ const FEATURES = [
   { label: 'Food Share',     icon: 'fast-food',      color: '#fbbf24', bg: '#2c1800', desc: 'Mess deals & sharing' },
 ];
 
+const EVENTS = [
+  { id: '1', title: 'Annual Tech Fest',    date: '24', month: 'OCT', time: '10:00 AM', venue: 'Main Auditorium', featured: true,  color: '#6366f1', desc: 'The biggest tech event of the year' },
+  { id: '2', title: 'Hackathon 2024',       date: '28', month: 'OCT', time: '10:00 AM', venue: 'Lab Block',       featured: false, color: '#818cf8' },
+  { id: '3', title: 'Career Fair',          date: '02', month: 'NOV', time: '09:00 AM', venue: 'Placement Cell',  featured: false, color: '#34d399' },
+  { id: '4', title: 'Cultural Night',       date: '05', month: 'NOV', time: '06:00 PM', venue: 'Open Ground',     featured: false, color: '#f472b6' },
+  { id: '5', title: 'Quiz Competition',     date: '10', month: 'NOV', time: '11:00 AM', venue: 'Seminar Hall',    featured: false, color: '#fbbf24' },
+];
+
+const RECENT_KEY = '@kampuscart/recent_items';
+
 const getGreeting = () => {
   const h = new Date().getHours();
   if (h < 12) return 'Good morning';
@@ -91,6 +102,74 @@ const SpotlightCard = ({ item, onPress }) => {
   );
 };
 
+// ─── Events Calendar ──────────────────────────────────────────────────────────
+const EventsCalendar = () => {
+  const featured = EVENTS.find(e => e.featured);
+  const upcoming = EVENTS.filter(e => !e.featured);
+  return (
+    <View style={ev.wrap}>
+      {/* Header */}
+      <View style={ev.header}>
+        <Text style={ev.title}>Events Calendar</Text>
+        <TouchableOpacity onPress={() => Alert.alert('📅 Full Schedule', 'Full schedule coming soon!')}>
+          <Text style={ev.fullBtn}>Full Schedule</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Featured event banner */}
+      {featured && (
+        <View style={ev.featured}>
+          <View style={ev.featuredOverlay} />
+          <View style={ev.featuredBadge}>
+            <Text style={ev.featuredBadgeTxt}>UPCOMING EVENT</Text>
+          </View>
+          <Text style={ev.featuredTitle}>{featured.title}</Text>
+          <View style={ev.featuredMeta}>
+            <Ionicons name="time-outline" size={12} color="#a5b4fc" />
+            <Text style={ev.featuredMetaTxt}>{featured.time}</Text>
+            <Ionicons name="location-outline" size={12} color="#a5b4fc" style={{ marginLeft: 8 }} />
+            <Text style={ev.featuredMetaTxt}>{featured.venue}</Text>
+          </View>
+          {/* Date badge */}
+          <View style={ev.dateBadge}>
+            <Text style={ev.dateBadgeDay}>{featured.date}</Text>
+            <Text style={ev.dateBadgeMon}>{featured.month}</Text>
+          </View>
+        </View>
+      )}
+
+      {/* Upcoming events — horizontal scroll */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 20 }}>
+        {upcoming.map(e => (
+          <TouchableOpacity
+            key={e.id}
+            style={[ev.card, { borderColor: e.color + '40' }]}
+            activeOpacity={0.8}
+            onPress={() => Alert.alert(`📅 ${e.title}`, `${e.time}  ·  ${e.venue}\n\nFull details coming soon!`)}
+          >
+            {/* Date box */}
+            <View style={[ev.cardDate, { backgroundColor: e.color + '22', borderColor: e.color + '50' }]}>
+              <Text style={[ev.cardDay, { color: e.color }]}>{e.date}</Text>
+              <Text style={[ev.cardMon, { color: e.color }]}>{e.month}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={ev.cardTimeRow}>
+                <Ionicons name="time-outline" size={11} color="#64748b" />
+                <Text style={ev.cardTime}>{e.time}</Text>
+              </View>
+              <Text style={ev.cardTitle} numberOfLines={2}>{e.title}</Text>
+              <View style={ev.cardLocRow}>
+                <Ionicons name="location-outline" size={11} color="#64748b" />
+                <Text style={ev.cardLoc} numberOfLines={1}>{e.venue}</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
+
 // ─── HomeScreen ───────────────────────────────────────────────────────────────
 const HomeScreen = ({ navigation }) => {
   const { currentUser, isGuest, logout } = useContext(AuthContext);
@@ -114,6 +193,9 @@ const HomeScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible]     = useState(false);
   const [collegeSearch, setCollegeSearch]   = useState('');
   const [dotIndex, setDotIndex]             = useState(0);
+  const [recentItems, setRecentItems]       = useState([]);
+  const [showAll, setShowAll]               = useState(false);
+  const [sortOrder, setSortOrder]           = useState('none'); // 'none' | 'asc' | 'desc'
 
   const shimmer    = useRef(new Animated.Value(0)).current;
   const heroAnim   = useRef(new Animated.Value(0)).current;
@@ -171,6 +253,23 @@ const HomeScreen = ({ navigation }) => {
     }).start();
   }, [searchFocused, searchQuery]);
 
+  // Load & save recently visited items
+  useEffect(() => {
+    AsyncStorage.getItem(RECENT_KEY)
+      .then(raw => { if (raw) setRecentItems(JSON.parse(raw)); })
+      .catch(() => {});
+  }, []);
+
+  const saveRecentItem = async (item) => {
+    try {
+      const raw = await AsyncStorage.getItem(RECENT_KEY);
+      const prev = raw ? JSON.parse(raw) : [];
+      const next = [item, ...prev.filter(i => i._id !== item._id)].slice(0, 8);
+      setRecentItems(next);
+      await AsyncStorage.setItem(RECENT_KEY, JSON.stringify(next));
+    } catch {}
+  };
+
   const isWindowShopping = !isGuest && currentUser &&
     activeCampus.name.toLowerCase() !== (currentUser.college || '').toLowerCase();
 
@@ -214,6 +313,14 @@ const HomeScreen = ({ navigation }) => {
     );
   }, [searchQuery, items]);
 
+  const sortedItems = useMemo(() => {
+    if (sortOrder === 'asc')  return [...filteredItems].sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
+    if (sortOrder === 'desc') return [...filteredItems].sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
+    return filteredItems;
+  }, [filteredItems, sortOrder]);
+
+  const displayItems = showAll ? sortedItems : sortedItems.slice(0, 10);
+
   const filteredColleges = colleges
     .filter(c => c.emailDomain !== null)
     .filter(c =>
@@ -230,6 +337,7 @@ const HomeScreen = ({ navigation }) => {
       ]);
       return;
     }
+    saveRecentItem(item);
     const isOwner = currentUser &&
       (item.seller === currentUser._id || item.seller?._id === currentUser._id);
     navigation.navigate('ItemDetails', { item, activeCollege: activeCampus.name, isOwner: !!isOwner });
@@ -255,7 +363,6 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const spots  = items.slice(0, 6);
-  const recent = items.slice(0, 12);
 
   const makeAnim = (anim, dy = 22) => ({
     opacity: anim,
@@ -306,8 +413,9 @@ const HomeScreen = ({ navigation }) => {
               <ScrollView
                 ref={spotlightRef}
                 horizontal
-                pagingEnabled
                 showsHorizontalScrollIndicator={false}
+                snapToInterval={SPOT_W + 14}
+                decelerationRate="fast"
                 contentContainerStyle={{ gap: 14, paddingRight: 20 }}
                 onMomentumScrollEnd={(e) => {
                   const idx = Math.round(e.nativeEvent.contentOffset.x / (SPOT_W + 14));
@@ -374,15 +482,28 @@ const HomeScreen = ({ navigation }) => {
       </Animated.View>
 
       {/* ── Recent Activity ── */}
-      {recent.length > 0 && (
+      {recentItems.length > 0 && (
         <Animated.View style={[styles.section, makeAnim(sec4Anim)]}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
+          <View style={styles.sectionHead}>
+            <Text style={styles.sectionTitle}>Recently Viewed</Text>
+            <TouchableOpacity onPress={() => { setRecentItems([]); AsyncStorage.removeItem(RECENT_KEY); }}>
+              <Text style={styles.clearRecentTxt}>Clear</Text>
+            </TouchableOpacity>
+          </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 20 }}>
-            {recent.map((item) => (
-              <Press key={item._id} onPress={() => handleItemPress(item)} style={styles.pill}>
-                <Text style={styles.pillText} numberOfLines={1}>{item.name || item.title}</Text>
-              </Press>
-            ))}
+            {recentItems.map((item) => {
+              const img = item.imageUrl || item.image || item.images?.[0];
+              return (
+                <Press key={item._id} onPress={() => handleItemPress(item)} style={styles.recentCard}>
+                  {img
+                    ? <Image source={{ uri: img }} style={styles.recentThumb} resizeMode="cover" />
+                    : <View style={[styles.recentThumb, styles.recentThumbFallback]}><Ionicons name="cube-outline" size={18} color="#334155" /></View>
+                  }
+                  <Text style={styles.recentName} numberOfLines={2}>{item.name || item.title}</Text>
+                  {item.price != null && <Text style={styles.recentPrice}>₹{item.price}</Text>}
+                </Press>
+              );
+            })}
           </ScrollView>
         </Animated.View>
       )}
@@ -402,7 +523,7 @@ const HomeScreen = ({ navigation }) => {
         </ScrollView>
       </View>
 
-      {/* ── Listings Label ── */}
+      {/* ── Listings Label + Sort ── */}
       <View style={styles.listHead}>
         <Text style={styles.listTitle}>
           {activeCategory === 'All' ? 'All Listings' : activeCategory}
@@ -410,6 +531,19 @@ const HomeScreen = ({ navigation }) => {
         </Text>
         {!loading && <Text style={styles.listCount}>{filteredItems.length}</Text>}
       </View>
+      {!loading && filteredItems.length > 0 && (
+        <View style={styles.sortRow}>
+          {[
+            { key: 'none', label: 'Default' },
+            { key: 'asc',  label: '₹ Low → High' },
+            { key: 'desc', label: '₹ High → Low' },
+          ].map(s => (
+            <Press key={s.key} onPress={() => { setSortOrder(s.key); setShowAll(false); }} style={[styles.sortChip, sortOrder === s.key && styles.sortChipOn]}>
+              <Text style={[styles.sortChipTxt, sortOrder === s.key && styles.sortChipTxtOn]}>{s.label}</Text>
+            </Press>
+          ))}
+        </View>
+      )}
 
       {loading && (
         <View style={styles.skRow}>
@@ -538,7 +672,7 @@ const HomeScreen = ({ navigation }) => {
       ) : (
         <FlatList
           ref={listRef}
-          data={filteredItems}
+          data={displayItems}
           keyExtractor={i => i._id}
           numColumns={2}
           contentContainerStyle={styles.pad}
@@ -550,6 +684,21 @@ const HomeScreen = ({ navigation }) => {
           }
           renderItem={renderItem}
           ListHeaderComponent={<ListHeader />}
+          ListFooterComponent={
+            <View>
+              {/* View All / Show Less */}
+              {!loading && sortedItems.length > 10 && (
+                <Press onPress={() => setShowAll(v => !v)} style={styles.viewAllBtn}>
+                  <Text style={styles.viewAllTxt}>
+                    {showAll ? '↑  Show Less' : `View All  (${sortedItems.length})`}
+                  </Text>
+                  <Ionicons name={showAll ? 'chevron-up' : 'chevron-down'} size={15} color="#818cf8" />
+                </Press>
+              )}
+              {/* Events Calendar */}
+              <EventsCalendar />
+            </View>
+          }
           ListEmptyComponent={
             <View style={styles.emptyBox}>
               <View style={styles.emptyOrb}>
@@ -881,6 +1030,92 @@ const styles = StyleSheet.create({
     paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: '#334155',
   },
   cancelTxt: { color: '#ef4444', fontWeight: '800', fontSize: 15 },
+
+  // Sort chips
+  sortRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 18, marginBottom: 12 },
+  sortChip: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#0f172a', borderRadius: 14,
+    paddingHorizontal: 12, paddingVertical: 6,
+    borderWidth: 1, borderColor: '#1e293b',
+  },
+  sortChipOn: { backgroundColor: '#1e1b4b', borderColor: '#6366f1' },
+  sortChipTxt: { fontSize: 11, color: '#64748b', fontWeight: '700' },
+  sortChipTxtOn: { color: '#818cf8' },
+
+  // View All button
+  viewAllBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    marginHorizontal: 18, marginTop: 16, marginBottom: 8,
+    backgroundColor: '#111827', borderRadius: 16,
+    paddingVertical: 14, borderWidth: 1, borderColor: '#1e293b',
+  },
+  viewAllTxt: { fontSize: 14, fontWeight: '800', color: '#818cf8' },
+
+  // Recent cards
+  clearRecentTxt: { fontSize: 12, color: '#ef4444', fontWeight: '700' },
+  recentCard: {
+    width: 110, backgroundColor: '#0f172a', borderRadius: 16,
+    padding: 10, borderWidth: 1, borderColor: '#1e293b',
+  },
+  recentThumb: { width: '100%', height: 70, borderRadius: 10, marginBottom: 8, backgroundColor: '#1e293b' },
+  recentThumbFallback: { alignItems: 'center', justifyContent: 'center' },
+  recentName: { fontSize: 12, fontWeight: '700', color: '#cbd5e1', marginBottom: 4, lineHeight: 16 },
+  recentPrice: { fontSize: 12, fontWeight: '800', color: '#34d399' },
+});
+
+// ─── Events Calendar styles ───────────────────────────────────────────────────
+const ev = StyleSheet.create({
+  wrap: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 32 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  title: { fontSize: 18, fontWeight: '900', color: '#f1f5f9' },
+  fullBtn: { fontSize: 13, fontWeight: '800', color: '#818cf8' },
+
+  featured: {
+    height: 180, borderRadius: 20, overflow: 'hidden', backgroundColor: '#0d1117',
+    marginBottom: 16, padding: 18, justifyContent: 'flex-end',
+    borderWidth: 1, borderColor: '#312e81',
+    shadowColor: '#6366f1', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35, shadowRadius: 14, elevation: 10,
+  },
+  featuredOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(20,16,50,0.72)',
+  },
+  featuredBadge: {
+    position: 'absolute', top: 16, left: 18,
+    backgroundColor: 'rgba(99,102,241,0.7)', borderRadius: 6,
+    paddingHorizontal: 10, paddingVertical: 4,
+  },
+  featuredBadgeTxt: { fontSize: 10, fontWeight: '900', color: '#e0e7ff', letterSpacing: 1 },
+  featuredTitle: { fontSize: 22, fontWeight: '900', color: '#fff', marginBottom: 8 },
+  featuredMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  featuredMetaTxt: { fontSize: 12, color: '#a5b4fc', fontWeight: '600' },
+  dateBadge: {
+    position: 'absolute', top: 12, right: 16,
+    backgroundColor: '#1e1b4b', borderRadius: 12,
+    width: 52, alignItems: 'center', paddingVertical: 8,
+    borderWidth: 1, borderColor: '#4338ca',
+  },
+  dateBadgeDay: { fontSize: 22, fontWeight: '900', color: '#fff', lineHeight: 26 },
+  dateBadgeMon: { fontSize: 10, fontWeight: '900', color: '#818cf8', letterSpacing: 1 },
+
+  card: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 12,
+    width: 210, backgroundColor: '#0f172a',
+    borderRadius: 18, padding: 14, borderWidth: 1,
+  },
+  cardDate: {
+    width: 46, alignItems: 'center', paddingVertical: 8,
+    borderRadius: 12, borderWidth: 1,
+  },
+  cardDay: { fontSize: 20, fontWeight: '900', lineHeight: 24 },
+  cardMon: { fontSize: 10, fontWeight: '900', letterSpacing: 1 },
+  cardTimeRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
+  cardTime: { fontSize: 11, color: '#64748b', fontWeight: '600' },
+  cardTitle: { fontSize: 13, fontWeight: '800', color: '#e2e8f0', marginBottom: 6 },
+  cardLocRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  cardLoc: { fontSize: 11, color: '#64748b', fontWeight: '500', flex: 1 },
 });
 
 export default HomeScreen;
