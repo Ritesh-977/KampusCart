@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet,
   Platform, ActivityIndicator, Image, Alert, StatusBar,
@@ -40,6 +41,15 @@ export default function ChatScreen({ route, navigation }) {
   const { currentUser } = useContext(AuthContext);
   const { socketRef, connected, onlineUsers } = useContext(SocketContext);
   const kbOffset = useRef(new Animated.Value(0)).current;
+
+  // Hide the bottom tab bar while this screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      const tabNav = navigation.getParent();
+      tabNav?.setOptions({ tabBarStyle: { display: 'none' } });
+      return () => tabNav?.setOptions({ tabBarStyle: undefined });
+    }, [navigation])
+  );
 
   useEffect(() => {
     const onShow = Keyboard.addListener('keyboardDidShow', (e) => {
