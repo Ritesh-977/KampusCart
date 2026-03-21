@@ -95,20 +95,22 @@ const MainTabNavigator = () => {
   );
 };
 
+export const TAB_BAR_STYLE = {
+  paddingBottom: 8,
+  paddingTop: 6,
+  height: 64,
+  borderTopWidth: 1,
+  borderTopColor: '#1e293b',
+  backgroundColor: '#0f172a',
+  elevation: 8,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: -2 },
+  shadowOpacity: 0.4,
+  shadowRadius: 8,
+};
+
 const styles = StyleSheet.create({
-  tabBar: {
-    paddingBottom: 8,
-    paddingTop: 6,
-    height: 64,
-    borderTopWidth: 1,
-    borderTopColor: '#1e293b',
-    backgroundColor: '#0f172a',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-  },
+  tabBar: TAB_BAR_STYLE,
   tabBarLabel: {
     fontSize: 11,
     fontWeight: '600',

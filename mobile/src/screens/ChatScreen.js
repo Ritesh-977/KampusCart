@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
+import { TAB_BAR_STYLE } from '../navigation/MainTabNavigator';
 import {
   View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet,
   Platform, ActivityIndicator, Image, Alert, StatusBar,
@@ -47,7 +48,7 @@ export default function ChatScreen({ route, navigation }) {
     useCallback(() => {
       const tabNav = navigation.getParent();
       tabNav?.setOptions({ tabBarStyle: { display: 'none' } });
-      return () => tabNav?.setOptions({ tabBarStyle: undefined });
+      return () => tabNav?.setOptions({ tabBarStyle: TAB_BAR_STYLE });
     }, [navigation])
   );
 
