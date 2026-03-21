@@ -3,36 +3,22 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  // 1. Initialize state (Lazy Initialization)
-  const [theme, setTheme] = useState(() => {
-    // Check localStorage immediately
-    const savedTheme = localStorage.getItem('theme');
-    
-    // If a theme is saved, use it. 
-    // If NOT saved (first visit), return 'dark' by default.
-    return savedTheme || 'dark';
-  });
+  // 1. Initialize state (Always dark mode)
+  const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
-    // 2. Apply the class to the <html> tag whenever theme changes
+    // 2. Apply the dark class to the <html> tag
     const root = window.document.documentElement;
+    root.classList.add('dark');
     
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    
-    // Save the current preference to localStorage
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+    // Save dark mode preference to localStorage
+    localStorage.setItem('theme', 'dark');
+  }, []);
 
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
-  };
+  // Removed toggleTheme function - always dark mode
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme }}>
       {children}
     </ThemeContext.Provider>
   );

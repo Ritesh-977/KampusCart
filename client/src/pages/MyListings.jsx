@@ -56,28 +56,28 @@ const MyListings = () => {
   };
 
   if (loading) return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400"></div>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center transition-colors">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 dark:border-cyan-400"></div>
       </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans transition-colors duration-200">
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="mb-8 border-b border-gray-200 dark:border-gray-700 pb-5">
-          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">My Listings</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">Manage your active ads and sold items.</p>
+        <div className="mb-8 border-b border-slate-200 dark:border-slate-700 pb-5">
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white">My Listings</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-2">Manage your active ads and sold items.</p>
         </div>
 
         {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-gray-800 rounded-3xl shadow-sm border-2 border-dashed border-gray-200 dark:border-gray-700">
-            <div className="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-full mb-4">
-                <FaBoxOpen className="text-indigo-400 text-4xl" />
+          <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-800 rounded-3xl shadow-sm border-2 border-dashed border-slate-200 dark:border-slate-700">
+            <div className="bg-cyan-50 dark:bg-cyan-900/30 p-4 rounded-full mb-4">
+                <FaBoxOpen className="text-cyan-400 text-4xl" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">No items listed yet</h3>
-            <p className="text-gray-500 dark:text-gray-400 mt-2 text-center max-w-sm">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">No items listed yet</h3>
+            <p className="text-slate-500 dark:text-slate-400 mt-2 text-center max-w-sm">
                 Once you sell an item using the "Sell" page, it will appear here.
             </p>
           </div>
@@ -86,12 +86,12 @@ const MyListings = () => {
             {items.map((item) => (
               <div 
                 key={item._id} 
-                className={`group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col ${item.isSold ? 'opacity-75' : ''}`}
+                className={`group relative bg-white dark:bg-slate-800 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col ${item.isSold ? 'opacity-75' : ''}`}
               >
                 {/* View Details Link */}
                 <Link to={`/edit-item/${item._id}`} className="absolute inset-0 z-0" title="Edit Item" />
 
-                <div className="relative h-48 w-full bg-gray-200 dark:bg-gray-700 overflow-hidden pointer-events-none">
+                <div className="relative h-48 w-full bg-slate-200 dark:bg-slate-700 overflow-hidden pointer-events-none">
                    <img 
                     src={item.image || (item.images && item.images[0]) || 'https://via.placeholder.com/300'} 
                     alt={item.title} 
@@ -112,23 +112,23 @@ const MyListings = () => {
                     <div className="flex-1">
                         <div className="flex justify-between items-start">
                             <div>
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">{item.title}</h3>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mt-1">{item.category}</p>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-1">{item.title}</h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold mt-1">{item.category}</p>
                             </div>
-                            <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">₹{item.price}</p>
+                            <p className="text-lg font-bold text-cyan-600 dark:text-cyan-400">₹{item.price}</p>
                         </div>
-                         <div className="mt-4 flex items-center text-xs text-gray-400 dark:text-gray-500">
+                         <div className="mt-4 flex items-center text-xs text-slate-400 dark:text-slate-500">
                              <span>Posted on {new Date(item.createdAt || Date.now()).toLocaleDateString()}</span>
                         </div>
                     </div>
 
-                    <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 grid grid-cols-2 gap-3 pointer-events-auto">
+                    <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700 grid grid-cols-2 gap-3 pointer-events-auto">
                         <button 
                             onClick={(e) => handleToggleSold(e, item._id, item.isSold)} 
                             className={`flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold transition-colors z-20 relative ${
                                 item.isSold 
                                 ? 'bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50' 
-                                : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50'
+                                : 'bg-cyan-50 text-cyan-700 hover:bg-cyan-100 dark:bg-cyan-900/30 dark:text-cyan-400 dark:hover:bg-cyan-900/50'
                             }`}
                         >
                             {item.isSold ? (
