@@ -1,6 +1,5 @@
 import React, { useContext } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { useNavigationState } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -17,11 +16,6 @@ const MainTabNavigator = () => {
   const { isGuest, currentUser } = useContext(AuthContext);
   const isAdmin = currentUser?.isAdmin === true;
 
-  // Hide tab bar when navigated into ChatRoom (index > 0 in the ChatTab stack)
-  const isInChatRoom = useNavigationState(state => {
-    const chatRoute = state?.routes?.find(r => r.name === 'ChatTab');
-    return (chatRoute?.state?.index ?? 0) > 0;
-  });
 
   return (
     <Tab.Navigator
@@ -54,7 +48,7 @@ const MainTabNavigator = () => {
         tabBarActiveTintColor: '#818cf8',
         tabBarInactiveTintColor: '#475569',
         headerShown: false,
-        tabBarStyle: isInChatRoom ? { display: 'none' } : styles.tabBar,
+        tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabBarLabel,
       })}
     >
@@ -80,7 +74,10 @@ const MainTabNavigator = () => {
         <Tab.Screen
           name="ChatTab"
           component={ChatStackNavigator}
-          options={{ title: 'Messages' }}
+          options={({ route }) => ({
+            title: 'Messages',
+            tabBarStyle: (route.state?.index ?? 0) > 0 ? { display: 'none' } : styles.tabBar,
+          })}
         />
       )}
       <Tab.Screen
