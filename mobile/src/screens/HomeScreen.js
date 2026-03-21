@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import {
-  View, Text, FlatList, StyleSheet, RefreshControl, SafeAreaView,
-  TouchableOpacity, Modal, TextInput, ScrollView, Alert, Platform,
-  Animated, Dimensions, StatusBar,
+  View, Text, FlatList, StyleSheet, RefreshControl,
+  TouchableOpacity, Modal, TextInput, ScrollView,
+  Alert, Platform, Animated, Dimensions, StatusBar, Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import API from '../api/axios';
 import ItemCard from '../components/ItemCard';
@@ -12,38 +13,77 @@ import { AuthContext } from '../context/AuthContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
+const SPOTLIGHT_W = SCREEN_WIDTH - 48;
 
 const CATEGORIES = [
-  { label: 'All',              icon: 'apps-outline' },
-  { label: 'Cycles',           icon: 'bicycle-outline' },
-  { label: 'Electronics',      icon: 'phone-portrait-outline' },
-  { label: 'Books & Notes',    icon: 'book-outline' },
-  { label: 'Hostel Essentials',icon: 'bed-outline' },
-  { label: 'Other',            icon: 'ellipsis-horizontal-circle-outline' },
+  { label: 'All',               icon: 'apps-outline' },
+  { label: 'Cycles',            icon: 'bicycle-outline' },
+  { label: 'Electronics',       icon: 'phone-portrait-outline' },
+  { label: 'Books & Notes',     icon: 'book-outline' },
+  { label: 'Hostel Essentials', icon: 'bed-outline' },
+  { label: 'Other',             icon: 'ellipsis-horizontal-circle-outline' },
 ];
 
-const getGreeting = () => {
-  const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
-};
+const QUICK_ACTIONS = [
+  { label: 'Books',       icon: 'book-outline',           color: '#818cf8', bg: 'rgba(129,140,248,0.15)', category: 'Books & Notes' },
+  { label: 'Electronics', icon: 'phone-portrait-outline', color: '#22d3ee', bg: 'rgba(34,211,238,0.15)',  category: 'Electronics' },
+  { label: 'Cycles',      icon: 'bicycle-outline',        color: '#4ade80', bg: 'rgba(74,222,128,0.15)',  category: 'Cycles' },
+  { label: 'Hostel',      icon: 'bed-outline',            color: '#f472b6', bg: 'rgba(244,114,182,0.15)', category: 'Hostel Essentials' },
+  { label: 'Lost',        icon: 'search-outline',         color: '#fbbf24', bg: 'rgba(251,191,36,0.15)',  category: 'lost' },
+];
 
-// ─── Skeleton Card ────────────────────────────────────────────────────────────
+const TRENDING_TILES = [
+  { label: 'Books & Notes',     colors: ['#3b82f6', '#4f46e5'], tall: true },
+  { label: 'Electronics',       colors: ['#f97316', '#ef4444'], tall: false },
+  { label: 'Hostel Essentials', colors: ['#22c55e', '#10b981'], tall: false },
+  { label: 'Cycles',            colors: ['#a3e635', '#22c55e'], tall: false },
+  { label: 'Lost & Found',      colors: ['#ec4899', '#9333ea'], tall: false },
+];
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
 const SkeletonCard = ({ shimmer }) => {
-  const opacity = shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0.75] });
+  const opacity = shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.7] });
   return (
     <View style={[sk.card, { width: CARD_WIDTH }]}>
       <Animated.View style={[sk.img, { opacity }]} />
       <View style={sk.body}>
         <Animated.View style={[sk.line, { width: '85%', opacity }]} />
         <Animated.View style={[sk.line, { width: '50%', marginTop: 6, opacity }]} />
-        <Animated.View style={[sk.line, { width: '65%', marginTop: 6, opacity }]} />
       </View>
     </View>
   );
 };
 
+// ─── Spotlight Card ───────────────────────────────────────────────────────────
+const SpotlightCard = ({ item, onPress }) => {
+  const img = item.imageUrl || item.image || item.images?.[0] || null;
+  return (
+    <TouchableOpacity style={sp.card} onPress={onPress} activeOpacity={0.9}>
+      {img ? (
+        <Image source={{ uri: img }} style={sp.img} resizeMode="cover" />
+      ) : (
+        <View style={[sp.img, { backgroundColor: '#1e293b', justifyContent: 'center', alignItems: 'center' }]}>
+          <Ionicons name="image-outline" size={40} color="#334155" />
+        </View>
+      )}
+      {/* Dark gradient overlay */}
+      <View style={sp.overlay} />
+      <View style={sp.badge}>
+        <Text style={sp.badgeText}>Campus Spotlight</Text>
+      </View>
+      <View style={sp.footer}>
+        <Text style={sp.itemName} numberOfLines={1}>
+          {item.category ? `${item.category}: ` : ''}{item.name || item.title}
+        </Text>
+        <TouchableOpacity style={sp.viewBtn} onPress={onPress}>
+          <Text style={sp.viewBtnText}>View</Text>
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 const HomeScreen = ({ navigation }) => {
   const { currentUser, isGuest, logout } = useContext(AuthContext);
 
@@ -57,44 +97,28 @@ const HomeScreen = ({ navigation }) => {
     }) || colleges[0];
   };
 
-  const [activeCampus, setActiveCampus]       = useState(getInitialCampus);
-  const [items, setItems]                     = useState([]);
-  const [loading, setLoading]                 = useState(true);
-  const [refreshing, setRefreshing]           = useState(false);
-  const [searchQuery, setSearchQuery]         = useState('');
-  const [activeCategory, setActiveCategory]   = useState('All');
-  const [modalVisible, setModalVisible]       = useState(false);
-  const [collegeSearch, setCollegeSearch]     = useState('');
-  const [searchFocused, setSearchFocused]     = useState(false);
+  const [activeCampus, setActiveCampus]     = useState(getInitialCampus);
+  const [items, setItems]                   = useState([]);
+  const [loading, setLoading]               = useState(true);
+  const [refreshing, setRefreshing]         = useState(false);
+  const [searchQuery, setSearchQuery]       = useState('');
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [modalVisible, setModalVisible]     = useState(false);
+  const [collegeSearch, setCollegeSearch]   = useState('');
 
-  // ── Animations ──────────────────────────────────────────────────────────────
-  const shimmer      = useRef(new Animated.Value(0)).current;
-  const headerFade   = useRef(new Animated.Value(0)).current;
-  const headerSlide  = useRef(new Animated.Value(-20)).current;
-  const searchScale  = useRef(new Animated.Value(1)).current;
-  const bannerAnim   = useRef(new Animated.Value(0)).current;
+  const shimmer = useRef(new Animated.Value(0)).current;
 
-  // shimmer loop for skeletons
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(shimmer, { toValue: 1, duration: 800, useNativeDriver: true }),
-        Animated.timing(shimmer, { toValue: 0, duration: 800, useNativeDriver: true }),
+        Animated.timing(shimmer, { toValue: 1, duration: 900, useNativeDriver: true }),
+        Animated.timing(shimmer, { toValue: 0, duration: 900, useNativeDriver: true }),
       ])
     );
     loop.start();
     return () => loop.stop();
   }, []);
 
-  // header entrance
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(headerFade,  { toValue: 1, duration: 500, useNativeDriver: true }),
-      Animated.spring(headerSlide, { toValue: 0, tension: 80, friction: 10, useNativeDriver: true }),
-    ]).start();
-  }, []);
-
-  // auto-switch campus when user data loads
   useEffect(() => {
     if (!isGuest && currentUser?.college) {
       const userCol = currentUser.college.toLowerCase();
@@ -107,38 +131,19 @@ const HomeScreen = ({ navigation }) => {
     }
   }, [currentUser, isGuest]);
 
-  const userCampusName  = currentUser?.college || '';
+  const userCampusName = currentUser?.college || '';
   const isWindowShopping = !isGuest && currentUser &&
     activeCampus.name.toLowerCase() !== userCampusName.toLowerCase();
-
-  // banner entrance
-  useEffect(() => {
-    Animated.timing(bannerAnim, {
-      toValue: isWindowShopping ? 1 : 0,
-      duration: 350,
-      useNativeDriver: true,
-    }).start();
-  }, [isWindowShopping]);
-
-  // search bar focus animation
-  const handleSearchFocus = () => {
-    setSearchFocused(true);
-    Animated.spring(searchScale, { toValue: 1.02, useNativeDriver: true, speed: 50 }).start();
-  };
-  const handleSearchBlur = () => {
-    setSearchFocused(false);
-    Animated.spring(searchScale, { toValue: 1, useNativeDriver: true, speed: 20 }).start();
-  };
 
   const fetchItems = useCallback(async () => {
     try {
       let url = `/items?college=${activeCampus.name}`;
       if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
       if (activeCategory !== 'All') url += `&category=${encodeURIComponent(activeCategory)}`;
-      const response = await API.get(url);
-      setItems(response.data);
-    } catch (error) {
-      console.error('Error fetching items:', error);
+      const res = await API.get(url);
+      setItems(res.data);
+    } catch (e) {
+      console.error('Error fetching items:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -163,16 +168,35 @@ const HomeScreen = ({ navigation }) => {
 
   const handleItemPress = (item) => {
     if (isGuest) {
-      Alert.alert('Login Required', 'Please log in to view item details and contact sellers.', [
+      Alert.alert('Login Required', 'Please log in to view item details.', [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Log In / Sign Up', onPress: logout },
+        { text: 'Log In', onPress: logout },
       ]);
       return;
     }
-    const isOwner = !isGuest && currentUser &&
+    const isOwner = currentUser &&
       (item.seller === currentUser._id || item.seller?._id === currentUser._id);
     navigation.navigate('ItemDetails', { item, activeCollege: activeCampus.name, isOwner: !!isOwner });
   };
+
+  const handleQuickAction = (action) => {
+    if (action.category === 'lost') {
+      navigation.navigate('LostFound');
+    } else {
+      setActiveCategory(action.category);
+    }
+  };
+
+  const handleTrendingTile = (label) => {
+    if (label === 'Lost & Found') {
+      navigation.navigate('LostFound');
+    } else {
+      setActiveCategory(label);
+    }
+  };
+
+  const spotlightItems = items.slice(0, 6);
+  const recentItems = items.slice(0, 10);
 
   const renderItem = useCallback(({ item, index }) => (
     <View style={index % 2 === 0 ? styles.gridLeft : styles.gridRight}>
@@ -180,71 +204,162 @@ const HomeScreen = ({ navigation }) => {
     </View>
   ), [currentUser, isGuest, activeCampus]);
 
-  const renderSkeleton = () => (
-    <View style={styles.gridRow}>
-      {[0, 1, 2, 3, 4, 5].map(i => (
-        <View key={i} style={i % 2 === 0 ? styles.gridLeft : styles.gridRight}>
-          <SkeletonCard shimmer={shimmer} />
+  // ─── List Header ────────────────────────────────────────────────────────────
+  const ListHeader = () => (
+    <View>
+      {/* ── Campus Header ── */}
+      <View style={styles.campusHeader}>
+        <TouchableOpacity
+          style={styles.campusNameRow}
+          onPress={() => setModalVisible(true)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.campusTitle} numberOfLines={1}>
+            {activeCampus.shortName || activeCampus.name}
+          </Text>
+          <Ionicons name="pencil" size={16} color="#818cf8" style={{ marginLeft: 6 }} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.changeBtn}
+          onPress={() => setModalVisible(true)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.changeBtnText}>Change</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ── Window-shopping banner ── */}
+      {isWindowShopping && (
+        <View style={styles.bannerWrap}>
+          <Ionicons name="eye-outline" size={13} color="#fbbf24" style={{ marginRight: 6 }} />
+          <Text style={styles.bannerText}>
+            Viewing <Text style={styles.bannerHighlight}>{activeCampus.shortName || activeCampus.name}</Text> — browse only
+          </Text>
         </View>
-      ))}
-    </View>
-  );
+      )}
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="#0f172a" barStyle="light-content" />
-
-      {/* ── Header ── */}
-      <Animated.View
-        style={[
-          styles.header,
-          { opacity: headerFade, transform: [{ translateY: headerSlide }] },
-        ]}
-      >
-        {/* Top row: greeting + Lost & Found */}
-        <View style={styles.topRow}>
-          <View style={styles.greetingBlock}>
-            <Text style={styles.greeting}>{getGreeting()} 👋</Text>
-            <TouchableOpacity style={styles.campusPill} onPress={() => setModalVisible(true)} activeOpacity={0.8}>
-              <Text style={styles.campusEmoji}>{activeCampus.emoji}</Text>
-              <Text style={styles.campusName} numberOfLines={1}>
-                {activeCampus.shortName || activeCampus.name}
-              </Text>
-              <Ionicons name="chevron-down" size={14} color="#a5b4fc" />
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            style={styles.lostFoundBtn}
-            onPress={() => navigation.navigate('LostFound')}
-            activeOpacity={0.8}
+      {/* ── Campus Spotlight ── */}
+      {spotlightItems.length > 0 && (
+        <View style={styles.section}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.spotlightScroll}
+            pagingEnabled
           >
-            <Ionicons name="search-circle" size={18} color="#fbbf24" />
-            <Text style={styles.lostFoundText}>Lost & Found</Text>
-          </TouchableOpacity>
+            {spotlightItems.map((item) => (
+              <SpotlightCard
+                key={item._id}
+                item={item}
+                onPress={() => handleItemPress(item)}
+              />
+            ))}
+          </ScrollView>
         </View>
+      )}
 
-        {/* Search bar */}
-        <Animated.View style={[styles.searchWrap, { transform: [{ scale: searchScale }] }]}>
-          <Ionicons name="search" size={18} color={searchFocused ? '#a5b4fc' : '#64748b'} style={{ marginRight: 8 }} />
+      {/* ── Quick Actions ── */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <View style={styles.quickRow}>
+          {QUICK_ACTIONS.map((action) => (
+            <TouchableOpacity
+              key={action.label}
+              style={styles.quickItem}
+              onPress={() => handleQuickAction(action)}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.quickCircle, { backgroundColor: action.bg, borderColor: action.color + '40' }]}>
+                <Ionicons name={action.icon} size={26} color={action.color} />
+              </View>
+              <Text style={styles.quickLabel}>{action.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* ── Trending Grid ── */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>
+          Trending in {activeCampus.shortName || activeCampus.name}
+        </Text>
+        <View style={styles.trendingGrid}>
+          {/* Left tall tile */}
+          <TouchableOpacity
+            style={[styles.tile, styles.tileTall, { backgroundColor: TRENDING_TILES[0].colors[0] }]}
+            onPress={() => handleTrendingTile(TRENDING_TILES[0].label)}
+            activeOpacity={0.85}
+          >
+            <View style={[styles.tileOverlay, { backgroundColor: TRENDING_TILES[0].colors[1] + '80' }]} />
+            <Text style={styles.tileLabel}>{TRENDING_TILES[0].label.replace(' & Notes', '')}</Text>
+          </TouchableOpacity>
+
+          {/* Right 2x2 grid */}
+          <View style={styles.tileRightCol}>
+            {TRENDING_TILES.slice(1).map((tile) => (
+              <TouchableOpacity
+                key={tile.label}
+                style={[styles.tile, styles.tileSmall, { backgroundColor: tile.colors[0] }]}
+                onPress={() => handleTrendingTile(tile.label)}
+                activeOpacity={0.85}
+              >
+                <View style={[styles.tileOverlay, { backgroundColor: tile.colors[1] + '80' }]} />
+                <Text style={styles.tileLabel} numberOfLines={1}>
+                  {tile.label.replace(' Essentials', '').replace(' & Notes', '')}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </View>
+
+      {/* ── Recent Activity ── */}
+      {recentItems.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Recent Activity</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.activityScroll}
+          >
+            {recentItems.map((item) => (
+              <TouchableOpacity
+                key={item._id}
+                style={styles.activityPill}
+                onPress={() => handleItemPress(item)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.activityText} numberOfLines={1}>{item.name || item.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* ── Search + Categories ── */}
+      <View style={[styles.section, { paddingBottom: 0 }]}>
+        <View style={styles.searchWrap}>
+          <Ionicons name="search" size={17} color="#64748b" style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
             placeholder={`Search on ${activeCampus.shortName || 'campus'}…`}
             placeholderTextColor="#64748b"
             value={searchQuery}
             onChangeText={setSearchQuery}
-            onFocus={handleSearchFocus}
-            onBlur={handleSearchBlur}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={18} color="#64748b" />
+              <Ionicons name="close-circle" size={17} color="#64748b" />
             </TouchableOpacity>
           )}
-        </Animated.View>
+        </View>
 
-        {/* Category chips */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll} contentContainerStyle={styles.chipsContent}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsContent}
+          style={{ marginBottom: 4 }}
+        >
           {CATEGORIES.map((cat) => {
             const active = activeCategory === cat.label;
             return (
@@ -254,35 +369,42 @@ const HomeScreen = ({ navigation }) => {
                 onPress={() => setActiveCategory(cat.label)}
                 activeOpacity={0.75}
               >
-                <Ionicons name={cat.icon} size={13} color={active ? '#fff' : '#94a3b8'} style={{ marginRight: 4 }} />
+                <Ionicons name={cat.icon} size={12} color={active ? '#fff' : '#94a3b8'} style={{ marginRight: 4 }} />
                 <Text style={[styles.chipText, active && styles.chipTextActive]}>{cat.label}</Text>
               </TouchableOpacity>
             );
           })}
         </ScrollView>
-      </Animated.View>
+      </View>
 
-      {/* ── Window-shopping banner ── */}
-      <Animated.View
-        style={[
-          styles.bannerWrap,
-          {
-            opacity: bannerAnim,
-            transform: [{ translateY: bannerAnim.interpolate({ inputRange: [0, 1], outputRange: [-10, 0] }) }],
-            display: isWindowShopping ? 'flex' : 'none',
-          },
-        ]}
-      >
-        <Ionicons name="eye-outline" size={13} color="#fbbf24" style={{ marginRight: 6 }} />
-        <Text style={styles.bannerText}>
-          Viewing <Text style={styles.bannerHighlight}>{activeCampus.shortName || activeCampus.name}</Text> — browse only, can't contact sellers.
+      {/* ── Listings header ── */}
+      <View style={styles.listingsHeader}>
+        <Text style={styles.listingsTitle}>
+          {activeCategory === 'All' ? 'All Listings' : activeCategory}
         </Text>
-      </Animated.View>
+        {!loading && <Text style={styles.listingsCount}>{items.length} items</Text>}
+      </View>
 
-      {/* ── List ── */}
+      {/* Skeleton while loading */}
+      {loading && (
+        <View style={styles.skeletonGrid}>
+          {[0, 1, 2, 3].map(i => (
+            <View key={i} style={i % 2 === 0 ? styles.gridLeft : styles.gridRight}>
+              <SkeletonCard shimmer={shimmer} />
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar backgroundColor="#0f172a" barStyle="light-content" />
+
       {loading ? (
         <ScrollView contentContainerStyle={styles.gridPad} showsVerticalScrollIndicator={false}>
-          {renderSkeleton()}
+          <ListHeader />
         </ScrollView>
       ) : (
         <FlatList
@@ -293,42 +415,25 @@ const HomeScreen = ({ navigation }) => {
           columnWrapperStyle={styles.row}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={['#4f46e5']}
-              tintColor="#4f46e5"
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4f46e5']} tintColor="#4f46e5" />
           }
           renderItem={renderItem}
-          ListHeaderComponent={
-            items.length > 0 ? (
-              <View style={styles.listHeader}>
-                <Text style={styles.listHeaderText}>
-                  {activeCategory === 'All' ? 'All listings' : activeCategory}
-                </Text>
-                <Text style={styles.listHeaderCount}>{items.length} items</Text>
-              </View>
-            ) : null
-          }
+          ListHeaderComponent={<ListHeader />}
           ListEmptyComponent={
             <View style={styles.emptyWrap}>
               <View style={styles.emptyIcon}>
-                <Ionicons name="storefront-outline" size={52} color="#c7d2fe" />
+                <Ionicons name="storefront-outline" size={48} color="#c7d2fe" />
               </View>
               <Text style={styles.emptyTitle}>
                 {searchQuery || activeCategory !== 'All' ? 'No results found' : 'No listings yet'}
               </Text>
               <Text style={styles.emptySubtitle}>
                 {searchQuery || activeCategory !== 'All'
-                  ? 'Try different keywords or clear your filters.'
-                  : `Be the first to list something at ${activeCampus.shortName || activeCampus.name}!`}
+                  ? 'Try different keywords or clear filters.'
+                  : `Be the first to list at ${activeCampus.shortName || activeCampus.name}!`}
               </Text>
               {(searchQuery || activeCategory !== 'All') && (
-                <TouchableOpacity
-                  style={styles.clearBtn}
-                  onPress={() => { setSearchQuery(''); setActiveCategory('All'); }}
-                >
+                <TouchableOpacity style={styles.clearBtn} onPress={() => { setSearchQuery(''); setActiveCategory('All'); }}>
                   <Text style={styles.clearBtnText}>Clear filters</Text>
                 </TouchableOpacity>
               )}
@@ -341,13 +446,9 @@ const HomeScreen = ({ navigation }) => {
       <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
-            {/* Handle */}
             <View style={styles.modalHandle} />
-
             <Text style={styles.modalTitle}>Window Shopping 🛍️</Text>
             <Text style={styles.modalSubtitle}>Browse listings from any campus</Text>
-
-            {/* Search */}
             <View style={styles.modalSearch}>
               <Ionicons name="search" size={16} color="#94a3b8" style={{ marginRight: 8 }} />
               <TextInput
@@ -358,7 +459,6 @@ const HomeScreen = ({ navigation }) => {
                 onChangeText={setCollegeSearch}
               />
             </View>
-
             <FlatList
               data={filteredColleges}
               keyExtractor={(item) => item.id}
@@ -376,12 +476,8 @@ const HomeScreen = ({ navigation }) => {
                   >
                     <Text style={styles.collegeEmoji}>{item.emoji}</Text>
                     <View style={styles.collegeInfo}>
-                      <Text style={[styles.collegeName, isActive && styles.collegeNameActive]}>
-                        {item.name}
-                      </Text>
-                      {item.location && (
-                        <Text style={styles.collegeLocation}>{item.location}</Text>
-                      )}
+                      <Text style={[styles.collegeName, isActive && styles.collegeNameActive]}>{item.name}</Text>
+                      {item.location && <Text style={styles.collegeLocation}>{item.location}</Text>}
                     </View>
                     <View style={styles.collegeMeta}>
                       {isUserCampus && (
@@ -395,7 +491,6 @@ const HomeScreen = ({ navigation }) => {
                 );
               }}
             />
-
             <TouchableOpacity style={styles.modalClose} onPress={() => { setModalVisible(false); setCollegeSearch(''); }}>
               <Text style={styles.modalCloseText}>Cancel</Text>
             </TouchableOpacity>
@@ -408,117 +503,159 @@ const HomeScreen = ({ navigation }) => {
 
 // ─── Skeleton styles ──────────────────────────────────────────────────────────
 const sk = StyleSheet.create({
-  card: {
-    backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden',
-    marginBottom: 16, elevation: 2,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06, shadowRadius: 4,
-  },
-  img: { width: '100%', height: CARD_WIDTH * 0.85, backgroundColor: '#e2e8f0' },
+  card: { backgroundColor: '#1e293b', borderRadius: 16, overflow: 'hidden', marginBottom: 16 },
+  img: { width: '100%', height: CARD_WIDTH * 0.85, backgroundColor: '#273549' },
   body: { padding: 10 },
-  line: { height: 12, backgroundColor: '#e2e8f0', borderRadius: 6 },
+  line: { height: 11, backgroundColor: '#273549', borderRadius: 6 },
+});
+
+// ─── Spotlight styles ─────────────────────────────────────────────────────────
+const sp = StyleSheet.create({
+  card: {
+    width: SPOTLIGHT_W, height: 220, borderRadius: 20, overflow: 'hidden',
+    marginRight: 16, backgroundColor: '#1e293b',
+  },
+  img: { ...StyleSheet.absoluteFillObject },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  badge: {
+    position: 'absolute', top: 14, left: 14,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
+  },
+  badgeText: { color: '#fff', fontSize: 11, fontWeight: '700', letterSpacing: 0.3 },
+  footer: {
+    position: 'absolute', bottom: 14, left: 14, right: 14,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+  },
+  itemName: { fontSize: 16, fontWeight: '800', color: '#fff', flex: 1, marginRight: 10 },
+  viewBtn: {
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    borderRadius: 14, paddingHorizontal: 14, paddingVertical: 6,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)',
+  },
+  viewBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 });
 
 // ─── Main styles ──────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f172a' },
+  gridPad: { paddingBottom: 100 },
 
-  // Header
-  header: {
-    backgroundColor: '#0f172a',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? 48 : 14,
-    paddingBottom: 14,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    elevation: 8,
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
+  // Campus header
+  campusHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 12 : 8, paddingBottom: 16,
   },
-  topRow: {
-    flexDirection: 'row', alignItems: 'flex-start',
-    justifyContent: 'space-between', marginBottom: 14,
+  campusNameRow: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  campusTitle: { fontSize: 22, fontWeight: '900', color: '#f1f5f9', maxWidth: '80%' },
+  changeBtn: {
+    backgroundColor: '#1e293b', borderRadius: 10,
+    paddingHorizontal: 14, paddingVertical: 7,
+    borderWidth: 1, borderColor: '#334155',
   },
-  greetingBlock: { flex: 1, marginRight: 12 },
-  greeting: { fontSize: 13, color: '#94a3b8', fontWeight: '500', marginBottom: 5 },
-  campusPill: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(79,70,229,0.2)', alignSelf: 'flex-start',
-    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5,
-    borderWidth: 1, borderColor: 'rgba(165,180,252,0.3)',
-  },
-  campusEmoji: { fontSize: 14, marginRight: 5 },
-  campusName: { fontSize: 14, fontWeight: '800', color: '#e2e8f0', marginRight: 4, maxWidth: 160 },
+  changeBtnText: { color: '#94a3b8', fontSize: 13, fontWeight: '700' },
 
-  lostFoundBtn: {
+  // Banner
+  bannerWrap: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(251,191,36,0.15)', borderRadius: 20,
-    paddingHorizontal: 10, paddingVertical: 6,
-    borderWidth: 1, borderColor: 'rgba(251,191,36,0.3)',
+    backgroundColor: 'rgba(251,191,36,0.1)', marginHorizontal: 16, marginBottom: 12,
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
+    borderWidth: 1, borderColor: 'rgba(251,191,36,0.25)',
   },
-  lostFoundText: { fontSize: 11, color: '#fbbf24', fontWeight: '700', marginLeft: 4 },
+  bannerText: { color: '#94a3b8', fontSize: 12, flex: 1 },
+  bannerHighlight: { color: '#fbbf24', fontWeight: '700' },
+
+  // Section
+  section: { paddingHorizontal: 16, marginBottom: 24 },
+  sectionTitle: { fontSize: 17, fontWeight: '800', color: '#f1f5f9', marginBottom: 14 },
+
+  // Spotlight
+  spotlightScroll: { paddingRight: 16 },
+
+  // Quick actions
+  quickRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  quickItem: { alignItems: 'center', flex: 1 },
+  quickCircle: {
+    width: 58, height: 58, borderRadius: 29,
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, marginBottom: 8,
+  },
+  quickLabel: { fontSize: 11, color: '#94a3b8', fontWeight: '600', textAlign: 'center' },
+
+  // Trending grid
+  trendingGrid: { flexDirection: 'row', gap: 10, height: 200 },
+  tileRightCol: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  tile: { borderRadius: 18, overflow: 'hidden', justifyContent: 'flex-end', padding: 12 },
+  tileTall: { width: (SCREEN_WIDTH - 58) * 0.42, alignSelf: 'stretch' },
+  tileSmall: { width: '47%', height: 90 },
+  tileOverlay: { ...StyleSheet.absoluteFillObject },
+  tileLabel: { fontSize: 13, fontWeight: '800', color: '#fff', zIndex: 1 },
+
+  // Recent activity
+  activityScroll: { gap: 8, paddingRight: 16 },
+  activityPill: {
+    backgroundColor: '#1e293b', borderRadius: 20,
+    paddingHorizontal: 14, paddingVertical: 8,
+    borderWidth: 1, borderColor: '#334155', maxWidth: 180,
+  },
+  activityText: { fontSize: 13, color: '#cbd5e1', fontWeight: '500' },
 
   // Search
   searchWrap: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#1e293b', borderRadius: 14,
     paddingHorizontal: 14, paddingVertical: 10,
-    marginBottom: 12,
-    borderWidth: 1, borderColor: '#334155',
+    marginBottom: 12, borderWidth: 1, borderColor: '#334155',
   },
-  searchInput: { flex: 1, fontSize: 15, color: '#e2e8f0', padding: 0 },
+  searchInput: { flex: 1, fontSize: 14, color: '#e2e8f0', padding: 0 },
 
   // Chips
-  chipsScroll: { marginBottom: 2 },
-  chipsContent: { paddingRight: 16, gap: 8, flexDirection: 'row' },
+  chipsContent: { paddingRight: 16, gap: 8 },
   chip: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#1e293b', borderRadius: 20,
-    paddingHorizontal: 12, paddingVertical: 6,
+    paddingHorizontal: 11, paddingVertical: 6,
     borderWidth: 1, borderColor: '#334155',
   },
   chipActive: { backgroundColor: '#4f46e5', borderColor: '#4f46e5' },
   chipText: { fontSize: 12, color: '#94a3b8', fontWeight: '600' },
   chipTextActive: { color: '#fff' },
 
-  // Banner
-  bannerWrap: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#1e293b', marginHorizontal: 16, marginTop: 12,
-    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
-    borderWidth: 1, borderColor: '#334155',
+  // Listings header
+  listingsHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 16, marginBottom: 12, marginTop: 16,
   },
-  bannerText: { color: '#94a3b8', fontSize: 12, flex: 1 },
-  bannerHighlight: { color: '#fbbf24', fontWeight: '700' },
+  listingsTitle: { fontSize: 17, fontWeight: '800', color: '#f1f5f9' },
+  listingsCount: { fontSize: 13, color: '#64748b', fontWeight: '600' },
 
-  // Grid
-  gridPad: { padding: 16, paddingBottom: 100 },
-  row: { justifyContent: 'space-between' },
-  gridRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  // Skeleton grid
+  skeletonGrid: {
+    flexDirection: 'row', flexWrap: 'wrap',
+    justifyContent: 'space-between', paddingHorizontal: 16,
+  },
+
+  // Item grid
+  row: { justifyContent: 'space-between', paddingHorizontal: 16 },
   gridLeft:  { width: CARD_WIDTH },
   gridRight: { width: CARD_WIDTH },
 
-  // List header
-  listHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    marginBottom: 14,
-  },
-  listHeaderText: { fontSize: 17, fontWeight: '800', color: '#f1f5f9' },
-  listHeaderCount: { fontSize: 13, color: '#64748b', fontWeight: '600' },
-
   // Empty
-  emptyWrap: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32 },
+  emptyWrap: { alignItems: 'center', paddingTop: 40, paddingHorizontal: 32 },
   emptyIcon: {
-    width: 96, height: 96, borderRadius: 48,
-    backgroundColor: 'rgba(79,70,229,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 20,
+    width: 88, height: 88, borderRadius: 44,
+    backgroundColor: 'rgba(79,70,229,0.15)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
   },
-  emptyTitle: { fontSize: 20, fontWeight: '800', color: '#f1f5f9', marginBottom: 8 },
-  emptySubtitle: { fontSize: 14, color: '#94a3b8', textAlign: 'center', lineHeight: 20 },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#f1f5f9', marginBottom: 6 },
+  emptySubtitle: { fontSize: 13, color: '#94a3b8', textAlign: 'center', lineHeight: 20 },
   clearBtn: {
-    marginTop: 20, backgroundColor: '#4f46e5',
-    borderRadius: 12, paddingHorizontal: 24, paddingVertical: 10,
+    marginTop: 16, backgroundColor: '#4f46e5',
+    borderRadius: 12, paddingHorizontal: 22, paddingVertical: 10,
   },
   clearBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 
@@ -528,10 +665,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1e293b', borderTopLeftRadius: 28, borderTopRightRadius: 28,
     paddingTop: 12, paddingHorizontal: 20, paddingBottom: 36, maxHeight: '80%',
   },
-  modalHandle: {
-    width: 40, height: 4, borderRadius: 2, backgroundColor: '#334155',
-    alignSelf: 'center', marginBottom: 16,
-  },
+  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#334155', alignSelf: 'center', marginBottom: 16 },
   modalTitle: { fontSize: 20, fontWeight: '900', color: '#f1f5f9', textAlign: 'center', marginBottom: 4 },
   modalSubtitle: { fontSize: 13, color: '#94a3b8', textAlign: 'center', marginBottom: 14 },
   modalSearch: {
@@ -545,8 +679,7 @@ const styles = StyleSheet.create({
   collegeRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingVertical: 13, paddingHorizontal: 4,
-    borderBottomWidth: 1, borderBottomColor: '#334155',
-    borderRadius: 12,
+    borderBottomWidth: 1, borderBottomColor: '#334155', borderRadius: 12,
   },
   collegeRowActive: { backgroundColor: 'rgba(79,70,229,0.2)' },
   collegeEmoji: { fontSize: 22, marginRight: 12 },
@@ -555,10 +688,7 @@ const styles = StyleSheet.create({
   collegeNameActive: { color: '#818cf8', fontWeight: '800' },
   collegeLocation: { fontSize: 12, color: '#64748b', marginTop: 2 },
   collegeMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  homeBadge: {
-    backgroundColor: '#dcfce7', borderRadius: 6,
-    paddingHorizontal: 7, paddingVertical: 2,
-  },
+  homeBadge: { backgroundColor: '#dcfce7', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
   homeBadgeText: { fontSize: 10, color: '#15803d', fontWeight: '700' },
   modalClose: {
     marginTop: 16, backgroundColor: '#273549', borderRadius: 14,
