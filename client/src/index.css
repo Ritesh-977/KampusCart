@@ -9,3 +9,132 @@
     @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200;
   }
 }
+
+/* Animated Gradient Background - Dark Cyan Theme */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  33% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  66% {
+    transform: translateY(-10px) translateX(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes slide-in-blur {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) blur(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) blur(0);
+  }
+}
+
+@keyframes neon-glow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(0, 255, 221, 0.5);
+    box-shadow: 0 0 20px rgba(0, 255, 221, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(0, 255, 221, 0.8);
+    box-shadow: 0 0 30px rgba(0, 255, 221, 0.6);
+  }
+}
+
+.gradient-animated {
+  background: linear-gradient(-45deg, #0f172a, #1e293b, #0f766e, #164e63);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+.gradient-dark-cyan-animated {
+  background: linear-gradient(135deg, #0f172a 0%, #164e63 25%, #0d9488 50%, #0f172a 75%, #164e63 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+.pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.slide-in-blur {
+  animation: slide-in-blur 0.8s ease-out forwards;
+  animation-delay: var(--animation-delay, 0s);
+}
+
+.neon-glow {
+  animation: neon-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeUpIn {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+.scroll-fade-up {
+  animation: fade-up 0.8s ease-out forwards;
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}

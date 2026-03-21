@@ -155,25 +155,33 @@ const Home = () => {
   }, [searchQuery, loading]);
 
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      <Navbar />
+    <div className="min-h-screen flex flex-col font-sans bg-white dark:bg-slate-950 transition-colors duration-300">
+      {/* Animated Gradient Background */}
+      <div className="fixed inset-0 gradient-dark-cyan-animated opacity-15 dark:opacity-30 pointer-events-none z-0"></div>
+      
+      {/* Decorative floating elements */}
+      <div className="fixed top-20 right-10 w-72 h-72 bg-cyan-400 rounded-full blur-3xl opacity-20 dark:opacity-15 float-animation pointer-events-none z-0"></div>
+      <div className="fixed bottom-20 left-10 w-80 h-80 bg-teal-500 rounded-full blur-3xl opacity-20 dark:opacity-15 float-animation pointer-events-none z-0" style={{ animationDelay: '2s' }}></div>
+      
+      <div className="relative z-10">
+        <Navbar />
 
-      <main className="flex-grow">
-        <HeroSection />
+        <main className="flex-grow">
+          <HeroSection />
 
-        <section className="bg-white dark:bg-gray-800 py-3 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-[150px] md:top-20 z-40 transition-all">
+        <section className="bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 py-3 shadow-md border-b border-teal-200 dark:border-teal-700/30 sticky top-[150px] md:top-20 z-40 transition-all backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
 
               {/* Categories */}
               <div className="flex-1 overflow-hidden">
-                <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2">Categories</h3>
+                <h3 className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-teal-500 dark:from-cyan-400 dark:to-teal-400 uppercase tracking-widest mb-2">Categories</h3>
                 <div className="flex space-x-3 overflow-x-auto pb-1 scrollbar-hide">
                   <button
                     onClick={() => setSelectedCategory('')}
                     className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap border ${selectedCategory === ''
-                        ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-transparent shadow-md'
-                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'
+                        ? 'bg-gradient-to-r from-cyan-500 to-teal-500 dark:from-cyan-500 dark:to-teal-500 text-white border-transparent shadow-lg hover:shadow-xl'
+                        : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border-cyan-300 dark:border-cyan-600 hover:border-cyan-400'
                       }`}
                   >
                     All
@@ -183,8 +191,8 @@ const Home = () => {
                       key={cat}
                       onClick={() => setSelectedCategory(cat === selectedCategory ? '' : cat)}
                       className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap border ${selectedCategory === cat
-                          ? 'bg-indigo-600 text-white border-transparent shadow-md'
-                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'
+                          ? 'bg-gradient-to-r from-cyan-500 to-teal-500 dark:from-cyan-500 dark:to-teal-500 text-white border-transparent shadow-lg hover:shadow-xl'
+                          : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border-cyan-300 dark:border-cyan-600 hover:border-cyan-400'
                         }`}
                     >
                       {cat}
@@ -194,14 +202,14 @@ const Home = () => {
               </div>
 
               {/* Sort By */}
-              <div className="flex-shrink-0 lg:border-l lg:pl-8 dark:border-gray-700">
-                <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2">Sort By</h3>
+              <div className="flex-shrink-0 lg:border-l lg:pl-8 dark:border-teal-700/30 border-teal-200">
+                <h3 className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-teal-500 dark:from-cyan-400 dark:to-teal-400 uppercase tracking-widest mb-2">Sort By</h3>
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                   <button
                     onClick={() => setSortBy(sortBy === 'priceLow' ? '' : 'priceLow')}
                     className={`px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition-all whitespace-nowrap ${sortBy === 'priceLow'
-                        ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-gray-300'
+                        ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 shadow-md'
+                        : 'border-cyan-300 dark:border-cyan-600 bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:border-cyan-400'
                       }`}
                   >
                     Price: Low to High
@@ -209,8 +217,8 @@ const Home = () => {
                   <button
                     onClick={() => setSortBy(sortBy === 'priceHigh' ? '' : 'priceHigh')}
                     className={`px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition-all whitespace-nowrap ${sortBy === 'priceHigh'
-                        ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-gray-300'
+                        ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 shadow-md'
+                        : 'border-cyan-300 dark:border-cyan-600 bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:border-cyan-400'
                       }`}
                   >
                     Price: High to Low
@@ -228,7 +236,7 @@ const Home = () => {
 
             {/* Tourist Banner */}
             {isViewingOtherCollege && (
-              <div className="mb-6 flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+              <div className="mb-6 flex items-start gap-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-300 dark:border-amber-700/50 rounded-xl px-4 py-3 text-sm text-amber-800 dark:text-amber-300 shadow-sm">
                 <span className="text-lg leading-snug">👀</span>
                 <p>
                   You are viewing <strong>{selectedCollege.name}</strong>. Your home campus is <strong>{user.college}</strong>. You can browse, but cannot contact sellers here.
@@ -237,7 +245,7 @@ const Home = () => {
             )}
 
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+              <h2 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-teal-500 dark:from-cyan-400 dark:to-teal-300">
                 {searchQuery
                   ? `Results for "${searchQuery}"`
                   : selectedCategory
@@ -256,18 +264,21 @@ const Home = () => {
               <div className="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
                 {/* Render 8 Skeleton Cards while loading */}
                 {[...Array(8)].map((_, index) => (
-                  <SkeletonItemCard key={index} />
+                  <div key={index} style={{ animationDelay: `${index * 0.1}s` }} className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+                    <SkeletonItemCard />
+                  </div>
                 ))}
               </div>
             ) : items.length > 0 ? (
               <div className="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
-                {items.slice(0, visibleCount).map((item) => (
-                  <ItemCard
-                    key={item._id}
-                    item={item}
-                    isWishlisted={wishlist.includes(item._id)}
-                    onToggleWishlist={(e) => handleToggleWishlist(e, item._id)}
-                  />
+                {items.slice(0, visibleCount).map((item, index) => (
+                  <div key={item._id} style={{ '--animation-delay': `${index * 0.08}s` }}>
+                    <ItemCard
+                      item={item}
+                      isWishlisted={wishlist.includes(item._id)}
+                      onToggleWishlist={(e) => handleToggleWishlist(e, item._id)}
+                    />
+                  </div>
                 ))}
               </div>
             ) : (
@@ -276,21 +287,10 @@ const Home = () => {
                 <button onClick={() => { setSelectedCategory(''); setSortBy(''); }} className="mt-4 text-indigo-600 dark:text-indigo-400 font-bold hover:underline">Clear Filters</button>
               </div>
             )}
-
-            {!loading && items.length > visibleCount && (
-              <div className="py-10 flex flex-col items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 dark:bg-indigo-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 dark:bg-indigo-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 dark:bg-indigo-500 animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-                <p className="text-sm text-gray-400 dark:text-gray-500">Loading more items...</p>
-              </div>
-            )}
           </div>
         </section>
       </main>
-
+        </div>
     </div>
   );
 };

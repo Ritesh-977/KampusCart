@@ -148,11 +148,11 @@ const Navbar = () => {
   };
 
   const NavItem = ({ to, icon: Icon, label, badgeCount }) => (
-    <Link to={to} className="relative flex items-center gap-2 px-3 py-2 rounded-full text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all group">
-       <Icon className="text-lg group-hover:scale-110 transition-transform text-gray-400 dark:text-gray-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" />
+    <Link to={to} className="relative flex items-center gap-2 px-3 py-2 rounded-full text-sm font-semibold text-slate-300 dark:text-slate-300 hover:bg-slate-800 dark:hover:bg-slate-800 hover:text-cyan-400 dark:hover:text-cyan-400 transition-all group">
+       <Icon className="text-lg group-hover:scale-110 transition-transform text-slate-400 dark:text-slate-500 group-hover:text-cyan-400 dark:group-hover:text-cyan-400" />
        <span className="hidden xl:block">{label}</span>
        {badgeCount > 0 && (
-         <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white ring-2 ring-white dark:ring-gray-900">
+         <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white ring-2 ring-slate-900 dark:ring-slate-950">
            {badgeCount}
          </span>
        )}
@@ -230,15 +230,15 @@ const Navbar = () => {
   );
 
   return (
-    <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50 transition-colors duration-200">
+    <nav className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 border-b border-cyan-700/30 dark:border-cyan-700/20 sticky top-0 z-50 transition-colors duration-200 shadow-lg shadow-cyan-500/10">
       <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[95rem] mx-auto">
         <div className="flex justify-between h-20 items-center gap-2 sm:gap-4">
 
           {/* Logo + College Badge */}
           <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer min-w-fit" onClick={() => navigate('/')}>
-            <div className="flex items-center text-xl sm:text-2xl font-black text-indigo-600 tracking-tight">
+            <div className="flex items-center text-xl sm:text-2xl font-black text-cyan-400 tracking-tight">
               <FaStore className="h-6 w-6 sm:h-8 sm:w-8 mr-1.5 sm:mr-2.5" />
-              <span className="dark:text-white">kampus<span className="text-gray-900 dark:text-gray-400">Cart</span></span>
+              <span className="dark:text-white">kampus<span className="text-slate-300 dark:text-slate-400">Cart</span></span>
             </div>
             {selectedCollege && (
               <button
@@ -269,7 +269,7 @@ const Navbar = () => {
                   onFocus={handleFocus}
                   onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg leading-5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition-all shadow-sm"
+                  className="block w-full pl-10 pr-10 py-2.5 border border-slate-700 dark:border-slate-700 rounded-lg leading-5 bg-slate-800 dark:bg-slate-800 text-white dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:bg-slate-800 dark:focus:bg-slate-800 transition-all shadow-sm"
                   placeholder="Search for items..."
                   autoComplete="off"
                 />
@@ -313,7 +313,7 @@ const Navbar = () => {
             {/* Sell Button: Desktop Only */}
             <Link
                 to="/sell"
-                className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 border border-transparent text-sm font-bold rounded-full shadow-lg text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 transition-all transform hover:-translate-y-0.5 mx-2"
+                className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 border border-transparent text-sm font-bold rounded-full shadow-lg text-white bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 transition-all transform hover:-translate-y-0.5 mx-2"
             >
                 <FaPlus className="text-xs" />
                 Sell Item
