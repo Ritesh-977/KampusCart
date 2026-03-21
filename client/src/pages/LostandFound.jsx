@@ -148,7 +148,7 @@ const LostAndFound = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-white dark:bg-slate-950 font-sans transition-colors duration-300">
       <Navbar />
       
       <ToastContainer 
@@ -165,11 +165,11 @@ const LostAndFound = () => {
       />
 
       {/* HERO SECTION */}
-      <div className="bg-indigo-600 dark:bg-indigo-900 py-10 px-4 sm:px-6 lg:px-8 text-center shadow-lg transition-colors duration-300">
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-10 px-4 sm:px-6 lg:px-8 text-center shadow-lg transition-colors duration-300 border-b border-cyan-700/30">
         <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2 flex items-center justify-center gap-3">
           <FaBullhorn /> Campus Lost & Found
         </h1>
-        <p className="text-indigo-100 dark:text-indigo-200 text-lg max-w-2xl mx-auto">
+        <p className="text-slate-300 dark:text-slate-300 text-lg max-w-2xl mx-auto">
           Report lost items or help others find their belongings.
         </p>
         <div className="mt-8 max-w-xl mx-auto relative">
@@ -181,7 +181,7 @@ const LostAndFound = () => {
             placeholder="Search for 'ID Card', 'Keys'..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full pl-10 pr-4 py-3 rounded-full border-none shadow-xl focus:ring-2 focus:ring-white focus:outline-none text-gray-800 dark:text-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400"
+            className="block w-full pl-10 pr-4 py-3 rounded-full border-none shadow-xl focus:ring-2 focus:ring-cyan-400 focus:outline-none text-gray-800 dark:text-white dark:bg-slate-800 placeholder-gray-500 dark:placeholder-slate-400"
           />
         </div>
       </div>
@@ -189,12 +189,12 @@ const LostAndFound = () => {
       {/* CONTROLS SECTION */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="bg-white dark:bg-gray-800 p-1 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 inline-flex transition-colors duration-300">
-            <button onClick={() => handleFilterChange('all')} className={`px-4 py-2 rounded-md text-sm font-medium transition ${filterType === 'all' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>All</button>
-            <button onClick={() => handleFilterChange('Lost')} className={`px-4 py-2 rounded-md text-sm font-medium transition ${filterType === 'Lost' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>Lost</button>
-            <button onClick={() => handleFilterChange('Found')} className={`px-4 py-2 rounded-md text-sm font-medium transition ${filterType === 'Found' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>Found</button>
+          <div className="bg-white dark:bg-slate-800 p-1 rounded-lg shadow-sm border border-cyan-300 dark:border-cyan-700/50 inline-flex transition-colors duration-300">
+            <button onClick={() => handleFilterChange('all')} className={`px-4 py-2 rounded-md text-sm font-medium transition ${filterType === 'all' ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>All</button>
+            <button onClick={() => handleFilterChange('Lost')} className={`px-4 py-2 rounded-md text-sm font-medium transition ${filterType === 'Lost' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>Lost</button>
+            <button onClick={() => handleFilterChange('Found')} className={`px-4 py-2 rounded-md text-sm font-medium transition ${filterType === 'Found' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>Found</button>
           </div>
-          <button onClick={() => setIsModalOpen(true)} className="flex items-center px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold shadow-md transition transform hover:-translate-y-0.5">
+          <button onClick={() => setIsModalOpen(true)} className="flex items-center px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white rounded-full font-bold shadow-md transition transform hover:-translate-y-0.5">
             <FaPlus className="mr-2" /> Report Item
           </button>
         </div>
@@ -238,8 +238,8 @@ const LostAndFound = () => {
                     </div>
                     
                     <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        <div className="flex items-center"><FaMapMarkerAlt className="mr-2 text-indigo-500" /> {item.location}</div>
-                        <div className="flex items-center"><FaCalendarAlt className="mr-2 text-indigo-500" /> {new Date(item.createdAt).toLocaleDateString()}</div>
+                        <div className="flex items-center"><FaMapMarkerAlt className="mr-2 text-cyan-500" /> {item.location}</div>
+                        <div className="flex items-center"><FaCalendarAlt className="mr-2 text-cyan-500" /> {new Date(item.createdAt).toLocaleDateString()}</div>
                     </div>
                     
                     <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 whitespace-pre-line flex-grow">{item.description}</p>
@@ -256,7 +256,7 @@ const LostAndFound = () => {
                                     <button onClick={() => handleMarkResolved(item._id)} className="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 text-sm font-bold border border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-900/20 px-3 py-1 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/40 transition">Mark Resolved</button>
                                 ) : (
                                     <div className="flex items-center gap-2">
-                                        <a href={`mailto:${item.reporter?.email}`} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-bold flex items-center cursor-pointer">Contact</a>
+                                        <a href={`mailto:${item.reporter?.email}`} className="text-cyan-600 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 text-sm font-bold flex items-center cursor-pointer">Contact</a>
                                         {item.contact && /^\+?\d[\d\s\-]{6,}$/.test(item.contact.trim()) && (
                                             <a
                                                 href={`https://wa.me/${item.contact.replace(/[\s\-\+]/g, '')}`}
@@ -290,9 +290,9 @@ const LostAndFound = () => {
       {/* --- REPORT MODAL --- */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-fadeIn max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white">Report an Item</h3>
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-fadeIn max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-cyan-300 dark:border-cyan-700/50 flex justify-between items-center bg-gradient-to-r from-cyan-50 to-teal-50 dark:from-slate-900 dark:to-slate-800">
+              <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-teal-600 dark:from-cyan-400 dark:to-teal-400">Report an Item</h3>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"><FaTimes size={20} /></button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -307,27 +307,27 @@ const LostAndFound = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Item Title</label>
-                    <input required type="text" name="title" value={newItem.title} onChange={handleInputChange} placeholder="e.g. Blue Casio Calculator" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-700 dark:text-white" />
+                    <input required type="text" name="title" value={newItem.title} onChange={handleInputChange} placeholder="e.g. Blue Casio Calculator" className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none bg-white dark:bg-slate-700 dark:text-white" />
                 </div>
                 <div className="col-span-2 sm:col-span-1">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-                    <select name="category" value={newItem.category} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-700 dark:text-white">
+                    <select name="category" value={newItem.category} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none bg-white dark:bg-slate-700 dark:text-white">
                         <option value="ID Card">ID Card</option><option value="Keys">Keys</option><option value="Electronics">Electronics</option><option value="Books">Books</option><option value="Other">Other</option>
                     </select>
                 </div>
                 <div className="col-span-2 sm:col-span-1">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location</label>
-                    <input required type="text" name="location" value={newItem.location} onChange={handleInputChange} placeholder="e.g. Library" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-700 dark:text-white" />
+                    <input required type="text" name="location" value={newItem.location} onChange={handleInputChange} placeholder="e.g. Library" className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none bg-white dark:bg-slate-700 dark:text-white" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label><input required type="date" name="date" value={newItem.date} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-700 dark:text-white" /></div>
-                <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Info</label><input required type="text" name="contact" value={newItem.contact} onChange={handleInputChange} placeholder="Phone/Email" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-700 dark:text-white" /></div>
+                <div><label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Date</label><input required type="date" name="date" value={newItem.date} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none bg-white dark:bg-slate-700 dark:text-white" /></div>
+                <div><label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Contact Info</label><input required type="text" name="contact" value={newItem.contact} onChange={handleInputChange} placeholder="Phone/Email" className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none bg-white dark:bg-slate-700 dark:text-white" /></div>
               </div>
-              <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label><textarea required name="description" rows="3" value={newItem.description} onChange={handleInputChange} placeholder="Describe the item details..." className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white dark:bg-gray-700 dark:text-white"></textarea></div>
+              <div><label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Description</label><textarea required name="description" rows="3" value={newItem.description} onChange={handleInputChange} placeholder="Describe the item details..." className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none bg-white dark:bg-slate-700 dark:text-white"></textarea></div>
               <div>
-                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upload Image (Optional)</label>
-                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer relative">
+                 <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Upload Image (Optional)</label>
+                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-cyan-300 dark:border-cyan-600 border-dashed rounded-lg hover:bg-cyan-50 dark:hover:bg-slate-700 cursor-pointer relative">
                     <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageUpload} accept="image/*" />
                     <div className="space-y-1 text-center">
                        {previewUrl ? (
@@ -338,7 +338,7 @@ const LostAndFound = () => {
                     </div>
                  </div>
               </div>
-              <button type="submit" disabled={submitting} className="w-full py-3 bg-indigo-600 text-white rounded-lg font-bold shadow-md hover:bg-indigo-700 transition flex items-center justify-center">
+              <button type="submit" disabled={submitting} className="w-full py-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-lg font-bold shadow-md hover:from-cyan-600 hover:to-teal-600 transition flex items-center justify-center">
                 {submitting ? <><FaSpinner className="animate-spin mr-2" /> Posting...</> : "Submit Report"}
               </button>
             </form>

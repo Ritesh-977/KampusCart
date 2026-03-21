@@ -306,26 +306,26 @@ const Chat = () => {
 
   return (
     // FIX 1: Root container uses 100dvh (Dynamic Viewport Height) for mobile browser support
-    <div className="h-[100dvh] flex flex-col bg-gray-100 dark:bg-gray-900 font-sans overflow-hidden fixed inset-0">
+    <div className="h-[100dvh] flex flex-col bg-slate-100 dark:bg-slate-900 font-sans overflow-hidden fixed inset-0">
       <div className="flex-none z-50 relative">
          <Navbar />
       </div>
 
       <div className="flex-1 w-full max-w-[95rem] mx-auto p-0 sm:p-4 lg:p-6 overflow-hidden relative flex flex-col">
-        <div className="bg-white dark:bg-gray-800 sm:rounded-2xl shadow-xl overflow-hidden flex-1 flex border border-gray-200 dark:border-gray-700 relative">
+        <div className="bg-white dark:bg-slate-800 sm:rounded-2xl shadow-xl overflow-hidden flex-1 flex border border-slate-200 dark:border-slate-700 relative">
           
           {/* --- IMAGE PREVIEW MODAL --- */}
           {imagePreview && (
             <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-4 backdrop-blur-sm">
-                <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-2xl max-w-md w-full flex flex-col items-center transition-colors">
+                <div className="bg-white dark:bg-slate-800 p-2 rounded-lg shadow-2xl max-w-md w-full flex flex-col items-center transition-colors">
                     <div className="w-full flex justify-between items-center mb-2 px-2">
-                        <h3 className="font-bold text-gray-700 dark:text-gray-200">Send Image?</h3>
-                        <button onClick={cancelPreview} className="text-gray-500 hover:text-red-500"><FaTimes /></button>
+                        <h3 className="font-bold text-slate-700 dark:text-slate-200">Send Image?</h3>
+                        <button onClick={cancelPreview} className="text-slate-500 hover:text-red-500"><FaTimes /></button>
                     </div>
-                    <img src={imagePreview} alt="Preview" className="max-h-[60vh] rounded border border-gray-200 dark:border-gray-700 object-contain" />
+                    <img src={imagePreview} alt="Preview" className="max-h-[60vh] rounded border border-slate-200 dark:border-slate-700 object-contain" />
                     <div className="flex gap-3 mt-4 w-full">
-                        <button onClick={cancelPreview} className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition" disabled={isUploading}>Cancel</button>
-                        <button onClick={sendImage} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition flex justify-center items-center gap-2" disabled={isUploading}>
+                        <button onClick={cancelPreview} className="flex-1 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition" disabled={isUploading}>Cancel</button>
+                        <button onClick={sendImage} className="flex-1 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-semibold hover:from-cyan-600 hover:to-teal-600 transition flex justify-center items-center gap-2" disabled={isUploading}>
                             {isUploading ? "Sending..." : <><FaPaperPlane /> Send</>}
                         </button>
                     </div>
@@ -334,22 +334,22 @@ const Chat = () => {
           )}
 
           {/* --- SIDEBAR --- */}
-          <div className={`${isMobileChatOpen ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 lg:w-1/4 flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 h-full`}>
+          <div className={`${isMobileChatOpen ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 lg:w-1/4 flex-col border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 h-full`}>
             {/* Sidebar content stays same, reusing existing classes */}
-            <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800 h-16 shrink-0">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">Chats</h2>
-              <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition"><FaEllipsisV /></button>
+            <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800 h-16 shrink-0">
+              <h2 className="text-xl font-bold text-slate-800 dark:text-white">Chats</h2>
+              <button className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition"><FaEllipsisV /></button>
             </div>
 
             <div className="p-4 shrink-0">
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FaSearch className="text-gray-400" /></span>
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FaSearch className="text-slate-400" /></span>
                 <input 
                     type="text" 
                     placeholder="Search chats..." 
                     value={sidebarSearch} 
                     onChange={(e) => setSidebarSearch(e.target.value)} 
-                    className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-full border-none focus:ring-2 focus:ring-indigo-500 text-sm transition outline-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400" 
+                    className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-700 rounded-full border-none focus:ring-2 focus:ring-cyan-500 text-sm transition outline-none text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400" 
                 />
               </div>
             </div>
@@ -380,12 +380,12 @@ const Chat = () => {
                   <div 
                     key={getUserId(chat)}
                     onClick={() => handleSelectChat(chat)}
-                    className={`flex items-center p-4 cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-700 
-                      ${isUnread ? 'bg-white dark:bg-gray-700 border-l-4 border-green-500' : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'} 
-                      ${isActive ? 'bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-600' : ''}`}
+                    className={`flex items-center p-4 cursor-pointer transition-colors border-b border-slate-100 dark:border-slate-700 
+                      ${isUnread ? 'bg-white dark:bg-slate-700 border-l-4 border-green-500' : 'bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700'} 
+                      ${isActive ? 'bg-cyan-50 dark:bg-cyan-900/20 border-l-4 border-cyan-600' : ''}`}
                   >
                     <div className="relative flex-shrink-0">
-                      <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-500 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
                         {partner.profilePic || partner.pic ? <img src={partner.profilePic || partner.pic} className="h-full w-full object-cover" alt="" /> : partner.name.charAt(0)}
                       </div>
                       {onlineUsers.includes(getUserId(partner)) && (
@@ -394,15 +394,15 @@ const Chat = () => {
                     </div>
                     <div className="ml-4 flex-1 min-w-0">
                       <div className="flex justify-between items-baseline mb-1">
-                        <h3 className={`text-sm truncate ${isUnread ? 'font-extrabold text-black dark:text-white' : 'font-medium text-gray-700 dark:text-gray-200'} ${isActive ? 'text-indigo-900 dark:text-indigo-400' : ''}`}>
+                        <h3 className={`text-sm truncate ${isUnread ? 'font-extrabold text-black dark:text-white' : 'font-medium text-slate-700 dark:text-slate-200'} ${isActive ? 'text-cyan-900 dark:text-cyan-400' : ''}`}>
                             {partner.name}
                         </h3>
-                        <span className={`text-xs ${isUnread ? 'font-bold text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                        <span className={`text-xs ${isUnread ? 'font-bold text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-slate-500'}`}>
                             {latestMsg ? new Date(latestMsg.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ""}
                         </span>
                       </div>
-                      <p className={`text-sm truncate ${isUnread ? 'font-bold text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'} ${isActive ? 'text-indigo-700 dark:text-indigo-300' : ''}`}>
-                          {isLatestMsgImage ? <span className="flex items-center gap-1 italic text-gray-400"><FaImage /> Photo</span> : latestMsg.content}
+                      <p className={`text-sm truncate ${isUnread ? 'font-bold text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'} ${isActive ? 'text-cyan-700 dark:text-cyan-300' : ''}`}>
+                          {isLatestMsgImage ? <span className="flex items-center gap-1 italic text-slate-400"><FaImage /> Photo</span> : latestMsg.content}
                       </p>
                     </div>
                   </div>
@@ -412,10 +412,10 @@ const Chat = () => {
 
           {/* --- MAIN CHAT WINDOW --- */}
           {/* FIX 2: Added Flex layout to main chat area to support Flex Input */}
-          <div className={`${!isMobileChatOpen ? 'hidden md:flex' : 'flex'} flex-1 flex-col bg-[#f0f2f5] dark:bg-gray-900 relative h-full`}>
+          <div className={`${!isMobileChatOpen ? 'hidden md:flex' : 'flex'} flex-1 flex-col bg-[#f0f2f5] dark:bg-slate-900 relative h-full`}>
             {selectedChat ? (
               <>
-                <div className="flex-none p-3 sm:p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm z-20 h-16 transition-colors">
+                <div className="flex-none p-3 sm:p-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center shadow-sm z-20 h-16 transition-colors">
                   {/* Header Content */}
                   <div className="flex items-center">
                     <button onClick={() => setIsMobileChatOpen(false)} className="md:hidden mr-3 text-gray-500 dark:text-gray-400 hover:text-indigo-600"><FaArrowLeft className="text-xl" /></button>
@@ -423,31 +423,31 @@ const Chat = () => {
                         className="flex items-center cursor-pointer hover:opacity-80 transition"
                         onClick={() => handleViewProfile(getUserId(getSender(user, selectedChat.users)))}
                     >
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold mr-3 overflow-hidden">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-500 flex items-center justify-center text-white font-bold mr-3 overflow-hidden">
                             {getSender(user, selectedChat.users).pic ? <img src={getSender(user, selectedChat.users).pic} className="h-full w-full object-cover" alt="" /> : getSender(user, selectedChat.users).name.charAt(0)}
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-indigo-600">{getSender(user, selectedChat.users).name}</h3>
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-cyan-600">{getSender(user, selectedChat.users).name}</h3>
                             <p className="text-xs font-medium flex items-center">
-                                {onlineUsers.includes(getUserId(getSender(user, selectedChat.users))) ? <span className="text-green-500 flex items-center gap-1"><FaCircle className="text-[8px]" /> Online</span> : <span className="text-gray-400 dark:text-gray-500">Offline</span>}
+                                {onlineUsers.includes(getUserId(getSender(user, selectedChat.users))) ? <span className="text-green-500 flex items-center gap-1"><FaCircle className="text-[8px]" /> Online</span> : <span className="text-slate-400 dark:text-slate-500">Offline</span>}
                             </p>
                         </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400">
+                  <div className="flex items-center space-x-2 text-cyan-600 dark:text-cyan-400">
                     {showInChatSearch ? (
-                        <div className="flex items-center bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full px-3 py-1.5 shadow-sm animate-fade-in transition-all">
-                            <input autoFocus type="text" placeholder="Find..." className="bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none appearance-none text-sm text-gray-700 dark:text-white w-28 sm:w-40 placeholder-gray-400" value={inChatSearch} onChange={(e) => setInChatSearch(e.target.value)} />
-                            <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 border-l border-gray-300 dark:border-gray-600 pl-2 ml-2">
+                        <div className="flex items-center bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-full px-3 py-1.5 shadow-sm animate-fade-in transition-all">
+                            <input autoFocus type="text" placeholder="Find..." className="bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none appearance-none text-sm text-slate-700 dark:text-white w-28 sm:w-40 placeholder-slate-400" value={inChatSearch} onChange={(e) => setInChatSearch(e.target.value)} />
+                            <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 border-l border-slate-300 dark:border-slate-600 pl-2 ml-2">
                                 <span className="mr-2">{searchMatches.length > 0 ? `${currentMatchIndex + 1}/${searchMatches.length}` : '0/0'}</span>
-                                <button onClick={handlePrevMatch} className="hover:bg-gray-100 dark:hover:bg-gray-600 p-1 rounded text-gray-600 dark:text-gray-300"><FaChevronUp /></button>
-                                <button onClick={handleNextMatch} className="hover:bg-gray-100 dark:hover:bg-gray-600 p-1 rounded text-gray-600 dark:text-gray-300"><FaChevronDown /></button>
+                                <button onClick={handlePrevMatch} className="hover:bg-slate-100 dark:hover:bg-slate-600 p-1 rounded text-slate-600 dark:text-slate-300"><FaChevronUp /></button>
+                                <button onClick={handleNextMatch} className="hover:bg-slate-100 dark:hover:bg-slate-600 p-1 rounded text-slate-600 dark:text-slate-300"><FaChevronDown /></button>
                             </div>
-                            <button onClick={() => {setShowInChatSearch(false); setInChatSearch("")}} className="text-gray-400 hover:text-red-500 ml-2 pl-2"><FaTimes /></button>
+                            <button onClick={() => {setShowInChatSearch(false); setInChatSearch("")}} className="text-slate-400 hover:text-red-500 ml-2 pl-2"><FaTimes /></button>
                         </div>
                     ) : (
-                        <button onClick={() => setShowInChatSearch(true)} className="hover:bg-indigo-50 dark:hover:bg-indigo-900/30 p-2.5 rounded-full transition text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"><FaSearch /></button>
+                        <button onClick={() => setShowInChatSearch(true)} className="hover:bg-cyan-50 dark:hover:bg-cyan-900/30 p-2.5 rounded-full transition text-slate-500 hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400"><FaSearch /></button>
                     )}
                   </div>
                 </div>
@@ -501,22 +501,22 @@ const Chat = () => {
                         value={newMessage} 
                         onChange={handleTyping} 
                         placeholder="Type a message..." 
-                        className="flex-1 bg-gray-100 dark:bg-gray-700 border-0 rounded-full px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-600 transition text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400" 
+                        className="flex-1 bg-slate-100 dark:bg-slate-700 border-0 rounded-full px-4 py-3 focus:ring-2 focus:ring-cyan-500 focus:bg-white dark:focus:bg-slate-600 transition text-sm sm:text-base text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400" 
                     />
                     
-                    <button type="submit" disabled={!newMessage.trim()} className={`p-3 rounded-full shadow-lg transition transform hover:scale-105 ${newMessage.trim() ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'}`}>
+                    <button type="submit" disabled={!newMessage.trim()} className={`p-3 rounded-full shadow-lg transition transform hover:scale-105 ${newMessage.trim() ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white hover:from-cyan-600 hover:to-teal-600' : 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'}`}>
                       <FaPaperPlane />
                     </button>
                   </form>
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center bg-[#f0f2f5] dark:bg-gray-900 text-center p-8 transition-colors">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-full shadow-md mb-6 animate-bounce-slow">
-                    <div className="text-indigo-200 dark:text-indigo-900 text-6xl"><FaImage className="mx-auto" /></div>
+              <div className="flex-1 flex flex-col items-center justify-center bg-[#f0f2f5] dark:bg-slate-900 text-center p-8 transition-colors">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-full shadow-md mb-6 animate-bounce-slow">
+                    <div className="text-cyan-200 dark:text-cyan-900 text-6xl"><FaImage className="mx-auto" /></div>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">CampusMart Chat</h2>
-                <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-md">Select a chat to start messaging.</p>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white">CampusMart Chat</h2>
+                <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-md">Select a chat to start messaging.</p>
               </div>
             )}
           </div>

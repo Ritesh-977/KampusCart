@@ -208,19 +208,25 @@ const UserProfile = () => {
       setSaving(false);
     }
   };
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold bg-gray-50 dark:bg-gray-900 transition-colors">Loading Profile...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-cyan-400 font-bold bg-slate-900 transition-colors">Loading Profile...</div>;
 
   return (
     // FIX 1: Main Background
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans transition-colors duration-200">
       <Navbar />
 
       <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
         {/* FIX 2: Card Background */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden relative transition-colors">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden relative transition-colors">
 
           {/* --- COVER IMAGE SECTION --- */}
-          <div className="relative h-48 bg-gray-300 dark:bg-gray-700 group">
+          <div className="relative h-48 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 group overflow-hidden">
+            {/* Attractive Default Cover Pattern */}
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-teal-500/20 to-cyan-500/20"></div>
+              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(6,182,212,0.3),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(20,184,166,0.3),transparent_50%)]"></div>
+            </div>
+            
             {coverPreview || user.coverImage ? (
               <img
                 src={coverPreview || user.coverImage}
@@ -228,7 +234,14 @@ const UserProfile = () => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-r from-indigo-600 to-purple-600"></div>
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-r from-cyan-400 to-teal-500 flex items-center justify-center">
+                    <FaCamera className="text-white text-xl" />
+                  </div>
+                  <p className="text-cyan-300 text-sm font-medium">Add a cover photo</p>
+                </div>
+              </div>
             )}
 
             {isEditing && (
@@ -236,7 +249,7 @@ const UserProfile = () => {
                 <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
                   <button
                     onClick={triggerCoverInput}
-                    className="bg-white/90 dark:bg-black/70 text-gray-800 dark:text-white px-4 py-2 rounded-full font-medium shadow-lg hover:bg-white dark:hover:bg-black/90 flex items-center transform hover:scale-105 transition"
+                    className="bg-slate-800/90 backdrop-blur-sm text-cyan-300 border border-cyan-400/30 px-4 py-2 rounded-full font-medium shadow-lg hover:bg-slate-700/90 flex items-center transform hover:scale-105 transition"
                   >
                     <FaImage className="mr-2" /> Change Cover
                   </button>
@@ -251,18 +264,18 @@ const UserProfile = () => {
             <div className="relative -mt-16 mb-6 flex justify-between items-end">
               <div className="relative group">
                 {/* FIX 3: Profile Pic Border & Placeholder */}
-                <div className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center shadow-md overflow-hidden relative z-10 transition-colors">
+                <div className="w-32 h-32 rounded-full border-4 border-slate-800 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center shadow-xl overflow-hidden relative z-10 transition-colors">
                   {imagePreview ? (
                     <img src={imagePreview} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-4xl font-bold text-indigo-600 dark:text-indigo-300">
+                    <span className="text-4xl font-bold text-cyan-400">
                       {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </span>
                   )}
                 </div>
                 <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
                 {isEditing && (
-                  <button onClick={triggerFileInput} className="absolute bottom-0 right-0 bg-gray-800 dark:bg-gray-700 text-white p-2 rounded-full hover:bg-gray-700 dark:hover:bg-gray-600 transition shadow-lg z-20" title="Upload Photo">
+                  <button onClick={triggerFileInput} className="absolute bottom-0 right-0 bg-gradient-to-r from-cyan-500 to-teal-500 text-white p-3 rounded-full hover:from-cyan-600 hover:to-teal-600 transition shadow-lg z-20 transform hover:scale-105" title="Upload Photo">
                     <FaCamera size={16} />
                   </button>
                 )}
@@ -284,8 +297,8 @@ const UserProfile = () => {
                     disabled={saving}
                     // FIX 4: Dark Mode Cancel Button
                     className="flex items-center px-2.5 py-1 text-xs md:px-4 md:py-2 md:text-base 
-                               bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg 
-                               hover:bg-gray-300 dark:hover:bg-gray-600 transition disabled:opacity-50"
+                               bg-slate-700 text-slate-300 rounded-lg 
+                               hover:bg-slate-600 transition disabled:opacity-50"
                   >
                     <FaTimes className="mr-1 md:mr-2" /> Cancel
                   </button>
@@ -295,8 +308,8 @@ const UserProfile = () => {
                     onClick={handleSave}
                     disabled={saving}
                     className="flex items-center px-2.5 py-1 text-xs md:px-4 md:py-2 md:text-base 
-                               bg-indigo-600 text-white rounded-lg 
-                               hover:bg-indigo-700 transition shadow-md 
+                               bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-lg 
+                               hover:from-cyan-600 hover:to-teal-600 transition shadow-md 
                                disabled:opacity-70 disabled:cursor-not-allowed
                                min-w-[90px] md:min-w-[140px] justify-center"
                   >
@@ -314,8 +327,8 @@ const UserProfile = () => {
 
                 ) : (
                   // FIX 5: Edit Button (Dark Mode)
-                  <button onClick={() => setIsEditing(true)} className="flex items-center px-5 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition shadow-sm font-medium">
-                    <FaEdit className="mr-2 text-indigo-500 dark:text-indigo-400" /> Edit Profile
+                  <button onClick={() => setIsEditing(true)} className="flex items-center px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-lg hover:from-cyan-600 hover:to-teal-600 transition shadow-sm font-medium transform hover:scale-105">
+                    <FaEdit className="mr-2" /> Edit Profile
                   </button>
                 )}
               </div>
@@ -336,8 +349,8 @@ const UserProfile = () => {
                     onChange={handleChange} 
                     className={`block w-full pl-10 py-3 rounded-lg border transition-all ${
                         isEditing 
-                        ? 'border-indigo-300 bg-white dark:bg-gray-700 dark:border-indigo-500 focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-white' 
-                        : 'border-transparent bg-gray-50 dark:bg-gray-900/50 text-gray-800 dark:text-gray-200 font-bold text-xl'
+                        ? 'border-cyan-300 bg-white dark:bg-slate-700 dark:border-cyan-500 focus:ring-2 focus:ring-cyan-500 text-gray-900 dark:text-white' 
+                        : 'border-transparent bg-slate-50 dark:bg-slate-900/50 text-gray-800 dark:text-gray-200 font-bold text-xl'
                     }`} 
                   />
                 </div>
@@ -372,8 +385,8 @@ const UserProfile = () => {
                     placeholder="Add phone number" 
                     className={`block w-full pl-10 py-3 rounded-lg border transition-all ${
                         isEditing 
-                        ? 'border-indigo-300 bg-white dark:bg-gray-700 dark:border-indigo-500 focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-white' 
-                        : 'border-transparent bg-gray-50 dark:bg-gray-900/50 text-gray-800 dark:text-gray-200'
+                        ? 'border-cyan-300 bg-white dark:bg-slate-700 dark:border-cyan-500 focus:ring-2 focus:ring-cyan-500 text-gray-900 dark:text-white' 
+                        : 'border-transparent bg-slate-50 dark:bg-slate-900/50 text-gray-800 dark:text-gray-200'
                     }`} 
                   />
                 </div>
@@ -392,8 +405,8 @@ const UserProfile = () => {
                     placeholder="e.g. 2nd Year CSE" 
                     className={`block w-full pl-10 py-3 rounded-lg border transition-all ${
                         isEditing 
-                        ? 'border-indigo-300 bg-white dark:bg-gray-700 dark:border-indigo-500 focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-white' 
-                        : 'border-transparent bg-gray-50 dark:bg-gray-900/50 text-gray-800 dark:text-gray-200'
+                        ? 'border-cyan-300 bg-white dark:bg-slate-700 dark:border-cyan-500 focus:ring-2 focus:ring-cyan-500 text-gray-900 dark:text-white' 
+                        : 'border-transparent bg-slate-50 dark:bg-slate-900/50 text-gray-800 dark:text-gray-200'
                     }`} 
                   />
                 </div>
@@ -407,7 +420,7 @@ const UserProfile = () => {
       {showCropModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm">
           {/* FIX 8: Modal Background */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden transition-colors">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden transition-colors">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-bold text-gray-800 dark:text-white">
                 {cropTarget === 'profile' ? 'Adjust Profile Picture' : 'Adjust Cover Image'}
@@ -417,7 +430,7 @@ const UserProfile = () => {
             <div className="p-4 flex flex-col items-center">
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Drag to reposition. Use slider to zoom.</p>
 
-              <div className="relative w-full h-64 bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden">
+              <div className="relative w-full h-64 bg-slate-100 dark:bg-slate-900 rounded-lg overflow-hidden">
                 <Cropper
                   image={tempImageSrc}
                   crop={crop}
@@ -441,13 +454,13 @@ const UserProfile = () => {
                   step={0.1}
                   onChange={(e) => setZoom(Number(e.target.value))}
                   // FIX 9: Slider Colors
-                  className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  className="w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer accent-cyan-500"
                 />
                 <span role="img" aria-label="zoom in" className="text-gray-500 dark:text-gray-400">➕</span>
               </div>
             </div>
 
-            <div className="p-4 bg-gray-50 dark:bg-gray-700 flex justify-end space-x-3 border-t border-gray-200 dark:border-gray-600">
+            <div className="p-4 bg-slate-50 dark:bg-slate-700 flex justify-end space-x-3 border-t border-slate-200 dark:border-slate-600">
               <button
                 onClick={cancelImage}
                 disabled={isCropping}
@@ -458,7 +471,7 @@ const UserProfile = () => {
               <button
                 onClick={showCroppedImage}
                 disabled={isCropping}
-                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium flex items-center disabled:opacity-50"
+                className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-lg hover:from-cyan-600 hover:to-teal-600 font-medium flex items-center disabled:opacity-50"
               >
                 {isCropping ? <>Processing...</> : <><FaCheck className="mr-2" /> Confirm Crop</>}
               </button>

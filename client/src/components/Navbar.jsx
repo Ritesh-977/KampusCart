@@ -3,12 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   FaSearch, FaUserCircle, FaStore, FaHistory, FaTrashAlt,
   FaHeart, FaPlus, FaSignOutAlt, FaUser, FaList, FaBullhorn,
-  FaCommentDots, FaTimes, FaSun, FaMoon, FaUserShield, FaUniversity, FaExchangeAlt, FaBars
+  FaCommentDots, FaTimes, FaUserShield, FaUniversity, FaExchangeAlt, FaBars
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import API from '../api/axios'; 
 import io from 'socket.io-client'; 
-import { useTheme } from '../context/ThemeContext';
 import { useCollege } from '../context/CollegeContext';
 
 const ENDPOINT = import.meta.env.VITE_SERVER_URL;
@@ -16,7 +15,6 @@ const ENDPOINT = import.meta.env.VITE_SERVER_URL;
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
   const { selectedCollege, clearCollege } = useCollege();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -361,17 +359,6 @@ const Navbar = () => {
 
                       <Link to="/my-listings" className="group flex items-center px-6 py-3 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"><FaList className="mr-3 text-gray-400 group-hover:text-indigo-500" /> My Listings</Link>
                       
-                      <button 
-                        onClick={toggleTheme}
-                        className="w-full text-left group flex items-center px-6 py-3 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        {theme === 'dark' ? (
-                            <><FaSun className="mr-3 text-yellow-500" /> Light Mode</>
-                        ) : (
-                            <><FaMoon className="mr-3 text-indigo-500" /> Dark Mode</>
-                        )}
-                      </button>
-
                       {/* Switch Campus */}
                       <button
                         onClick={handleSwitchCampus}
@@ -411,22 +398,10 @@ const Navbar = () => {
                     <FaExchangeAlt />
                     <span className="hidden lg:block">Switch Campus</span>
                   </button>
-                  <button
-                    onClick={toggleTheme}
-                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-yellow-400 transition-colors"
-                  >
-                    {theme === 'dark' ? <FaSun /> : <FaMoon />}
-                  </button>
                 </div>
 
-                {/* Mobile: theme + hamburger only */}
+                {/* Mobile: hamburger only */}
                 <div className="flex sm:hidden items-center gap-1">
-                  <button
-                    onClick={toggleTheme}
-                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-yellow-400 transition-colors"
-                  >
-                    {theme === 'dark' ? <FaSun className="text-base" /> : <FaMoon className="text-base" />}
-                  </button>
                   <button
                     onClick={() => setIsMobileMenuOpen(prev => !prev)}
                     className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors"
