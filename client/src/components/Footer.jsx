@@ -12,10 +12,10 @@ const Footer = () => {
 
   // Smooth link animation class
   const linkClass =
-    "inline-block transition-all duration-200 ease-out hover:text-indigo-400 hover:translate-x-0.5 active:scale-95";
+    "inline-block transition-all duration-200 ease-out hover:text-cyan-400 hover:translate-x-0.5 active:scale-95";
 
   return (
-    <footer className="bg-gray-900 text-gray-300 pt-8 pb-4 mt-auto border-t border-gray-800">
+    <footer className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-300 pt-8 pb-4 mt-auto border-t border-cyan-700/30 shadow-lg shadow-cyan-500/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* GRID CHANGES: 
@@ -33,21 +33,21 @@ const Footer = () => {
               to="/"
               className="flex items-center text-lg font-bold text-white tracking-tight mb-3"
             >
-              <FaStore className="h-5 w-5 mr-2 text-indigo-500" />
+              <FaStore className="h-5 w-5 mr-2 text-cyan-400" />
               <span>
-                kampus<span className="text-indigo-400">Cart</span>
+                kampus<span className="text-cyan-400">Cart</span>
               </span>
             </Link>
 
-            <p className="text-gray-400 mb-3 text-sm leading-snug max-w-xs">
+            <p className="text-slate-400 mb-3 text-sm leading-snug max-w-xs">
               A trusted marketplace for students to buy and sell locally.
             </p>
 
             <div className="flex space-x-2">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors"><FaFacebook size={16} /></a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors"><FaTwitter size={16} /></a>
-              <a href="https://www.instagram.com/kampuscart/?hl=en" className="text-gray-400 hover:text-white transition-colors"><FaInstagram size={16} /></a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors"><FaLinkedin size={16} /></a>
+              <a href="#" className="text-slate-400 hover:text-cyan-400 transition-colors"><FaFacebook size={16} /></a>
+              <a href="#" className="text-slate-400 hover:text-cyan-400 transition-colors"><FaTwitter size={16} /></a>
+              <a href="https://www.instagram.com/kampuscart/?hl=en" className="text-slate-400 hover:text-cyan-400 transition-colors"><FaInstagram size={16} /></a>
+              <a href="#" className="text-slate-400 hover:text-cyan-400 transition-colors"><FaLinkedin size={16} /></a>
             </div>
           </div>
 
@@ -55,7 +55,7 @@ const Footer = () => {
              Naturally falls into Column 1 (Left) on mobile 
           */}
           <div>
-            <h3 className="text-xs font-semibold text-white uppercase tracking-wider mb-3">
+            <h3 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-3">
               Platform
             </h3>
             <ul className="space-y-2 text-sm">
@@ -70,7 +70,7 @@ const Footer = () => {
              Naturally falls into Column 2 (Right) on mobile 
           */}
           <div>
-            <h3 className="text-xs font-semibold text-white uppercase tracking-wider mb-3">
+            <h3 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-3">
               Support
             </h3>
             <ul className="space-y-2 text-sm">
@@ -84,7 +84,7 @@ const Footer = () => {
         </div>
 
         {/* Bottom */}
-        <div className="border-t border-gray-800 pt-3 text-xs text-gray-500 text-center md:text-left">
+        <div className="border-t border-slate-800 pt-3 text-xs text-slate-500 text-center md:text-left">
           © {new Date().getFullYear()} kampusCart. All rights reserved.
         </div>
 
