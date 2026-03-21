@@ -85,12 +85,15 @@ export function usePushNotifications(navigationRef) {
         if (!data?.chatId || !navigationRef?.current) return;
 
         // Navigate to the chat screen
-        navigationRef.current.navigate('Chat', {
-          chat: { _id: data.chatId, users: [] },
-          otherUser: {
-            _id: data.senderId,
-            name: data.senderName,
-            profilePic: data.senderPic || '',
+        navigationRef.current.navigate('ChatTab', {
+          screen: 'ChatRoom',
+          params: {
+            chat: { _id: data.chatId, users: [] },
+            otherUser: {
+              _id: data.senderId,
+              name: data.senderName,
+              profilePic: data.senderPic || '',
+            },
           },
         });
       }
