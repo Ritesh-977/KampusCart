@@ -11,10 +11,33 @@ import ItemCard from '../components/ItemCard';
 import { colleges } from '../utils/colleges';
 import { AuthContext } from '../context/AuthContext';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
-const SPOTLIGHT_W = SCREEN_WIDTH - 48;
+const { width: SW } = Dimensions.get('window');
+const CARD_W = (SW - 48) / 2;
+const SPOT_W = SW - 40;
 
+// ─── AnimatedPressable ────────────────────────────────────────────────────────
+const Press = ({ children, onPress, style, disabled }) => {
+  const scale = useRef(new Animated.Value(1)).current;
+  const pressIn = () =>
+    Animated.spring(scale, { toValue: 0.93, useNativeDriver: true, speed: 80, bounciness: 4 }).start();
+  const pressOut = () =>
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 80, bounciness: 6 }).start();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={pressIn}
+      onPressOut={pressOut}
+      activeOpacity={1}
+      disabled={disabled}
+    >
+      <Animated.View style={[style, { transform: [{ scale }] }]}>
+        {children}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 const CATEGORIES = [
   { label: 'All',               icon: 'apps-outline' },
   { label: 'Cycles',            icon: 'bicycle-outline' },
@@ -24,76 +47,69 @@ const CATEGORIES = [
   { label: 'Other',             icon: 'ellipsis-horizontal-circle-outline' },
 ];
 
-const QUICK_ACTIONS = [
-  { label: 'Books',       icon: 'book-outline',           color: '#818cf8', bg: 'rgba(129,140,248,0.15)', category: 'Books & Notes' },
-  { label: 'Electronics', icon: 'phone-portrait-outline', color: '#22d3ee', bg: 'rgba(34,211,238,0.15)',  category: 'Electronics' },
-  { label: 'Cycles',      icon: 'bicycle-outline',        color: '#4ade80', bg: 'rgba(74,222,128,0.15)',  category: 'Cycles' },
-  { label: 'Hostel',      icon: 'bed-outline',            color: '#f472b6', bg: 'rgba(244,114,182,0.15)', category: 'Hostel Essentials' },
-  { label: 'Lost',        icon: 'search-outline',         color: '#fbbf24', bg: 'rgba(251,191,36,0.15)',  category: 'lost' },
+const QUICK = [
+  { label: 'Books',       icon: 'book',            color: '#818cf8', glow: '#6366f1', cat: 'Books & Notes' },
+  { label: 'Electronics', icon: 'phone-portrait',  color: '#34d399', glow: '#10b981', cat: 'Electronics' },
+  { label: 'Cycles',      icon: 'bicycle',         color: '#38bdf8', glow: '#0284c7', cat: 'Cycles' },
+  { label: 'Hostel',      icon: 'bed',             color: '#fb923c', glow: '#ea580c', cat: 'Hostel Essentials' },
+  { label: 'Lost',        icon: 'search',          color: '#f472b6', glow: '#db2777', cat: '__lost__' },
 ];
 
-const TRENDING_TILES = [
-  { label: 'Books & Notes',     colors: ['#3b82f6', '#4f46e5'], tall: true },
-  { label: 'Electronics',       colors: ['#f97316', '#ef4444'], tall: false },
-  { label: 'Hostel Essentials', colors: ['#22c55e', '#10b981'], tall: false },
-  { label: 'Cycles',            colors: ['#a3e635', '#22c55e'], tall: false },
-  { label: 'Lost & Found',      colors: ['#ec4899', '#9333ea'], tall: false },
+const TILES = [
+  { label: 'Books',       icon: 'book',           bg: '#312e81', accent: '#6366f1', tall: true,  cat: 'Books & Notes' },
+  { label: 'Electronics', icon: 'phone-portrait', bg: '#7c2d12', accent: '#fb923c', tall: false, cat: 'Electronics' },
+  { label: 'Hostel',      icon: 'bed',            bg: '#064e3b', accent: '#34d399', tall: false, cat: 'Hostel Essentials' },
+  { label: 'Cycles',      icon: 'bicycle',        bg: '#0c4a6e', accent: '#38bdf8', tall: false, cat: 'Cycles' },
+  { label: 'Lost & Found',icon: 'search-circle',  bg: '#4a044e', accent: '#e879f9', tall: false, cat: '__lost__' },
 ];
+
+const getGreeting = () => {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+};
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
-const SkeletonCard = ({ shimmer }) => {
-  const opacity = shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.7] });
-  return (
-    <View style={[sk.card, { width: CARD_WIDTH }]}>
-      <Animated.View style={[sk.img, { opacity }]} />
-      <View style={sk.body}>
-        <Animated.View style={[sk.line, { width: '85%', opacity }]} />
-        <Animated.View style={[sk.line, { width: '50%', marginTop: 6, opacity }]} />
-      </View>
-    </View>
-  );
+const Skeleton = ({ shimmer, w, h, radius = 10, style }) => {
+  const op = shimmer.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.55] });
+  return <Animated.View style={[{ width: w, height: h, borderRadius: radius, backgroundColor: '#1e293b', opacity: op }, style]} />;
 };
 
 // ─── Spotlight Card ───────────────────────────────────────────────────────────
 const SpotlightCard = ({ item, onPress }) => {
-  const img = item.imageUrl || item.image || item.images?.[0] || null;
+  const img = item.imageUrl || item.image || item.images?.[0];
   return (
-    <TouchableOpacity style={sp.card} onPress={onPress} activeOpacity={0.9}>
-      {img ? (
-        <Image source={{ uri: img }} style={sp.img} resizeMode="cover" />
-      ) : (
-        <View style={[sp.img, { backgroundColor: '#1e293b', justifyContent: 'center', alignItems: 'center' }]}>
-          <Ionicons name="image-outline" size={40} color="#334155" />
+    <Press onPress={onPress} style={sp.card}>
+      {img
+        ? <Image source={{ uri: img }} style={sp.img} resizeMode="cover" />
+        : <View style={[sp.img, sp.noImg]}><Ionicons name="image-outline" size={36} color="#334155" /></View>
+      }
+      <View style={sp.grad} />
+      <View style={sp.topRow}>
+        <View style={sp.badge}><Text style={sp.badgeText}>✦  Campus Spotlight</Text></View>
+      </View>
+      <View style={sp.bottom}>
+        <Text style={sp.itemName} numberOfLines={1}>{item.name || item.title}</Text>
+        <View style={sp.priceRow}>
+          {item.price != null && <Text style={sp.price}>₹{item.price}</Text>}
+          <View style={sp.viewBtn}><Text style={sp.viewTxt}>View  →</Text></View>
         </View>
-      )}
-      {/* Dark gradient overlay */}
-      <View style={sp.overlay} />
-      <View style={sp.badge}>
-        <Text style={sp.badgeText}>Campus Spotlight</Text>
       </View>
-      <View style={sp.footer}>
-        <Text style={sp.itemName} numberOfLines={1}>
-          {item.category ? `${item.category}: ` : ''}{item.name || item.title}
-        </Text>
-        <TouchableOpacity style={sp.viewBtn} onPress={onPress}>
-          <Text style={sp.viewBtnText}>View</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
+    </Press>
   );
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── HomeScreen ───────────────────────────────────────────────────────────────
 const HomeScreen = ({ navigation }) => {
   const { currentUser, isGuest, logout } = useContext(AuthContext);
 
   const getInitialCampus = () => {
     if (isGuest || !currentUser?.college) return colleges[0];
-    const userCol = currentUser.college.toLowerCase();
+    const uc = currentUser.college.toLowerCase();
     return colleges.find(c => {
-      const cName = c.name.toLowerCase();
-      const cShort = (c.shortName || '').toLowerCase();
-      return cName === userCol || cName.includes(userCol) || userCol.includes(cName) || (cShort && userCol.includes(cShort));
+      const cn = c.name.toLowerCase(), cs = (c.shortName || '').toLowerCase();
+      return cn === uc || cn.includes(uc) || uc.includes(cn) || (cs && uc.includes(cs));
     }) || colleges[0];
   };
 
@@ -105,45 +121,67 @@ const HomeScreen = ({ navigation }) => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [modalVisible, setModalVisible]     = useState(false);
   const [collegeSearch, setCollegeSearch]   = useState('');
+  const [dotIndex, setDotIndex]             = useState(0);
 
-  const shimmer = useRef(new Animated.Value(0)).current;
+  // Animations
+  const shimmer    = useRef(new Animated.Value(0)).current;
+  const heroAnim   = useRef(new Animated.Value(0)).current;
+  const sec1Anim   = useRef(new Animated.Value(0)).current;
+  const sec2Anim   = useRef(new Animated.Value(0)).current;
+  const sec3Anim   = useRef(new Animated.Value(0)).current;
+  const sec4Anim   = useRef(new Animated.Value(0)).current;
+  const spotlightRef = useRef(null);
+  const spotIdx    = useRef(0);
 
   useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(shimmer, { toValue: 1, duration: 900, useNativeDriver: true }),
-        Animated.timing(shimmer, { toValue: 0, duration: 900, useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
+    Animated.loop(Animated.sequence([
+      Animated.timing(shimmer, { toValue: 1, duration: 900, useNativeDriver: true }),
+      Animated.timing(shimmer, { toValue: 0, duration: 900, useNativeDriver: true }),
+    ])).start();
   }, []);
+
+  // Staggered entrance
+  useEffect(() => {
+    Animated.stagger(140, [heroAnim, sec1Anim, sec2Anim, sec3Anim, sec4Anim].map(a =>
+      Animated.timing(a, { toValue: 1, duration: 520, useNativeDriver: true })
+    )).start();
+  }, []);
+
+  // Auto-scroll spotlight
+  useEffect(() => {
+    if (items.length < 2) return;
+    const spots = items.slice(0, 6);
+    const t = setInterval(() => {
+      spotIdx.current = (spotIdx.current + 1) % spots.length;
+      spotlightRef.current?.scrollTo({ x: spotIdx.current * (SPOT_W + 14), animated: true });
+      setDotIndex(spotIdx.current);
+    }, 3200);
+    return () => clearInterval(t);
+  }, [items.length]);
 
   useEffect(() => {
     if (!isGuest && currentUser?.college) {
-      const userCol = currentUser.college.toLowerCase();
+      const uc = currentUser.college.toLowerCase();
       const match = colleges.find(c => {
-        const cName = c.name.toLowerCase();
-        const cShort = (c.shortName || '').toLowerCase();
-        return cName === userCol || cName.includes(userCol) || userCol.includes(cName) || (cShort && userCol.includes(cShort));
+        const cn = c.name.toLowerCase(), cs = (c.shortName || '').toLowerCase();
+        return cn === uc || cn.includes(uc) || uc.includes(cn) || (cs && uc.includes(cs));
       });
       if (match && match.name !== activeCampus.name) setActiveCampus(match);
     }
   }, [currentUser, isGuest]);
 
-  const userCampusName = currentUser?.college || '';
   const isWindowShopping = !isGuest && currentUser &&
-    activeCampus.name.toLowerCase() !== userCampusName.toLowerCase();
+    activeCampus.name.toLowerCase() !== (currentUser.college || '').toLowerCase();
 
   const fetchItems = useCallback(async () => {
     try {
       let url = `/items?college=${activeCampus.name}`;
-      if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+      if (searchQuery)       url += `&search=${encodeURIComponent(searchQuery)}`;
       if (activeCategory !== 'All') url += `&category=${encodeURIComponent(activeCategory)}`;
       const res = await API.get(url);
       setItems(res.data);
     } catch (e) {
-      console.error('Error fetching items:', e);
+      console.error('fetchItems:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -152,7 +190,7 @@ const HomeScreen = ({ navigation }) => {
 
   useEffect(() => {
     setLoading(true);
-    const t = setTimeout(fetchItems, 400);
+    const t = setTimeout(fetchItems, 380);
     return () => clearTimeout(t);
   }, [fetchItems]);
 
@@ -168,7 +206,7 @@ const HomeScreen = ({ navigation }) => {
 
   const handleItemPress = (item) => {
     if (isGuest) {
-      Alert.alert('Login Required', 'Please log in to view item details.', [
+      Alert.alert('Login Required', 'Log in to see details and contact sellers.', [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Log In', onPress: logout },
       ]);
@@ -179,320 +217,324 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate('ItemDetails', { item, activeCollege: activeCampus.name, isOwner: !!isOwner });
   };
 
-  const handleQuickAction = (action) => {
-    if (action.category === 'lost') {
-      navigation.navigate('LostFound');
-    } else {
-      setActiveCategory(action.category);
-    }
+  const handleQuick = (cat) => {
+    if (cat === '__lost__') navigation.navigate('LostFound');
+    else setActiveCategory(cat);
   };
 
-  const handleTrendingTile = (label) => {
-    if (label === 'Lost & Found') {
-      navigation.navigate('LostFound');
-    } else {
-      setActiveCategory(label);
-    }
+  const handleTile = (cat) => {
+    if (cat === '__lost__') navigation.navigate('LostFound');
+    else setActiveCategory(cat);
   };
 
-  const spotlightItems = items.slice(0, 6);
-  const recentItems = items.slice(0, 10);
+  const spots = items.slice(0, 6);
+  const recent = items.slice(0, 12);
 
-  const renderItem = useCallback(({ item, index }) => (
-    <View style={index % 2 === 0 ? styles.gridLeft : styles.gridRight}>
-      <ItemCard item={item} onPress={() => handleItemPress(item)} compact />
-    </View>
-  ), [currentUser, isGuest, activeCampus]);
+  const makeAnim = (anim, dy = 22) => ({
+    opacity: anim,
+    transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [dy, 0] }) }],
+  });
 
   // ─── List Header ────────────────────────────────────────────────────────────
-  const ListHeader = () => (
+  const Header = () => (
     <View>
-      {/* ── Campus Header ── */}
-      <View style={styles.campusHeader}>
-        <TouchableOpacity
-          style={styles.campusNameRow}
-          onPress={() => setModalVisible(true)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.campusTitle} numberOfLines={1}>
-            {activeCampus.shortName || activeCampus.name}
-          </Text>
-          <Ionicons name="pencil" size={16} color="#818cf8" style={{ marginLeft: 6 }} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.changeBtn}
-          onPress={() => setModalVisible(true)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.changeBtnText}>Change</Text>
-        </TouchableOpacity>
-      </View>
+      {/* ── Hero ── */}
+      <Animated.View style={[makeAnim(heroAnim, 18)]}>
+        {/* Decorative orbs */}
+        <View style={styles.orb1} />
+        <View style={styles.orb2} />
 
-      {/* ── Window-shopping banner ── */}
-      {isWindowShopping && (
-        <View style={styles.bannerWrap}>
-          <Ionicons name="eye-outline" size={13} color="#fbbf24" style={{ marginRight: 6 }} />
-          <Text style={styles.bannerText}>
-            Viewing <Text style={styles.bannerHighlight}>{activeCampus.shortName || activeCampus.name}</Text> — browse only
-          </Text>
-        </View>
-      )}
+        <View style={styles.heroInner}>
+          <View style={styles.heroTop}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.greeting}>{getGreeting()} 👋</Text>
+              <Text style={styles.heroName} numberOfLines={1}>
+                {isGuest ? 'Guest' : (currentUser?.name?.split(' ')[0] || 'Student')}
+              </Text>
+            </View>
+            <Press onPress={() => setModalVisible(true)} style={styles.campusBadge}>
+              <Text style={styles.campusEmoji}>{activeCampus.emoji}</Text>
+              <Text style={styles.campusShort} numberOfLines={1}>
+                {activeCampus.shortName || activeCampus.name}
+              </Text>
+              <Ionicons name="chevron-down" size={12} color="#818cf8" />
+            </Press>
+          </View>
 
-      {/* ── Campus Spotlight ── */}
-      {spotlightItems.length > 0 && (
-        <View style={styles.section}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.spotlightScroll}
-            pagingEnabled
-          >
-            {spotlightItems.map((item) => (
-              <SpotlightCard
-                key={item._id}
-                item={item}
-                onPress={() => handleItemPress(item)}
-              />
-            ))}
-          </ScrollView>
+          {/* Search bar */}
+          <View style={styles.searchWrap}>
+            <Ionicons name="search" size={17} color="#64748b" style={{ marginRight: 9 }} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={`Search in ${activeCampus.shortName || 'campus'}…`}
+              placeholderTextColor="#475569"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={16} color="#475569" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Stats row */}
+          <View style={styles.statsRow}>
+            <View style={styles.statChip}>
+              <Ionicons name="storefront-outline" size={13} color="#818cf8" />
+              <Text style={styles.statText}>{items.length} listings</Text>
+            </View>
+            <View style={styles.statChip}>
+              <Ionicons name="location-outline" size={13} color="#34d399" />
+              <Text style={[styles.statText, { color: '#34d399' }]}>
+                {activeCampus.shortName || activeCampus.name}
+              </Text>
+            </View>
+            {isWindowShopping && (
+              <View style={[styles.statChip, { borderColor: '#fbbf2440' }]}>
+                <Ionicons name="eye-outline" size={13} color="#fbbf24" />
+                <Text style={[styles.statText, { color: '#fbbf24' }]}>Browse only</Text>
+              </View>
+            )}
+          </View>
         </View>
+      </Animated.View>
+
+      {/* ── Spotlight ── */}
+      {(spots.length > 0 || loading) && (
+        <Animated.View style={[styles.section, makeAnim(sec1Anim)]}>
+          <View style={styles.sectionHead}>
+            <Text style={styles.sectionTitle}>✦ Campus Spotlight</Text>
+          </View>
+
+          {loading ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingRight: 20 }}>
+              {[0, 1, 2].map(i => <Skeleton key={i} shimmer={shimmer} w={SPOT_W} h={210} radius={22} />)}
+            </ScrollView>
+          ) : (
+            <>
+              <ScrollView
+                ref={spotlightRef}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 14, paddingRight: 20 }}
+                onMomentumScrollEnd={(e) => {
+                  const idx = Math.round(e.nativeEvent.contentOffset.x / (SPOT_W + 14));
+                  setDotIndex(idx);
+                  spotIdx.current = idx;
+                }}
+              >
+                {spots.map(item => (
+                  <SpotlightCard key={item._id} item={item} onPress={() => handleItemPress(item)} />
+                ))}
+              </ScrollView>
+              {spots.length > 1 && (
+                <View style={styles.dots}>
+                  {spots.map((_, i) => (
+                    <View key={i} style={[styles.dot, i === dotIndex && styles.dotActive]} />
+                  ))}
+                </View>
+              )}
+            </>
+          )}
+        </Animated.View>
       )}
 
       {/* ── Quick Actions ── */}
-      <View style={styles.section}>
+      <Animated.View style={[styles.section, makeAnim(sec2Anim)]}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.quickRow}>
-          {QUICK_ACTIONS.map((action) => (
-            <TouchableOpacity
-              key={action.label}
-              style={styles.quickItem}
-              onPress={() => handleQuickAction(action)}
-              activeOpacity={0.75}
-            >
-              <View style={[styles.quickCircle, { backgroundColor: action.bg, borderColor: action.color + '40' }]}>
-                <Ionicons name={action.icon} size={26} color={action.color} />
+          {QUICK.map((q) => (
+            <Press key={q.label} onPress={() => handleQuick(q.cat)} style={styles.quickItem}>
+              <View style={[styles.quickCircle, { borderColor: q.glow + '60', shadowColor: q.glow }]}>
+                {/* Glow background */}
+                <View style={[styles.quickGlow, { backgroundColor: q.glow + '20' }]} />
+                <Ionicons name={q.icon} size={26} color={q.color} />
               </View>
-              <Text style={styles.quickLabel}>{action.label}</Text>
-            </TouchableOpacity>
+              <Text style={styles.quickLabel}>{q.label}</Text>
+            </Press>
           ))}
         </View>
-      </View>
+      </Animated.View>
 
-      {/* ── Trending Grid ── */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          Trending in {activeCampus.shortName || activeCampus.name}
-        </Text>
-        <View style={styles.trendingGrid}>
-          {/* Left tall tile */}
-          <TouchableOpacity
-            style={[styles.tile, styles.tileTall, { backgroundColor: TRENDING_TILES[0].colors[0] }]}
-            onPress={() => handleTrendingTile(TRENDING_TILES[0].label)}
-            activeOpacity={0.85}
-          >
-            <View style={[styles.tileOverlay, { backgroundColor: TRENDING_TILES[0].colors[1] + '80' }]} />
-            <Text style={styles.tileLabel}>{TRENDING_TILES[0].label.replace(' & Notes', '')}</Text>
-          </TouchableOpacity>
+      {/* ── Trending Tiles ── */}
+      <Animated.View style={[styles.section, makeAnim(sec3Anim)]}>
+        <View style={styles.sectionHead}>
+          <Text style={styles.sectionTitle}>Trending Now</Text>
+          <Text style={styles.sectionSub}>{activeCampus.shortName || activeCampus.name}</Text>
+        </View>
+        <View style={styles.grid}>
+          {/* Tall left tile */}
+          <Press onPress={() => handleTile(TILES[0].cat)} style={[styles.tile, styles.tileTall, { backgroundColor: TILES[0].bg }]}>
+            <View style={[styles.tileAccent, { backgroundColor: TILES[0].accent + '25' }]} />
+            <View style={[styles.tileCircle, { backgroundColor: TILES[0].accent + '30', borderColor: TILES[0].accent + '50' }]}>
+              <Ionicons name={TILES[0].icon} size={30} color={TILES[0].accent} />
+            </View>
+            <Text style={styles.tileName}>{TILES[0].label}</Text>
+            <View style={[styles.tilePill, { backgroundColor: TILES[0].accent + '30' }]}>
+              <Text style={[styles.tilePillText, { color: TILES[0].accent }]}>Shop →</Text>
+            </View>
+          </Press>
 
-          {/* Right 2x2 grid */}
-          <View style={styles.tileRightCol}>
-            {TRENDING_TILES.slice(1).map((tile) => (
-              <TouchableOpacity
-                key={tile.label}
-                style={[styles.tile, styles.tileSmall, { backgroundColor: tile.colors[0] }]}
-                onPress={() => handleTrendingTile(tile.label)}
-                activeOpacity={0.85}
-              >
-                <View style={[styles.tileOverlay, { backgroundColor: tile.colors[1] + '80' }]} />
-                <Text style={styles.tileLabel} numberOfLines={1}>
-                  {tile.label.replace(' Essentials', '').replace(' & Notes', '')}
-                </Text>
-              </TouchableOpacity>
+          {/* Right 2×2 */}
+          <View style={styles.tileRight}>
+            {TILES.slice(1).map((tile) => (
+              <Press key={tile.label} onPress={() => handleTile(tile.cat)} style={[styles.tile, styles.tileSmall, { backgroundColor: tile.bg }]}>
+                <View style={[styles.tileAccent, { backgroundColor: tile.accent + '20' }]} />
+                <Ionicons name={tile.icon} size={22} color={tile.accent} style={{ marginBottom: 6 }} />
+                <Text style={styles.tileNameSm} numberOfLines={1}>{tile.label}</Text>
+              </Press>
             ))}
           </View>
         </View>
-      </View>
+      </Animated.View>
 
       {/* ── Recent Activity ── */}
-      {recentItems.length > 0 && (
-        <View style={styles.section}>
+      {recent.length > 0 && (
+        <Animated.View style={[styles.section, makeAnim(sec4Anim)]}>
           <Text style={styles.sectionTitle}>Recent Activity</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.activityScroll}
-          >
-            {recentItems.map((item) => (
-              <TouchableOpacity
-                key={item._id}
-                style={styles.activityPill}
-                onPress={() => handleItemPress(item)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.activityText} numberOfLines={1}>{item.name || item.title}</Text>
-              </TouchableOpacity>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 20 }}>
+            {recent.map((item) => (
+              <Press key={item._id} onPress={() => handleItemPress(item)} style={styles.pill}>
+                <Text style={styles.pillText} numberOfLines={1}>{item.name || item.title}</Text>
+              </Press>
             ))}
           </ScrollView>
-        </View>
+        </Animated.View>
       )}
 
-      {/* ── Search + Categories ── */}
+      {/* ── Filter Bar ── */}
       <View style={[styles.section, { paddingBottom: 0 }]}>
-        <View style={styles.searchWrap}>
-          <Ionicons name="search" size={17} color="#64748b" style={{ marginRight: 8 }} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={`Search on ${activeCampus.shortName || 'campus'}…`}
-            placeholderTextColor="#64748b"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={17} color="#64748b" />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipsContent}
-          style={{ marginBottom: 4 }}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 20 }}>
           {CATEGORIES.map((cat) => {
             const active = activeCategory === cat.label;
             return (
-              <TouchableOpacity
+              <Press
                 key={cat.label}
-                style={[styles.chip, active && styles.chipActive]}
                 onPress={() => setActiveCategory(cat.label)}
-                activeOpacity={0.75}
+                style={[styles.chip, active && styles.chipOn]}
               >
-                <Ionicons name={cat.icon} size={12} color={active ? '#fff' : '#94a3b8'} style={{ marginRight: 4 }} />
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>{cat.label}</Text>
-              </TouchableOpacity>
+                <Ionicons name={cat.icon} size={13} color={active ? '#fff' : '#64748b'} style={{ marginRight: 5 }} />
+                <Text style={[styles.chipTxt, active && styles.chipTxtOn]}>{cat.label}</Text>
+              </Press>
             );
           })}
         </ScrollView>
       </View>
 
-      {/* ── Listings header ── */}
-      <View style={styles.listingsHeader}>
-        <Text style={styles.listingsTitle}>
+      {/* ── Listings Label ── */}
+      <View style={styles.listHead}>
+        <Text style={styles.listTitle}>
           {activeCategory === 'All' ? 'All Listings' : activeCategory}
         </Text>
-        {!loading && <Text style={styles.listingsCount}>{items.length} items</Text>}
+        {!loading && <Text style={styles.listCount}>{items.length}</Text>}
       </View>
 
-      {/* Skeleton while loading */}
+      {/* Skeleton grid while loading */}
       {loading && (
-        <View style={styles.skeletonGrid}>
-          {[0, 1, 2, 3].map(i => (
-            <View key={i} style={i % 2 === 0 ? styles.gridLeft : styles.gridRight}>
-              <SkeletonCard shimmer={shimmer} />
-            </View>
-          ))}
+        <View style={styles.skRow}>
+          {[0, 1, 2, 3].map(i => <Skeleton key={i} shimmer={shimmer} w={CARD_W} h={CARD_W * 1.25} radius={14} style={{ marginBottom: 16 }} />)}
         </View>
       )}
     </View>
   );
 
+  const renderItem = useCallback(({ item, index }) => (
+    <View style={index % 2 === 0 ? styles.colL : styles.colR}>
+      <ItemCard item={item} onPress={() => handleItemPress(item)} compact />
+    </View>
+  ), [currentUser, isGuest, activeCampus]);
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar backgroundColor="#0f172a" barStyle="light-content" />
+    <SafeAreaView style={styles.root} edges={['top']}>
+      <StatusBar backgroundColor="#07090f" barStyle="light-content" />
 
       {loading ? (
-        <ScrollView contentContainerStyle={styles.gridPad} showsVerticalScrollIndicator={false}>
-          <ListHeader />
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.pad}>
+          <Header />
         </ScrollView>
       ) : (
         <FlatList
           data={items}
-          keyExtractor={(item) => item._id}
+          keyExtractor={i => i._id}
           numColumns={2}
-          contentContainerStyle={styles.gridPad}
+          contentContainerStyle={styles.pad}
           columnWrapperStyle={styles.row}
           showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4f46e5']} tintColor="#4f46e5" />
-          }
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366f1']} tintColor="#6366f1" />}
           renderItem={renderItem}
-          ListHeaderComponent={<ListHeader />}
+          ListHeaderComponent={<Header />}
           ListEmptyComponent={
-            <View style={styles.emptyWrap}>
-              <View style={styles.emptyIcon}>
-                <Ionicons name="storefront-outline" size={48} color="#c7d2fe" />
+            <View style={styles.emptyBox}>
+              <View style={styles.emptyOrb}>
+                <Ionicons name="storefront-outline" size={44} color="#818cf8" />
               </View>
               <Text style={styles.emptyTitle}>
-                {searchQuery || activeCategory !== 'All' ? 'No results found' : 'No listings yet'}
+                {searchQuery || activeCategory !== 'All' ? 'No results' : 'No listings yet'}
               </Text>
-              <Text style={styles.emptySubtitle}>
+              <Text style={styles.emptySub}>
                 {searchQuery || activeCategory !== 'All'
                   ? 'Try different keywords or clear filters.'
-                  : `Be the first to list at ${activeCampus.shortName || activeCampus.name}!`}
+                  : `Be the first to list on ${activeCampus.shortName || activeCampus.name}!`}
               </Text>
               {(searchQuery || activeCategory !== 'All') && (
-                <TouchableOpacity style={styles.clearBtn} onPress={() => { setSearchQuery(''); setActiveCategory('All'); }}>
-                  <Text style={styles.clearBtnText}>Clear filters</Text>
-                </TouchableOpacity>
+                <Press onPress={() => { setSearchQuery(''); setActiveCategory('All'); }} style={styles.clearBtn}>
+                  <Text style={styles.clearTxt}>Clear filters</Text>
+                </Press>
               )}
             </View>
           }
         />
       )}
 
-      {/* ── Campus picker modal ── */}
+      {/* ── Campus Picker Modal ── */}
       <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Window Shopping 🛍️</Text>
-            <Text style={styles.modalSubtitle}>Browse listings from any campus</Text>
-            <View style={styles.modalSearch}>
-              <Ionicons name="search" size={16} color="#94a3b8" style={{ marginRight: 8 }} />
+        <View style={styles.modalBg}>
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Window Shopping 🛍️</Text>
+            <Text style={styles.sheetSub}>Browse listings from any campus</Text>
+            <View style={styles.mSearch}>
+              <Ionicons name="search" size={15} color="#64748b" style={{ marginRight: 8 }} />
               <TextInput
-                style={styles.modalSearchInput}
+                style={styles.mSearchInput}
                 placeholder="Search colleges…"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor="#64748b"
                 value={collegeSearch}
                 onChangeText={setCollegeSearch}
               />
             </View>
             <FlatList
               data={filteredColleges}
-              keyExtractor={(item) => item.id}
-              style={styles.collegeList}
+              keyExtractor={i => i.id}
+              style={{ flexGrow: 0 }}
               showsVerticalScrollIndicator={false}
               renderItem={({ item }) => {
                 const isActive = item.name === activeCampus.name;
-                const isUserCampus = !isGuest && currentUser &&
+                const isHome = !isGuest && currentUser &&
                   item.name.toLowerCase() === (currentUser.college || '').toLowerCase();
                 return (
                   <TouchableOpacity
-                    style={[styles.collegeRow, isActive && styles.collegeRowActive]}
+                    style={[styles.cRow, isActive && styles.cRowActive]}
                     onPress={() => { setActiveCampus(item); setModalVisible(false); setCollegeSearch(''); }}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.collegeEmoji}>{item.emoji}</Text>
-                    <View style={styles.collegeInfo}>
-                      <Text style={[styles.collegeName, isActive && styles.collegeNameActive]}>{item.name}</Text>
-                      {item.location && <Text style={styles.collegeLocation}>{item.location}</Text>}
+                    <Text style={styles.cEmoji}>{item.emoji}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.cName, isActive && styles.cNameActive]}>{item.name}</Text>
+                      {item.location && <Text style={styles.cLoc}>{item.location}</Text>}
                     </View>
-                    <View style={styles.collegeMeta}>
-                      {isUserCampus && (
-                        <View style={styles.homeBadge}>
-                          <Text style={styles.homeBadgeText}>Home</Text>
-                        </View>
-                      )}
-                      {isActive && <Ionicons name="checkmark-circle" size={20} color="#4f46e5" />}
+                    <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                      {isHome && <View style={styles.homeBadge}><Text style={styles.homeTxt}>Home</Text></View>}
+                      {isActive && <Ionicons name="checkmark-circle" size={20} color="#6366f1" />}
                     </View>
                   </TouchableOpacity>
                 );
               }}
             />
-            <TouchableOpacity style={styles.modalClose} onPress={() => { setModalVisible(false); setCollegeSearch(''); }}>
-              <Text style={styles.modalCloseText}>Cancel</Text>
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => { setModalVisible(false); setCollegeSearch(''); }}>
+              <Text style={styles.cancelTxt}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -501,200 +543,223 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
-// ─── Skeleton styles ──────────────────────────────────────────────────────────
-const sk = StyleSheet.create({
-  card: { backgroundColor: '#1e293b', borderRadius: 16, overflow: 'hidden', marginBottom: 16 },
-  img: { width: '100%', height: CARD_WIDTH * 0.85, backgroundColor: '#273549' },
-  body: { padding: 10 },
-  line: { height: 11, backgroundColor: '#273549', borderRadius: 6 },
-});
-
 // ─── Spotlight styles ─────────────────────────────────────────────────────────
 const sp = StyleSheet.create({
   card: {
-    width: SPOTLIGHT_W, height: 220, borderRadius: 20, overflow: 'hidden',
-    marginRight: 16, backgroundColor: '#1e293b',
+    width: SPOT_W, height: 215, borderRadius: 22, overflow: 'hidden',
+    backgroundColor: '#0f172a',
+    shadowColor: '#6366f1', shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3, shadowRadius: 16, elevation: 12,
   },
   img: { ...StyleSheet.absoluteFillObject },
-  overlay: {
+  noImg: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1e293b' },
+  grad: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'transparent',
+    // Simulate gradient with two overlapping views
   },
+  topRow: { position: 'absolute', top: 14, left: 14, right: 14 },
   badge: {
-    position: 'absolute', top: 14, left: 14,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(99,102,241,0.75)',
+    borderRadius: 20, paddingHorizontal: 11, paddingVertical: 5,
+    borderWidth: 1, borderColor: 'rgba(165,180,252,0.4)',
+  },
+  badgeText: { color: '#e0e7ff', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
+  bottom: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, backgroundColor: 'rgba(0,0,0,0.55)' },
+  itemName: { fontSize: 17, fontWeight: '900', color: '#fff', marginBottom: 8 },
+  priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  price: { fontSize: 16, fontWeight: '800', color: '#34d399' },
+  viewBtn: {
+    backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 14,
+    paddingHorizontal: 14, paddingVertical: 6,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
   },
-  badgeText: { color: '#fff', fontSize: 11, fontWeight: '700', letterSpacing: 0.3 },
-  footer: {
-    position: 'absolute', bottom: 14, left: 14, right: 14,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-  },
-  itemName: { fontSize: 16, fontWeight: '800', color: '#fff', flex: 1, marginRight: 10 },
-  viewBtn: {
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    borderRadius: 14, paddingHorizontal: 14, paddingVertical: 6,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)',
-  },
-  viewBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  viewTxt: { color: '#fff', fontSize: 13, fontWeight: '800' },
 });
 
 // ─── Main styles ──────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f172a' },
-  gridPad: { paddingBottom: 100 },
+  root: { flex: 1, backgroundColor: '#07090f' },
+  pad: { paddingBottom: 110 },
 
-  // Campus header
-  campusHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 12 : 8, paddingBottom: 16,
+  // Decorative orbs
+  orb1: {
+    position: 'absolute', width: 200, height: 200, borderRadius: 100,
+    backgroundColor: '#6366f1', opacity: 0.07,
+    top: -60, right: -60,
   },
-  campusNameRow: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  campusTitle: { fontSize: 22, fontWeight: '900', color: '#f1f5f9', maxWidth: '80%' },
-  changeBtn: {
-    backgroundColor: '#1e293b', borderRadius: 10,
-    paddingHorizontal: 14, paddingVertical: 7,
-    borderWidth: 1, borderColor: '#334155',
+  orb2: {
+    position: 'absolute', width: 150, height: 150, borderRadius: 75,
+    backgroundColor: '#06b6d4', opacity: 0.06,
+    top: 20, left: -40,
   },
-  changeBtnText: { color: '#94a3b8', fontSize: 13, fontWeight: '700' },
 
-  // Banner
-  bannerWrap: {
+  // Hero
+  heroInner: { paddingHorizontal: 18, paddingTop: Platform.OS === 'android' ? 10 : 6, paddingBottom: 20 },
+  heroTop: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 18 },
+  greeting: { fontSize: 13, color: '#64748b', fontWeight: '600', marginBottom: 4 },
+  heroName: { fontSize: 26, fontWeight: '900', color: '#f1f5f9', maxWidth: SW * 0.55 },
+  campusBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: '#111827', borderRadius: 16,
+    paddingHorizontal: 12, paddingVertical: 8,
+    borderWidth: 1, borderColor: '#1e3a5f',
+    shadowColor: '#6366f1', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2, shadowRadius: 8, elevation: 4,
+  },
+  campusEmoji: { fontSize: 16 },
+  campusShort: { fontSize: 13, fontWeight: '800', color: '#cbd5e1', maxWidth: 80 },
+
+  // Search
+  searchWrap: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(251,191,36,0.1)', marginHorizontal: 16, marginBottom: 12,
-    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
-    borderWidth: 1, borderColor: 'rgba(251,191,36,0.25)',
+    backgroundColor: '#0f172a', borderRadius: 16,
+    paddingHorizontal: 15, paddingVertical: 12,
+    borderWidth: 1, borderColor: '#1e293b', marginBottom: 14,
   },
-  bannerText: { color: '#94a3b8', fontSize: 12, flex: 1 },
-  bannerHighlight: { color: '#fbbf24', fontWeight: '700' },
+  searchInput: { flex: 1, fontSize: 15, color: '#e2e8f0', padding: 0 },
+
+  // Stats
+  statsRow: { flexDirection: 'row', gap: 8 },
+  statChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: '#0f172a', borderRadius: 20,
+    paddingHorizontal: 10, paddingVertical: 5,
+    borderWidth: 1, borderColor: '#1e293b',
+  },
+  statText: { fontSize: 12, color: '#818cf8', fontWeight: '700' },
 
   // Section
-  section: { paddingHorizontal: 16, marginBottom: 24 },
-  sectionTitle: { fontSize: 17, fontWeight: '800', color: '#f1f5f9', marginBottom: 14 },
+  section: { paddingHorizontal: 18, marginBottom: 28 },
+  sectionHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 },
+  sectionTitle: { fontSize: 17, fontWeight: '900', color: '#f1f5f9', marginBottom: 14, letterSpacing: 0.2 },
+  sectionSub: { fontSize: 12, color: '#64748b', fontWeight: '600' },
 
-  // Spotlight
-  spotlightScroll: { paddingRight: 16 },
+  // Dots
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 12 },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#1e293b' },
+  dotActive: { width: 18, backgroundColor: '#6366f1' },
 
   // Quick actions
   quickRow: { flexDirection: 'row', justifyContent: 'space-between' },
   quickItem: { alignItems: 'center', flex: 1 },
   quickCircle: {
-    width: 58, height: 58, borderRadius: 29,
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, marginBottom: 8,
+    width: 60, height: 60, borderRadius: 30,
+    backgroundColor: '#0f172a', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, marginBottom: 8,
+    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6,
+    overflow: 'hidden',
   },
-  quickLabel: { fontSize: 11, color: '#94a3b8', fontWeight: '600', textAlign: 'center' },
+  quickGlow: { ...StyleSheet.absoluteFillObject },
+  quickLabel: { fontSize: 11, color: '#94a3b8', fontWeight: '700', textAlign: 'center' },
 
   // Trending grid
-  trendingGrid: { flexDirection: 'row', gap: 10, height: 200 },
-  tileRightCol: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  tile: { borderRadius: 18, overflow: 'hidden', justifyContent: 'flex-end', padding: 12 },
-  tileTall: { width: (SCREEN_WIDTH - 58) * 0.42, alignSelf: 'stretch' },
-  tileSmall: { width: '47%', height: 90 },
-  tileOverlay: { ...StyleSheet.absoluteFillObject },
-  tileLabel: { fontSize: 13, fontWeight: '800', color: '#fff', zIndex: 1 },
-
-  // Recent activity
-  activityScroll: { gap: 8, paddingRight: 16 },
-  activityPill: {
-    backgroundColor: '#1e293b', borderRadius: 20,
-    paddingHorizontal: 14, paddingVertical: 8,
-    borderWidth: 1, borderColor: '#334155', maxWidth: 180,
+  grid: { flexDirection: 'row', gap: 10 },
+  tileRight: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  tile: { borderRadius: 20, overflow: 'hidden', padding: 14, justifyContent: 'flex-end' },
+  tileTall: { width: (SW - 56) * 0.42, aspectRatio: 0.72, justifyContent: 'flex-end' },
+  tileSmall: { width: '47%', aspectRatio: 1.05, justifyContent: 'center', alignItems: 'flex-start' },
+  tileAccent: { ...StyleSheet.absoluteFillObject },
+  tileCircle: {
+    width: 54, height: 54, borderRadius: 27,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, marginBottom: 12,
   },
-  activityText: { fontSize: 13, color: '#cbd5e1', fontWeight: '500' },
+  tileName: { fontSize: 15, fontWeight: '900', color: '#fff', marginBottom: 10 },
+  tileNameSm: { fontSize: 12, fontWeight: '800', color: '#fff' },
+  tilePill: { alignSelf: 'flex-start', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
+  tilePillText: { fontSize: 12, fontWeight: '800' },
 
-  // Search
-  searchWrap: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#1e293b', borderRadius: 14,
-    paddingHorizontal: 14, paddingVertical: 10,
-    marginBottom: 12, borderWidth: 1, borderColor: '#334155',
+  // Pills
+  pill: {
+    backgroundColor: '#111827', borderRadius: 20,
+    paddingHorizontal: 14, paddingVertical: 9,
+    borderWidth: 1, borderColor: '#1e293b', maxWidth: 200,
   },
-  searchInput: { flex: 1, fontSize: 14, color: '#e2e8f0', padding: 0 },
+  pillText: { fontSize: 13, color: '#cbd5e1', fontWeight: '600' },
 
-  // Chips
-  chipsContent: { paddingRight: 16, gap: 8 },
+  // Filter chips
   chip: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#1e293b', borderRadius: 20,
-    paddingHorizontal: 11, paddingVertical: 6,
-    borderWidth: 1, borderColor: '#334155',
+    backgroundColor: '#0f172a', borderRadius: 20,
+    paddingHorizontal: 13, paddingVertical: 7,
+    borderWidth: 1, borderColor: '#1e293b',
   },
-  chipActive: { backgroundColor: '#4f46e5', borderColor: '#4f46e5' },
-  chipText: { fontSize: 12, color: '#94a3b8', fontWeight: '600' },
-  chipTextActive: { color: '#fff' },
+  chipOn: { backgroundColor: '#4f46e5', borderColor: '#6366f1' },
+  chipTxt: { fontSize: 12, color: '#64748b', fontWeight: '700' },
+  chipTxtOn: { color: '#fff' },
 
   // Listings header
-  listingsHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 16, marginBottom: 12, marginTop: 16,
+  listHead: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 18, paddingVertical: 14,
   },
-  listingsTitle: { fontSize: 17, fontWeight: '800', color: '#f1f5f9' },
-  listingsCount: { fontSize: 13, color: '#64748b', fontWeight: '600' },
-
-  // Skeleton grid
-  skeletonGrid: {
-    flexDirection: 'row', flexWrap: 'wrap',
-    justifyContent: 'space-between', paddingHorizontal: 16,
+  listTitle: { fontSize: 17, fontWeight: '900', color: '#f1f5f9' },
+  listCount: {
+    fontSize: 13, color: '#6366f1', fontWeight: '800',
+    backgroundColor: '#1e1b4b', borderRadius: 10,
+    paddingHorizontal: 10, paddingVertical: 3,
   },
 
   // Item grid
-  row: { justifyContent: 'space-between', paddingHorizontal: 16 },
-  gridLeft:  { width: CARD_WIDTH },
-  gridRight: { width: CARD_WIDTH },
+  row: { justifyContent: 'space-between', paddingHorizontal: 18 },
+  colL: { width: CARD_W },
+  colR: { width: CARD_W },
+  skRow: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 12,
+    justifyContent: 'space-between', paddingHorizontal: 18,
+  },
 
   // Empty
-  emptyWrap: { alignItems: 'center', paddingTop: 40, paddingHorizontal: 32 },
-  emptyIcon: {
-    width: 88, height: 88, borderRadius: 44,
-    backgroundColor: 'rgba(79,70,229,0.15)',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+  emptyBox: { alignItems: 'center', paddingTop: 48, paddingHorizontal: 36 },
+  emptyOrb: {
+    width: 96, height: 96, borderRadius: 48,
+    backgroundColor: '#1e1b4b', alignItems: 'center', justifyContent: 'center', marginBottom: 18,
+    borderWidth: 1, borderColor: '#312e81',
   },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#f1f5f9', marginBottom: 6 },
-  emptySubtitle: { fontSize: 13, color: '#94a3b8', textAlign: 'center', lineHeight: 20 },
+  emptyTitle: { fontSize: 20, fontWeight: '900', color: '#f1f5f9', marginBottom: 8 },
+  emptySub: { fontSize: 13, color: '#64748b', textAlign: 'center', lineHeight: 20 },
   clearBtn: {
-    marginTop: 16, backgroundColor: '#4f46e5',
-    borderRadius: 12, paddingHorizontal: 22, paddingVertical: 10,
+    marginTop: 18, backgroundColor: '#4f46e5', borderRadius: 14,
+    paddingHorizontal: 24, paddingVertical: 12,
   },
-  clearBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  clearTxt: { color: '#fff', fontWeight: '800', fontSize: 14 },
 
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
-  modalSheet: {
-    backgroundColor: '#1e293b', borderTopLeftRadius: 28, borderTopRightRadius: 28,
-    paddingTop: 12, paddingHorizontal: 20, paddingBottom: 36, maxHeight: '80%',
+  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  sheet: {
+    backgroundColor: '#0f172a', borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    paddingTop: 12, paddingHorizontal: 20, paddingBottom: 36, maxHeight: '82%',
+    borderWidth: 1, borderColor: '#1e293b',
   },
-  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#334155', alignSelf: 'center', marginBottom: 16 },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: '#f1f5f9', textAlign: 'center', marginBottom: 4 },
-  modalSubtitle: { fontSize: 13, color: '#94a3b8', textAlign: 'center', marginBottom: 14 },
-  modalSearch: {
+  sheetHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: '#334155', alignSelf: 'center', marginBottom: 18 },
+  sheetTitle: { fontSize: 20, fontWeight: '900', color: '#f1f5f9', textAlign: 'center', marginBottom: 4 },
+  sheetSub: { fontSize: 13, color: '#64748b', textAlign: 'center', marginBottom: 16 },
+  mSearch: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#273549', borderRadius: 12,
-    paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12,
+    backgroundColor: '#1e293b', borderRadius: 14,
+    paddingHorizontal: 12, paddingVertical: 11, marginBottom: 12,
     borderWidth: 1, borderColor: '#334155',
   },
-  modalSearchInput: { flex: 1, fontSize: 14, color: '#f1f5f9', padding: 0 },
-  collegeList: { flexGrow: 0 },
-  collegeRow: {
+  mSearchInput: { flex: 1, fontSize: 14, color: '#f1f5f9', padding: 0 },
+  cRow: {
     flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 13, paddingHorizontal: 4,
-    borderBottomWidth: 1, borderBottomColor: '#334155', borderRadius: 12,
+    paddingVertical: 13, paddingHorizontal: 8,
+    borderBottomWidth: 1, borderBottomColor: '#1e293b', borderRadius: 14,
   },
-  collegeRowActive: { backgroundColor: 'rgba(79,70,229,0.2)' },
-  collegeEmoji: { fontSize: 22, marginRight: 12 },
-  collegeInfo: { flex: 1 },
-  collegeName: { fontSize: 15, fontWeight: '600', color: '#f1f5f9' },
-  collegeNameActive: { color: '#818cf8', fontWeight: '800' },
-  collegeLocation: { fontSize: 12, color: '#64748b', marginTop: 2 },
-  collegeMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  homeBadge: { backgroundColor: '#dcfce7', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
-  homeBadgeText: { fontSize: 10, color: '#15803d', fontWeight: '700' },
-  modalClose: {
-    marginTop: 16, backgroundColor: '#273549', borderRadius: 14,
-    paddingVertical: 14, alignItems: 'center',
+  cRowActive: { backgroundColor: 'rgba(99,102,241,0.12)' },
+  cEmoji: { fontSize: 22, marginRight: 12 },
+  cName: { fontSize: 15, fontWeight: '600', color: '#e2e8f0' },
+  cNameActive: { color: '#818cf8', fontWeight: '800' },
+  cLoc: { fontSize: 12, color: '#475569', marginTop: 2 },
+  homeBadge: { backgroundColor: '#dcfce7', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 },
+  homeTxt: { fontSize: 10, color: '#15803d', fontWeight: '800' },
+  cancelBtn: {
+    marginTop: 16, backgroundColor: '#1e293b', borderRadius: 16,
+    paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: '#334155',
   },
-  modalCloseText: { color: '#ef4444', fontWeight: '700', fontSize: 15 },
+  cancelTxt: { color: '#ef4444', fontWeight: '800', fontSize: 15 },
 });
 
 export default HomeScreen;
