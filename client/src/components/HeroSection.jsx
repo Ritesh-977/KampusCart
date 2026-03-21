@@ -94,7 +94,7 @@ const HeroSection = () => {
           </div>
 
           {/* --- RIGHT SIDE: Animated Illustration --- */}
-          <div className="relative h-[300px] sm:h-[350px] lg:h-[450px] w-full overflow-hidden">
+          <div className="hidden lg:block relative h-[450px] w-full overflow-hidden">
             {/* Animated Circles */}
             <div className="absolute w-80 h-80 bg-gradient-to-br from-cyan-500 to-teal-500 rounded-full blur-2xl opacity-20 animate-blob top-1/4 -right-20"></div>
             <div className="absolute w-72 h-72 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full blur-2xl opacity-15 animate-blob animation-delay-2000 bottom-1/4 -left-10" style={{ animationDelay: '2s' }}></div>
