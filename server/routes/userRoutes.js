@@ -32,6 +32,18 @@ router.route('/wishlist')
     .post(protect, toggleWishlist)
     .get(protect, getWishlist);
 
+// Save Expo push token for the logged-in user
+router.put('/push-token', protect, async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ error: 'Token required' });
+    await User.findByIdAndUpdate(req.user._id, { pushSubscription: [token] });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post('/subscribe', async (req, res) => {
     try {
         // req.user.id would come from your auth middleware
