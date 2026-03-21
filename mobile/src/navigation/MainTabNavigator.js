@@ -16,7 +16,6 @@ const MainTabNavigator = () => {
   const { isGuest, currentUser } = useContext(AuthContext);
   const isAdmin = currentUser?.isAdmin === true;
 
-
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -74,10 +73,7 @@ const MainTabNavigator = () => {
         <Tab.Screen
           name="ChatTab"
           component={ChatStackNavigator}
-          options={({ route }) => ({
-            title: 'Messages',
-            tabBarStyle: (route.state?.index ?? 0) > 0 ? { display: 'none' } : styles.tabBar,
-          })}
+          options={{ title: 'Messages' }}
         />
       )}
       <Tab.Screen
