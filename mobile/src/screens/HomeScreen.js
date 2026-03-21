@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, StyleSheet, RefreshControl,
   TouchableOpacity, Modal, TextInput, ScrollView,
   Alert, Platform, Animated, Dimensions, StatusBar, Image,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,21 +19,11 @@ const SPOT_W = SW - 40;
 // ─── AnimatedPressable ────────────────────────────────────────────────────────
 const Press = ({ children, onPress, style, disabled }) => {
   const scale = useRef(new Animated.Value(1)).current;
-  const pressIn = () =>
-    Animated.spring(scale, { toValue: 0.93, useNativeDriver: true, speed: 80, bounciness: 4 }).start();
-  const pressOut = () =>
-    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 80, bounciness: 6 }).start();
+  const pressIn  = () => Animated.spring(scale, { toValue: 0.93, useNativeDriver: true, speed: 80, bounciness: 4 }).start();
+  const pressOut = () => Animated.spring(scale, { toValue: 1,    useNativeDriver: true, speed: 80, bounciness: 6 }).start();
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      onPressIn={pressIn}
-      onPressOut={pressOut}
-      activeOpacity={1}
-      disabled={disabled}
-    >
-      <Animated.View style={[style, { transform: [{ scale }] }]}>
-        {children}
-      </Animated.View>
+    <TouchableOpacity onPress={onPress} onPressIn={pressIn} onPressOut={pressOut} activeOpacity={1} disabled={disabled}>
+      <Animated.View style={[style, { transform: [{ scale }] }]}>{children}</Animated.View>
     </TouchableOpacity>
   );
 };
@@ -48,19 +39,20 @@ const CATEGORIES = [
 ];
 
 const QUICK = [
-  { label: 'Books',       icon: 'book',            color: '#818cf8', glow: '#6366f1', cat: 'Books & Notes' },
+  { label: 'Books',       icon: 'book',           color: '#818cf8', glow: '#6366f1', cat: 'Books & Notes' },
   { label: 'Electronics', icon: 'phone-portrait',  color: '#34d399', glow: '#10b981', cat: 'Electronics' },
   { label: 'Cycles',      icon: 'bicycle',         color: '#38bdf8', glow: '#0284c7', cat: 'Cycles' },
   { label: 'Hostel',      icon: 'bed',             color: '#fb923c', glow: '#ea580c', cat: 'Hostel Essentials' },
   { label: 'Lost',        icon: 'search',          color: '#f472b6', glow: '#db2777', cat: '__lost__' },
 ];
 
-const TILES = [
-  { label: 'Books',       icon: 'book',           bg: '#312e81', accent: '#6366f1', tall: true,  cat: 'Books & Notes' },
-  { label: 'Electronics', icon: 'phone-portrait', bg: '#7c2d12', accent: '#fb923c', tall: false, cat: 'Electronics' },
-  { label: 'Hostel',      icon: 'bed',            bg: '#064e3b', accent: '#34d399', tall: false, cat: 'Hostel Essentials' },
-  { label: 'Cycles',      icon: 'bicycle',        bg: '#0c4a6e', accent: '#38bdf8', tall: false, cat: 'Cycles' },
-  { label: 'Lost & Found',icon: 'search-circle',  bg: '#4a044e', accent: '#e879f9', tall: false, cat: '__lost__' },
+const FEATURES = [
+  { label: 'Campus Events',  icon: 'calendar',       color: '#818cf8', bg: '#1e1b4b', desc: 'Fests, seminars & more' },
+  { label: 'Study Material', icon: 'document-text',  color: '#34d399', bg: '#064e3b', desc: 'Notes, PDFs & resources' },
+  { label: 'Exam Schedule',  icon: 'clipboard',      color: '#fb923c', bg: '#431407', desc: 'Mid-sems & end-sems' },
+  { label: 'Find Roomies',   icon: 'home',           color: '#38bdf8', bg: '#082f49', desc: 'Room & flatmate search' },
+  { label: 'Campus Jobs',    icon: 'briefcase',      color: '#f472b6', bg: '#2d0a3e', desc: 'Part-time & internships' },
+  { label: 'Food Share',     icon: 'fast-food',      color: '#fbbf24', bg: '#2c1800', desc: 'Mess deals & sharing' },
 ];
 
 const getGreeting = () => {
@@ -85,7 +77,6 @@ const SpotlightCard = ({ item, onPress }) => {
         ? <Image source={{ uri: img }} style={sp.img} resizeMode="cover" />
         : <View style={[sp.img, sp.noImg]}><Ionicons name="image-outline" size={36} color="#334155" /></View>
       }
-      <View style={sp.grad} />
       <View style={sp.topRow}>
         <View style={sp.badge}><Text style={sp.badgeText}>✦  Campus Spotlight</Text></View>
       </View>
@@ -118,20 +109,22 @@ const HomeScreen = ({ navigation }) => {
   const [loading, setLoading]               = useState(true);
   const [refreshing, setRefreshing]         = useState(false);
   const [searchQuery, setSearchQuery]       = useState('');
+  const [searchFocused, setSearchFocused]   = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
   const [modalVisible, setModalVisible]     = useState(false);
   const [collegeSearch, setCollegeSearch]   = useState('');
   const [dotIndex, setDotIndex]             = useState(0);
 
-  // Animations
   const shimmer    = useRef(new Animated.Value(0)).current;
   const heroAnim   = useRef(new Animated.Value(0)).current;
   const sec1Anim   = useRef(new Animated.Value(0)).current;
   const sec2Anim   = useRef(new Animated.Value(0)).current;
   const sec3Anim   = useRef(new Animated.Value(0)).current;
   const sec4Anim   = useRef(new Animated.Value(0)).current;
+  const suggestAnim = useRef(new Animated.Value(0)).current;
   const spotlightRef = useRef(null);
   const spotIdx    = useRef(0);
+  const listRef    = useRef(null);
 
   useEffect(() => {
     Animated.loop(Animated.sequence([
@@ -140,14 +133,12 @@ const HomeScreen = ({ navigation }) => {
     ])).start();
   }, []);
 
-  // Staggered entrance
   useEffect(() => {
     Animated.stagger(140, [heroAnim, sec1Anim, sec2Anim, sec3Anim, sec4Anim].map(a =>
       Animated.timing(a, { toValue: 1, duration: 520, useNativeDriver: true })
     )).start();
   }, []);
 
-  // Auto-scroll spotlight
   useEffect(() => {
     if (items.length < 2) return;
     const spots = items.slice(0, 6);
@@ -170,13 +161,22 @@ const HomeScreen = ({ navigation }) => {
     }
   }, [currentUser, isGuest]);
 
+  // Animate suggestion dropdown in/out
+  useEffect(() => {
+    Animated.spring(suggestAnim, {
+      toValue: searchFocused && searchQuery.length > 0 ? 1 : 0,
+      useNativeDriver: true,
+      speed: 60,
+      bounciness: 4,
+    }).start();
+  }, [searchFocused, searchQuery]);
+
   const isWindowShopping = !isGuest && currentUser &&
     activeCampus.name.toLowerCase() !== (currentUser.college || '').toLowerCase();
 
   const fetchItems = useCallback(async () => {
     try {
       let url = `/items?college=${activeCampus.name}`;
-      if (searchQuery)       url += `&search=${encodeURIComponent(searchQuery)}`;
       if (activeCategory !== 'All') url += `&category=${encodeURIComponent(activeCategory)}`;
       const res = await API.get(url);
       setItems(res.data);
@@ -186,7 +186,7 @@ const HomeScreen = ({ navigation }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [searchQuery, activeCategory, activeCampus]);
+  }, [activeCategory, activeCampus]);
 
   useEffect(() => {
     setLoading(true);
@@ -195,6 +195,24 @@ const HomeScreen = ({ navigation }) => {
   }, [fetchItems]);
 
   const onRefresh = () => { setRefreshing(true); fetchItems(); };
+
+  // Search suggestions (client-side filter — no debounce needed)
+  const suggestions = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return items
+      .filter(item => (item.name || item.title || '').toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [searchQuery, items]);
+
+  const filteredItems = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter(item =>
+      (item.name || item.title || '').toLowerCase().includes(q) ||
+      (item.category || '').toLowerCase().includes(q)
+    );
+  }, [searchQuery, items]);
 
   const filteredColleges = colleges
     .filter(c => c.emailDomain !== null)
@@ -217,17 +235,26 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate('ItemDetails', { item, activeCollege: activeCampus.name, isOwner: !!isOwner });
   };
 
+  const handleSuggestionPress = (item) => {
+    setSearchQuery('');
+    setSearchFocused(false);
+    handleItemPress(item);
+  };
+
   const handleQuick = (cat) => {
     if (cat === '__lost__') navigation.navigate('LostFound');
     else setActiveCategory(cat);
   };
 
-  const handleTile = (cat) => {
-    if (cat === '__lost__') navigation.navigate('LostFound');
-    else setActiveCategory(cat);
+  const handleFeature = (label) => {
+    Alert.alert(
+      '🚀 Coming Soon',
+      `${label} is on its way! We're building this feature for your campus.`,
+      [{ text: 'Got it!', style: 'default' }]
+    );
   };
 
-  const spots = items.slice(0, 6);
+  const spots  = items.slice(0, 6);
   const recent = items.slice(0, 12);
 
   const makeAnim = (anim, dy = 22) => ({
@@ -235,78 +262,41 @@ const HomeScreen = ({ navigation }) => {
     transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [dy, 0] }) }],
   });
 
-  // ─── List Header ────────────────────────────────────────────────────────────
-  const Header = () => (
+  const renderItem = useCallback(({ item, index }) => (
+    <View style={index % 2 === 0 ? styles.colL : styles.colR}>
+      <ItemCard item={item} onPress={() => handleItemPress(item)} compact />
+    </View>
+  ), [currentUser, isGuest, activeCampus]);
+
+  // ─── List Header (sections above the items grid) ─────────────────────────
+  const ListHeader = () => (
     <View>
-      {/* ── Hero ── */}
-      <Animated.View style={[makeAnim(heroAnim, 18)]}>
-        {/* Decorative orbs */}
-        <View style={styles.orb1} />
-        <View style={styles.orb2} />
-
-        <View style={styles.heroInner}>
-          <View style={styles.heroTop}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.greeting}>{getGreeting()} 👋</Text>
-              <Text style={styles.heroName} numberOfLines={1}>
-                {isGuest ? 'Guest' : (currentUser?.name?.split(' ')[0] || 'Student')}
-              </Text>
-            </View>
-            <Press onPress={() => setModalVisible(true)} style={styles.campusBadge}>
-              <Text style={styles.campusEmoji}>{activeCampus.emoji}</Text>
-              <Text style={styles.campusShort} numberOfLines={1}>
-                {activeCampus.shortName || activeCampus.name}
-              </Text>
-              <Ionicons name="chevron-down" size={12} color="#818cf8" />
-            </Press>
-          </View>
-
-          {/* Search bar */}
-          <View style={styles.searchWrap}>
-            <Ionicons name="search" size={17} color="#64748b" style={{ marginRight: 9 }} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder={`Search in ${activeCampus.shortName || 'campus'}…`}
-              placeholderTextColor="#475569"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={16} color="#475569" />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Stats row */}
-          <View style={styles.statsRow}>
-            <View style={styles.statChip}>
-              <Ionicons name="storefront-outline" size={13} color="#818cf8" />
-              <Text style={styles.statText}>{items.length} listings</Text>
-            </View>
-            <View style={styles.statChip}>
-              <Ionicons name="location-outline" size={13} color="#34d399" />
-              <Text style={[styles.statText, { color: '#34d399' }]}>
-                {activeCampus.shortName || activeCampus.name}
-              </Text>
-            </View>
-            {isWindowShopping && (
-              <View style={[styles.statChip, { borderColor: '#fbbf2440' }]}>
-                <Ionicons name="eye-outline" size={13} color="#fbbf24" />
-                <Text style={[styles.statText, { color: '#fbbf24' }]}>Browse only</Text>
-              </View>
-            )}
-          </View>
+      {/* ── Stats + campus info ── */}
+      <Animated.View style={[styles.statsRow, makeAnim(heroAnim, 10)]}>
+        <View style={styles.statChip}>
+          <Ionicons name="storefront-outline" size={13} color="#818cf8" />
+          <Text style={styles.statText}>{items.length} listings</Text>
         </View>
+        <View style={styles.statChip}>
+          <Ionicons name="location-outline" size={13} color="#34d399" />
+          <Text style={[styles.statText, { color: '#34d399' }]}>
+            {activeCampus.shortName || activeCampus.name}
+          </Text>
+        </View>
+        {isWindowShopping && (
+          <View style={[styles.statChip, { borderColor: '#fbbf2440' }]}>
+            <Ionicons name="eye-outline" size={13} color="#fbbf24" />
+            <Text style={[styles.statText, { color: '#fbbf24' }]}>Browse only</Text>
+          </View>
+        )}
       </Animated.View>
 
-      {/* ── Spotlight ── */}
+      {/* ── Campus Spotlight ── */}
       {(spots.length > 0 || loading) && (
         <Animated.View style={[styles.section, makeAnim(sec1Anim)]}>
           <View style={styles.sectionHead}>
             <Text style={styles.sectionTitle}>✦ Campus Spotlight</Text>
           </View>
-
           {loading ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingRight: 20 }}>
               {[0, 1, 2].map(i => <Skeleton key={i} shimmer={shimmer} w={SPOT_W} h={210} radius={22} />)}
@@ -348,7 +338,6 @@ const HomeScreen = ({ navigation }) => {
           {QUICK.map((q) => (
             <Press key={q.label} onPress={() => handleQuick(q.cat)} style={styles.quickItem}>
               <View style={[styles.quickCircle, { borderColor: q.glow + '60', shadowColor: q.glow }]}>
-                {/* Glow background */}
                 <View style={[styles.quickGlow, { backgroundColor: q.glow + '20' }]} />
                 <Ionicons name={q.icon} size={26} color={q.color} />
               </View>
@@ -358,35 +347,29 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </Animated.View>
 
-      {/* ── Trending Tiles ── */}
+      {/* ── Campus Features ── */}
       <Animated.View style={[styles.section, makeAnim(sec3Anim)]}>
         <View style={styles.sectionHead}>
-          <Text style={styles.sectionTitle}>Trending Now</Text>
-          <Text style={styles.sectionSub}>{activeCampus.shortName || activeCampus.name}</Text>
-        </View>
-        <View style={styles.grid}>
-          {/* Tall left tile */}
-          <Press onPress={() => handleTile(TILES[0].cat)} style={[styles.tile, styles.tileTall, { backgroundColor: TILES[0].bg }]}>
-            <View style={[styles.tileAccent, { backgroundColor: TILES[0].accent + '25' }]} />
-            <View style={[styles.tileCircle, { backgroundColor: TILES[0].accent + '30', borderColor: TILES[0].accent + '50' }]}>
-              <Ionicons name={TILES[0].icon} size={30} color={TILES[0].accent} />
-            </View>
-            <Text style={styles.tileName}>{TILES[0].label}</Text>
-            <View style={[styles.tilePill, { backgroundColor: TILES[0].accent + '30' }]}>
-              <Text style={[styles.tilePillText, { color: TILES[0].accent }]}>Shop →</Text>
-            </View>
-          </Press>
-
-          {/* Right 2×2 */}
-          <View style={styles.tileRight}>
-            {TILES.slice(1).map((tile) => (
-              <Press key={tile.label} onPress={() => handleTile(tile.cat)} style={[styles.tile, styles.tileSmall, { backgroundColor: tile.bg }]}>
-                <View style={[styles.tileAccent, { backgroundColor: tile.accent + '20' }]} />
-                <Ionicons name={tile.icon} size={22} color={tile.accent} style={{ marginBottom: 6 }} />
-                <Text style={styles.tileNameSm} numberOfLines={1}>{tile.label}</Text>
-              </Press>
-            ))}
+          <Text style={styles.sectionTitle}>Campus Life</Text>
+          <View style={styles.soonBadge}>
+            <Text style={styles.soonText}>Coming Soon</Text>
           </View>
+        </View>
+        <View style={styles.featuresGrid}>
+          {FEATURES.map((f) => (
+            <Press key={f.label} onPress={() => handleFeature(f.label)} style={[styles.featureCard, { backgroundColor: f.bg }]}>
+              {/* Glow blob */}
+              <View style={[styles.featureBlob, { backgroundColor: f.color + '18' }]} />
+              <View style={[styles.featureIconWrap, { borderColor: f.color + '40', backgroundColor: f.color + '18' }]}>
+                <Ionicons name={f.icon} size={22} color={f.color} />
+              </View>
+              <Text style={styles.featureName}>{f.label}</Text>
+              <Text style={styles.featureDesc} numberOfLines={1}>{f.desc}</Text>
+              <View style={[styles.featureSoon, { borderColor: f.color + '50' }]}>
+                <Text style={[styles.featureSoonText, { color: f.color }]}>🔒 Soon</Text>
+              </View>
+            </Press>
+          ))}
         </View>
       </Animated.View>
 
@@ -404,17 +387,13 @@ const HomeScreen = ({ navigation }) => {
         </Animated.View>
       )}
 
-      {/* ── Filter Bar ── */}
-      <View style={[styles.section, { paddingBottom: 0 }]}>
+      {/* ── Filter Chips ── */}
+      <View style={[styles.section, { paddingBottom: 0, marginBottom: 0 }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 20 }}>
           {CATEGORIES.map((cat) => {
             const active = activeCategory === cat.label;
             return (
-              <Press
-                key={cat.label}
-                onPress={() => setActiveCategory(cat.label)}
-                style={[styles.chip, active && styles.chipOn]}
-              >
+              <Press key={cat.label} onPress={() => setActiveCategory(cat.label)} style={[styles.chip, active && styles.chipOn]}>
                 <Ionicons name={cat.icon} size={13} color={active ? '#fff' : '#64748b'} style={{ marginRight: 5 }} />
                 <Text style={[styles.chipTxt, active && styles.chipTxtOn]}>{cat.label}</Text>
               </Press>
@@ -427,11 +406,11 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.listHead}>
         <Text style={styles.listTitle}>
           {activeCategory === 'All' ? 'All Listings' : activeCategory}
+          {searchQuery ? `  ·  "${searchQuery}"` : ''}
         </Text>
-        {!loading && <Text style={styles.listCount}>{items.length}</Text>}
+        {!loading && <Text style={styles.listCount}>{filteredItems.length}</Text>}
       </View>
 
-      {/* Skeleton grid while loading */}
       {loading && (
         <View style={styles.skRow}>
           {[0, 1, 2, 3].map(i => <Skeleton key={i} shimmer={shimmer} w={CARD_W} h={CARD_W * 1.25} radius={14} style={{ marginBottom: 16 }} />)}
@@ -440,31 +419,137 @@ const HomeScreen = ({ navigation }) => {
     </View>
   );
 
-  const renderItem = useCallback(({ item, index }) => (
-    <View style={index % 2 === 0 ? styles.colL : styles.colR}>
-      <ItemCard item={item} onPress={() => handleItemPress(item)} compact />
-    </View>
-  ), [currentUser, isGuest, activeCampus]);
-
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <StatusBar backgroundColor="#07090f" barStyle="light-content" />
 
+      {/* ── Sticky Top Bar ─────────────────────────────────────────────────── */}
+      <Animated.View style={[styles.topBar, makeAnim(heroAnim, 18)]}>
+        {/* Decorative orbs */}
+        <View style={styles.orb1} />
+        <View style={styles.orb2} />
+
+        {/* Campus row */}
+        <View style={styles.heroTop}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.greeting}>{getGreeting()} 👋</Text>
+            <Text style={styles.heroName} numberOfLines={1}>
+              {isGuest ? 'Guest' : (currentUser?.name?.split(' ')[0] || 'Student')}
+            </Text>
+          </View>
+          <Press onPress={() => setModalVisible(true)} style={styles.campusBadge}>
+            <Text style={styles.campusEmoji}>{activeCampus.emoji}</Text>
+            <Text style={styles.campusShort} numberOfLines={1}>
+              {activeCampus.shortName || activeCampus.name}
+            </Text>
+            <Ionicons name="chevron-down" size={12} color="#818cf8" />
+          </Press>
+        </View>
+
+        {/* Search bar */}
+        <View style={styles.searchWrap}>
+          <Ionicons name="search" size={17} color={searchFocused ? '#818cf8' : '#64748b'} style={{ marginRight: 9 }} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder={`Search items on campus…`}
+            placeholderTextColor="#475569"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => { setSearchQuery(''); setSearchFocused(false); }}>
+              <Ionicons name="close-circle" size={17} color="#475569" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* ── Search Suggestions Dropdown ── */}
+        {searchFocused && suggestions.length > 0 && (
+          <Animated.View
+            style={[
+              styles.suggestBox,
+              {
+                opacity: suggestAnim,
+                transform: [{ translateY: suggestAnim.interpolate({ inputRange: [0, 1], outputRange: [-8, 0] }) }],
+              },
+            ]}
+          >
+            {suggestions.map((item, idx) => {
+              const img = item.imageUrl || item.image || item.images?.[0];
+              const q = searchQuery.trim().toLowerCase();
+              const name = item.name || item.title || '';
+              const matchIdx = name.toLowerCase().indexOf(q);
+              return (
+                <TouchableOpacity
+                  key={item._id}
+                  style={[styles.suggestRow, idx < suggestions.length - 1 && styles.suggestBorder]}
+                  onPress={() => handleSuggestionPress(item)}
+                  activeOpacity={0.75}
+                >
+                  {/* Thumbnail */}
+                  {img
+                    ? <Image source={{ uri: img }} style={styles.suggestThumb} resizeMode="cover" />
+                    : (
+                      <View style={[styles.suggestThumb, styles.suggestThumbFallback]}>
+                        <Ionicons name="cube-outline" size={16} color="#334155" />
+                      </View>
+                    )
+                  }
+                  {/* Text */}
+                  <View style={{ flex: 1 }}>
+                    {/* Highlighted name */}
+                    <Text style={styles.suggestName} numberOfLines={1}>
+                      {matchIdx >= 0 ? (
+                        <>
+                          <Text>{name.slice(0, matchIdx)}</Text>
+                          <Text style={styles.suggestHighlight}>{name.slice(matchIdx, matchIdx + q.length)}</Text>
+                          <Text>{name.slice(matchIdx + q.length)}</Text>
+                        </>
+                      ) : name}
+                    </Text>
+                    <Text style={styles.suggestMeta} numberOfLines={1}>
+                      {item.category}{item.price != null ? `  ·  ₹${item.price}` : ''}
+                    </Text>
+                  </View>
+                  <Ionicons name="arrow-forward" size={15} color="#334155" />
+                </TouchableOpacity>
+              );
+            })}
+          </Animated.View>
+        )}
+
+        {/* No match hint */}
+        {searchFocused && searchQuery.length > 0 && suggestions.length === 0 && (
+          <Animated.View style={[styles.noSuggestBox, { opacity: suggestAnim }]}>
+            <Ionicons name="search-outline" size={16} color="#334155" />
+            <Text style={styles.noSuggestText}>No items matching "{searchQuery}"</Text>
+          </Animated.View>
+        )}
+      </Animated.View>
+
+      {/* ── Main Content ─────────────────────────────────────────────────────── */}
       {loading ? (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.pad}>
-          <Header />
+          <ListHeader />
         </ScrollView>
       ) : (
         <FlatList
-          data={items}
+          ref={listRef}
+          data={filteredItems}
           keyExtractor={i => i._id}
           numColumns={2}
           contentContainerStyle={styles.pad}
           columnWrapperStyle={styles.row}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366f1']} tintColor="#6366f1" />}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366f1']} tintColor="#6366f1" />
+          }
           renderItem={renderItem}
-          ListHeaderComponent={<Header />}
+          ListHeaderComponent={<ListHeader />}
           ListEmptyComponent={
             <View style={styles.emptyBox}>
               <View style={styles.emptyOrb}>
@@ -553,25 +638,22 @@ const sp = StyleSheet.create({
   },
   img: { ...StyleSheet.absoluteFillObject },
   noImg: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1e293b' },
-  grad: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'transparent',
-    // Simulate gradient with two overlapping views
-  },
-  topRow: { position: 'absolute', top: 14, left: 14, right: 14 },
+  topRow: { position: 'absolute', top: 14, left: 14 },
   badge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(99,102,241,0.75)',
-    borderRadius: 20, paddingHorizontal: 11, paddingVertical: 5,
+    backgroundColor: 'rgba(99,102,241,0.75)', borderRadius: 20,
+    paddingHorizontal: 11, paddingVertical: 5,
     borderWidth: 1, borderColor: 'rgba(165,180,252,0.4)',
   },
   badgeText: { color: '#e0e7ff', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
-  bottom: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, backgroundColor: 'rgba(0,0,0,0.55)' },
+  bottom: {
+    position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16,
+    backgroundColor: 'rgba(0,0,0,0.58)',
+  },
   itemName: { fontSize: 17, fontWeight: '900', color: '#fff', marginBottom: 8 },
   priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   price: { fontSize: 16, fontWeight: '800', color: '#34d399' },
   viewBtn: {
-    backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 14,
     paddingHorizontal: 14, paddingVertical: 6,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
   },
@@ -581,25 +663,25 @@ const sp = StyleSheet.create({
 // ─── Main styles ──────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#07090f' },
-  pad: { paddingBottom: 110 },
+  pad:  { paddingBottom: 110 },
 
-  // Decorative orbs
-  orb1: {
-    position: 'absolute', width: 200, height: 200, borderRadius: 100,
-    backgroundColor: '#6366f1', opacity: 0.07,
-    top: -60, right: -60,
+  // Top bar (sticky)
+  topBar: {
+    backgroundColor: '#07090f',
+    paddingHorizontal: 18,
+    paddingTop: Platform.OS === 'android' ? 10 : 6,
+    paddingBottom: 14,
+    zIndex: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#0f172a',
+    overflow: 'visible',
   },
-  orb2: {
-    position: 'absolute', width: 150, height: 150, borderRadius: 75,
-    backgroundColor: '#06b6d4', opacity: 0.06,
-    top: 20, left: -40,
-  },
+  orb1: { position: 'absolute', width: 180, height: 180, borderRadius: 90, backgroundColor: '#6366f1', opacity: 0.07, top: -50, right: -40 },
+  orb2: { position: 'absolute', width: 130, height: 130, borderRadius: 65, backgroundColor: '#06b6d4', opacity: 0.06, top: 10, left: -30 },
 
-  // Hero
-  heroInner: { paddingHorizontal: 18, paddingTop: Platform.OS === 'android' ? 10 : 6, paddingBottom: 20 },
-  heroTop: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 18 },
+  heroTop: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 14 },
   greeting: { fontSize: 13, color: '#64748b', fontWeight: '600', marginBottom: 4 },
-  heroName: { fontSize: 26, fontWeight: '900', color: '#f1f5f9', maxWidth: SW * 0.55 },
+  heroName: { fontSize: 24, fontWeight: '900', color: '#f1f5f9', maxWidth: SW * 0.55 },
   campusBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: '#111827', borderRadius: 16,
@@ -615,13 +697,42 @@ const styles = StyleSheet.create({
   searchWrap: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#0f172a', borderRadius: 16,
-    paddingHorizontal: 15, paddingVertical: 12,
-    borderWidth: 1, borderColor: '#1e293b', marginBottom: 14,
+    paddingHorizontal: 15, paddingVertical: 11,
+    borderWidth: 1, borderColor: '#1e293b',
   },
   searchInput: { flex: 1, fontSize: 15, color: '#e2e8f0', padding: 0 },
 
-  // Stats
-  statsRow: { flexDirection: 'row', gap: 8 },
+  // Suggestions dropdown
+  suggestBox: {
+    backgroundColor: '#111827',
+    borderRadius: 16, marginTop: 6,
+    borderWidth: 1, borderColor: '#1e293b',
+    overflow: 'hidden',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5, shadowRadius: 16, elevation: 20,
+    zIndex: 999,
+  },
+  suggestRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 14, paddingVertical: 11, gap: 12,
+  },
+  suggestBorder: { borderBottomWidth: 1, borderBottomColor: '#1e293b' },
+  suggestThumb: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#1e293b' },
+  suggestThumbFallback: { alignItems: 'center', justifyContent: 'center' },
+  suggestName: { fontSize: 14, fontWeight: '700', color: '#e2e8f0', marginBottom: 2 },
+  suggestHighlight: { color: '#818cf8', fontWeight: '900', backgroundColor: 'rgba(99,102,241,0.15)' },
+  suggestMeta: { fontSize: 12, color: '#475569', fontWeight: '500' },
+
+  noSuggestBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#0f172a', borderRadius: 14,
+    paddingHorizontal: 14, paddingVertical: 12, marginTop: 6,
+    borderWidth: 1, borderColor: '#1e293b',
+  },
+  noSuggestText: { fontSize: 13, color: '#334155', fontStyle: 'italic' },
+
+  // Stats row
+  statsRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 18, paddingTop: 14, marginBottom: 4 },
   statChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: '#0f172a', borderRadius: 20,
@@ -632,9 +743,14 @@ const styles = StyleSheet.create({
 
   // Section
   section: { paddingHorizontal: 18, marginBottom: 28 },
-  sectionHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
   sectionTitle: { fontSize: 17, fontWeight: '900', color: '#f1f5f9', marginBottom: 14, letterSpacing: 0.2 },
-  sectionSub: { fontSize: 12, color: '#64748b', fontWeight: '600' },
+  soonBadge: {
+    backgroundColor: '#1e1b4b', borderRadius: 10,
+    paddingHorizontal: 10, paddingVertical: 4,
+    borderWidth: 1, borderColor: '#312e81',
+  },
+  soonText: { fontSize: 11, color: '#818cf8', fontWeight: '800' },
 
   // Dots
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 12 },
@@ -647,29 +763,37 @@ const styles = StyleSheet.create({
   quickCircle: {
     width: 60, height: 60, borderRadius: 30,
     backgroundColor: '#0f172a', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, marginBottom: 8,
+    borderWidth: 1.5, marginBottom: 8, overflow: 'hidden',
     shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6,
-    overflow: 'hidden',
   },
   quickGlow: { ...StyleSheet.absoluteFillObject },
   quickLabel: { fontSize: 11, color: '#94a3b8', fontWeight: '700', textAlign: 'center' },
 
-  // Trending grid
-  grid: { flexDirection: 'row', gap: 10 },
-  tileRight: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  tile: { borderRadius: 20, overflow: 'hidden', padding: 14, justifyContent: 'flex-end' },
-  tileTall: { width: (SW - 56) * 0.42, aspectRatio: 0.72, justifyContent: 'flex-end' },
-  tileSmall: { width: '47%', aspectRatio: 1.05, justifyContent: 'center', alignItems: 'flex-start' },
-  tileAccent: { ...StyleSheet.absoluteFillObject },
-  tileCircle: {
-    width: 54, height: 54, borderRadius: 27,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, marginBottom: 12,
+  // Campus features grid
+  featuresGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  featureCard: {
+    width: (SW - 48) / 2, borderRadius: 20, padding: 16, overflow: 'hidden',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 8, elevation: 6,
   },
-  tileName: { fontSize: 15, fontWeight: '900', color: '#fff', marginBottom: 10 },
-  tileNameSm: { fontSize: 12, fontWeight: '800', color: '#fff' },
-  tilePill: { alignSelf: 'flex-start', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
-  tilePillText: { fontSize: 12, fontWeight: '800' },
+  featureBlob: {
+    position: 'absolute', width: 80, height: 80, borderRadius: 40,
+    top: -20, right: -20,
+  },
+  featureIconWrap: {
+    width: 44, height: 44, borderRadius: 14,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, marginBottom: 10,
+  },
+  featureName: { fontSize: 13, fontWeight: '800', color: '#f1f5f9', marginBottom: 3 },
+  featureDesc: { fontSize: 11, color: '#64748b', fontWeight: '500', marginBottom: 10 },
+  featureSoon: {
+    alignSelf: 'flex-start', borderRadius: 8,
+    paddingHorizontal: 8, paddingVertical: 3,
+    borderWidth: 1, backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  featureSoonText: { fontSize: 10, fontWeight: '800' },
 
   // Pills
   pill: {
@@ -679,7 +803,7 @@ const styles = StyleSheet.create({
   },
   pillText: { fontSize: 13, color: '#cbd5e1', fontWeight: '600' },
 
-  // Filter chips
+  // Category chips
   chip: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#0f172a', borderRadius: 20,
@@ -695,15 +819,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 18, paddingVertical: 14,
   },
-  listTitle: { fontSize: 17, fontWeight: '900', color: '#f1f5f9' },
+  listTitle: { fontSize: 16, fontWeight: '900', color: '#f1f5f9', flex: 1 },
   listCount: {
     fontSize: 13, color: '#6366f1', fontWeight: '800',
     backgroundColor: '#1e1b4b', borderRadius: 10,
     paddingHorizontal: 10, paddingVertical: 3,
   },
 
-  // Item grid
-  row: { justifyContent: 'space-between', paddingHorizontal: 18 },
+  // Grid
+  row:  { justifyContent: 'space-between', paddingHorizontal: 18 },
   colL: { width: CARD_W },
   colR: { width: CARD_W },
   skRow: {
@@ -715,16 +839,13 @@ const styles = StyleSheet.create({
   emptyBox: { alignItems: 'center', paddingTop: 48, paddingHorizontal: 36 },
   emptyOrb: {
     width: 96, height: 96, borderRadius: 48,
-    backgroundColor: '#1e1b4b', alignItems: 'center', justifyContent: 'center', marginBottom: 18,
-    borderWidth: 1, borderColor: '#312e81',
+    backgroundColor: '#1e1b4b', alignItems: 'center', justifyContent: 'center',
+    marginBottom: 18, borderWidth: 1, borderColor: '#312e81',
   },
   emptyTitle: { fontSize: 20, fontWeight: '900', color: '#f1f5f9', marginBottom: 8 },
-  emptySub: { fontSize: 13, color: '#64748b', textAlign: 'center', lineHeight: 20 },
-  clearBtn: {
-    marginTop: 18, backgroundColor: '#4f46e5', borderRadius: 14,
-    paddingHorizontal: 24, paddingVertical: 12,
-  },
-  clearTxt: { color: '#fff', fontWeight: '800', fontSize: 14 },
+  emptySub:   { fontSize: 13, color: '#64748b', textAlign: 'center', lineHeight: 20 },
+  clearBtn:   { marginTop: 18, backgroundColor: '#4f46e5', borderRadius: 14, paddingHorizontal: 24, paddingVertical: 12 },
+  clearTxt:   { color: '#fff', fontWeight: '800', fontSize: 14 },
 
   // Modal
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
@@ -735,7 +856,7 @@ const styles = StyleSheet.create({
   },
   sheetHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: '#334155', alignSelf: 'center', marginBottom: 18 },
   sheetTitle: { fontSize: 20, fontWeight: '900', color: '#f1f5f9', textAlign: 'center', marginBottom: 4 },
-  sheetSub: { fontSize: 13, color: '#64748b', textAlign: 'center', marginBottom: 16 },
+  sheetSub:   { fontSize: 13, color: '#64748b', textAlign: 'center', marginBottom: 16 },
   mSearch: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#1e293b', borderRadius: 14,
