@@ -12,6 +12,7 @@ import { protect } from '../middleware/authMiddleware.js';
 // 1. Import the storage you defined in utils/cloudinary.js
 import { storage } from '../utils/cloudinaryConfig.js';
 import User from '../models/User.js';
+import Item from '../models/Item.js';
 
 const router = express.Router();
 
@@ -61,6 +62,21 @@ router.post('/subscribe', async (req, res) => {
     } catch (error) {
         console.error("Error saving subscription:", error);
         res.status(500).json({ error: "Server error saving subscription" });
+    }
+});
+
+// Public stats endpoint for HeroSection
+router.get('/counts', async (req, res) => {
+    try {
+        const [usersCount, itemsCount] = await Promise.all([
+            User.countDocuments(),
+            Item.countDocuments(),
+        ]);
+
+        res.json({ usersCount, itemsCount });
+    } catch (error) {
+        console.error('Failed to get counts', error);
+        res.status(500).json({ message: 'Could not fetch counts' });
     }
 });
 
