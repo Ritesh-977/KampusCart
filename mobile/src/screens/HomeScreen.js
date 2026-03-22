@@ -64,7 +64,7 @@ const EVENTS = [
   { id: '5', title: 'Quiz Competition',     date: '10', month: 'NOV', time: '11:00 AM', venue: 'Seminar Hall',    featured: false, color: '#fbbf24' },
 ];
 
-const RECENT_KEY = '@kampuscart/recent_items';
+const getRecentKey = (userId) => `@kampuscart/recent_items_${userId || 'guest'}`;
 
 const getGreeting = () => {
   const h = new Date().getHours();
@@ -206,7 +206,8 @@ const HomeScreen = ({ navigation }) => {
   const suggestAnim = useRef(new Animated.Value(0)).current;
   const spotlightRef = useRef(null);
   const spotIdx    = useRef(0);
-  const listRef    = useRef(null);
+  const listRef       = useRef(null);
+  const headerHeightRef = useRef(0);
 
   useEffect(() => {
     Animated.loop(Animated.sequence([
@@ -253,20 +254,23 @@ const HomeScreen = ({ navigation }) => {
     }).start();
   }, [searchFocused, searchQuery]);
 
-  // Load & save recently visited items
+  // Load & save recently visited items (per-user)
   useEffect(() => {
-    AsyncStorage.getItem(RECENT_KEY)
+    const key = getRecentKey(currentUser?.id);
+    setRecentItems([]);
+    AsyncStorage.getItem(key)
       .then(raw => { if (raw) setRecentItems(JSON.parse(raw)); })
       .catch(() => {});
-  }, []);
+  }, [currentUser?.id]);
 
   const saveRecentItem = async (item) => {
     try {
-      const raw = await AsyncStorage.getItem(RECENT_KEY);
+      const key = getRecentKey(currentUser?.id);
+      const raw = await AsyncStorage.getItem(key);
       const prev = raw ? JSON.parse(raw) : [];
       const next = [item, ...prev.filter(i => i._id !== item._id)].slice(0, 8);
       setRecentItems(next);
-      await AsyncStorage.setItem(RECENT_KEY, JSON.stringify(next));
+      await AsyncStorage.setItem(key, JSON.stringify(next));
     } catch {}
   };
 
@@ -275,8 +279,7 @@ const HomeScreen = ({ navigation }) => {
 
   const fetchItems = useCallback(async () => {
     try {
-      let url = `/items?college=${activeCampus.name}`;
-      if (activeCategory !== 'All') url += `&category=${encodeURIComponent(activeCategory)}`;
+      const url = `/items?college=${activeCampus.name}`;
       const res = await API.get(url);
       setItems(res.data);
     } catch (e) {
@@ -285,7 +288,7 @@ const HomeScreen = ({ navigation }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [activeCategory, activeCampus]);
+  }, [activeCampus]);
 
   useEffect(() => {
     setLoading(true);
@@ -306,12 +309,15 @@ const HomeScreen = ({ navigation }) => {
 
   const filteredItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter(item =>
-      (item.name || item.title || '').toLowerCase().includes(q) ||
-      (item.category || '').toLowerCase().includes(q)
-    );
-  }, [searchQuery, items]);
+    return items.filter(item => {
+      const matchesSearch = !q ||
+        (item.name || item.title || '').toLowerCase().includes(q) ||
+        (item.category || '').toLowerCase().includes(q);
+      const matchesCategory = activeCategory === 'All' ||
+        (item.category || '').toLowerCase() === activeCategory.toLowerCase();
+      return matchesSearch && matchesCategory;
+    });
+  }, [searchQuery, activeCategory, items]);
 
   const sortedItems = useMemo(() => {
     if (sortOrder === 'asc')  return [...filteredItems].sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
@@ -350,8 +356,12 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleQuick = (cat) => {
-    if (cat === '__lost__') navigation.navigate('LostFound');
-    else setActiveCategory(cat);
+    if (cat === '__lost__') {
+      navigation.navigate('LostFound');
+    } else {
+      setActiveCategory(cat);
+      listRef.current?.scrollToOffset({ offset: headerHeightRef.current, animated: true });
+    }
   };
 
   const handleFeature = (label) => {
@@ -377,7 +387,7 @@ const HomeScreen = ({ navigation }) => {
 
   // ─── List Header (sections above the items grid) ─────────────────────────
   const ListHeader = () => (
-    <View>
+    <View onLayout={(e) => { headerHeightRef.current = e.nativeEvent.layout.height; }}>
       {/* ── Stats + campus info ── */}
       <Animated.View style={[styles.statsRow, makeAnim(heroAnim, 10)]}>
         <View style={styles.statChip}>
@@ -486,7 +496,7 @@ const HomeScreen = ({ navigation }) => {
         <Animated.View style={[styles.section, makeAnim(sec4Anim)]}>
           <View style={styles.sectionHead}>
             <Text style={styles.sectionTitle}>Recently Viewed</Text>
-            <TouchableOpacity onPress={() => { setRecentItems([]); AsyncStorage.removeItem(RECENT_KEY); }}>
+            <TouchableOpacity onPress={() => { setRecentItems([]); AsyncStorage.removeItem(getRecentKey(currentUser?.id)); }}>
               <Text style={styles.clearRecentTxt}>Clear</Text>
             </TouchableOpacity>
           </View>
@@ -592,6 +602,10 @@ const HomeScreen = ({ navigation }) => {
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
             returnKeyType="search"
+            onSubmitEditing={() => {
+              setSearchFocused(false);
+              listRef.current?.scrollToOffset({ offset: headerHeightRef.current, animated: true });
+            }}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => { setSearchQuery(''); setSearchFocused(false); }}>
