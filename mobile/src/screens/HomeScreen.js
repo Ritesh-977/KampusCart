@@ -394,6 +394,10 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleFeature = (label) => {
+    if (label === 'Study Material') {
+      navigation.navigate('StudyMaterials');
+      return;
+    }
     Alert.alert(
       '🚀 Coming Soon',
       `${label} is on its way! We're building this feature for your campus.`,
@@ -502,9 +506,15 @@ const HomeScreen = ({ navigation }) => {
               </View>
               <Text style={styles.featureName}>{f.label}</Text>
               <Text style={styles.featureDesc} numberOfLines={1}>{f.desc}</Text>
-              <View style={[styles.featureSoon, { borderColor: f.color + '50' }]}>
-                <Text style={[styles.featureSoonText, { color: f.color }]}>🔒 Soon</Text>
-              </View>
+              {f.label === 'Study Material' ? (
+                <View style={[styles.featureSoon, { borderColor: f.color + '50' }]}>
+                  <Text style={[styles.featureSoonText, { color: f.color }]}>Open →</Text>
+                </View>
+              ) : (
+                <View style={[styles.featureSoon, { borderColor: f.color + '50' }]}>
+                  <Text style={[styles.featureSoonText, { color: f.color }]}>🔒 Soon</Text>
+                </View>
+              )}
             </Press>
           ))}
         </View>
