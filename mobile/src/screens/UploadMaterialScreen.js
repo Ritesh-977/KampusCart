@@ -53,9 +53,9 @@ const UploadMaterialScreen = ({ navigation }) => {
 
       if (!asset.uri) return;
 
-      // 5 MB guard (DocumentPicker gives size in bytes)
-      if (asset.size && asset.size > 5 * 1024 * 1024) {
-        Alert.alert('File Too Large', 'Please select a file smaller than 5 MB.');
+      // 10 MB guard (DocumentPicker gives size in bytes)
+      if (asset.size && asset.size > 10 * 1024 * 1024) {
+        Alert.alert('File Too Large', 'Please select a file smaller than 10 MB.');
         return;
       }
 
@@ -200,7 +200,7 @@ const UploadMaterialScreen = ({ navigation }) => {
           </View>
 
           {/* File picker */}
-          <Text style={styles.label}>File (PDF or Image, max 5 MB) *</Text>
+          <Text style={styles.label}>File (PDF or Image, max 10 MB) *</Text>
           <TouchableOpacity
             style={[styles.filePicker, file && styles.filePickerFilled]}
             onPress={pickFile}
@@ -228,7 +228,7 @@ const UploadMaterialScreen = ({ navigation }) => {
               <>
                 <Ionicons name="cloud-upload-outline" size={32} color="#334155" />
                 <Text style={styles.filePickerLabel}>Tap to browse PDF or Image</Text>
-                <Text style={styles.filePickerSub}>Max 5 MB · PDF, JPG, PNG</Text>
+                <Text style={styles.filePickerSub}>Max 10 MB · PDF, JPG, PNG</Text>
               </>
             )}
           </TouchableOpacity>
