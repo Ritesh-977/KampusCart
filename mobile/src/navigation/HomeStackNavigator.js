@@ -4,6 +4,7 @@ import HomeScreen from '../screens/HomeScreen';
 import ItemDetailsScreen from '../screens/ItemDetailsScreen';
 import LostFoundScreen from '../screens/LostFoundScreen';
 import EventsScreen from '../screens/EventsScreen';
+import EventDetailsScreen from '../screens/EventDetailsScreen';
 import PostEventScreen from '../screens/PostEventScreen';
 
 const Stack = createNativeStackNavigator();
@@ -36,6 +37,11 @@ const HomeStackNavigator = () => {
       <Stack.Screen
         name="Events"
         component={EventsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EventDetails"
+        component={EventDetailsScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

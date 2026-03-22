@@ -116,7 +116,11 @@ const EventsScreen = ({ navigation, route }) => {
     const hasPhone    = !!item.organizer?.phone;
 
     return (
-      <View style={[styles.card, { borderColor: color + '35' }]}>
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => navigation.navigate('EventDetails', { event: item })}
+        style={[styles.card, { borderColor: color + '35' }]}
+      >
         {/* Color bar */}
         <View style={[styles.colorBar, { backgroundColor: color }]} />
 
@@ -142,9 +146,20 @@ const EventsScreen = ({ navigation, route }) => {
               </View>
             </View>
             {isOrganizer && (
-              <TouchableOpacity onPress={() => handleDelete(item._id)} style={styles.deleteBtn}>
-                <Ionicons name="trash-outline" size={17} color="#ef4444" />
-              </TouchableOpacity>
+              <View style={styles.ownerBtns}>
+                <TouchableOpacity
+                  onPress={(e) => { e.stopPropagation?.(); navigation.navigate('PostEvent', { event: item, college: item.college }); }}
+                  style={styles.iconBtn}
+                >
+                  <Ionicons name="create-outline" size={16} color="#818cf8" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={(e) => { e.stopPropagation?.(); handleDelete(item._id); }}
+                  style={[styles.iconBtn, { marginTop: 4 }]}
+                >
+                  <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                </TouchableOpacity>
+              </View>
             )}
           </View>
 
@@ -192,7 +207,7 @@ const EventsScreen = ({ navigation, route }) => {
             Organized by  {item.organizer?.name || 'Campus'}
           </Text>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -297,7 +312,12 @@ const styles = StyleSheet.create({
   metaText: { fontSize: 12, color: '#64748b', marginLeft: 4 },
   metaDuration: { fontSize: 12, color: '#475569' },
 
-  deleteBtn: { padding: 6 },
+  ownerBtns: { alignItems: 'center' },
+  iconBtn: {
+    width: 30, height: 30, borderRadius: 8,
+    backgroundColor: '#273549', justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: '#334155',
+  },
 
   description: { fontSize: 14, color: '#94a3b8', lineHeight: 20, marginBottom: 12 },
 
