@@ -1,13 +1,81 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import API from '../api/axios';
 
 const HeroSection = () => {
+  const [activeItemsCount, setActiveItemsCount] = useState(1);
+  const [targetItemsCount, setTargetItemsCount] = useState(1);
+  const [usersCount, setUsersCount] = useState(1);
+  const [targetUsersCount, setTargetUsersCount] = useState(1);
+
   const handleStartBrowsing = () => {
     window.scrollTo({
       top: 600, 
       behavior: 'smooth'
     });
   };
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const { data } = await API.get('/users/counts');
+        setTargetItemsCount(Math.max(1, data.itemsCount || 1));
+        setTargetUsersCount(Math.max(1, data.usersCount || 1));
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
+  useEffect(() => {
+    if (targetItemsCount <= 1) {
+      setActiveItemsCount(targetItemsCount);
+      return;
+    }
+
+    const duration = 800;
+    const steps = 60;
+    const increment = Math.max(1, Math.ceil((targetItemsCount - 1) / steps));
+    let current = 1;
+
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= targetItemsCount) {
+        setActiveItemsCount(targetItemsCount);
+        clearInterval(timer);
+      } else {
+        setActiveItemsCount(current);
+      }
+    }, duration / steps);
+
+    return () => clearInterval(timer);
+  }, [targetItemsCount]);
+
+  useEffect(() => {
+    if (targetUsersCount <= 1) {
+      setUsersCount(targetUsersCount);
+      return;
+    }
+
+    const duration = 800;
+    const steps = 60;
+    const increment = Math.max(1, Math.ceil((targetUsersCount - 1) / steps));
+    let current = 1;
+
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= targetUsersCount) {
+        setUsersCount(targetUsersCount);
+        clearInterval(timer);
+      } else {
+        setUsersCount(current);
+      }
+    }, duration / steps);
+
+    return () => clearInterval(timer);
+  }, [targetUsersCount]);
 
   return (
     // Dark Navy/Slate with Cyan Accents
@@ -77,20 +145,20 @@ const HeroSection = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mt-12 lg:mt-8 max-w-sm mx-auto lg:mx-0">
+            {/* <div className="grid grid-cols-3 gap-4 mt-12 lg:mt-8 max-w-sm mx-auto lg:mx-0">
               <div className="text-center lg:text-left">
-                <p className="text-2xl font-bold text-cyan-400">1000+</p>
+                <p className="text-2xl font-bold text-cyan-400">{activeItemsCount >= targetItemsCount ? `${activeItemsCount}+` : activeItemsCount}</p>
                 <p className="text-xs text-gray-400">Active Items</p>
               </div>
               <div className="text-center lg:text-left">
-                <p className="text-2xl font-bold text-teal-400">500+</p>
+                <p className="text-2xl font-bold text-teal-400">{usersCount >= targetUsersCount ? `${usersCount}+` : usersCount}</p>
                 <p className="text-xs text-gray-400">Users</p>
               </div>
               <div className="text-center lg:text-left">
                 <p className="text-2xl font-bold text-cyan-400">4.8★</p>
                 <p className="text-xs text-gray-400">Rating</p>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* --- RIGHT SIDE: Animated Illustration --- */}

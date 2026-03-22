@@ -11,7 +11,7 @@ import { toast } from 'react-toastify';
 // --- SKELETON COMPONENT ---
 const PublicProfileSkeleton = () => {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 text-slate-800 transition-colors duration-200 font-sans">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-pulse">
         
@@ -85,6 +85,7 @@ const PublicProfile = () => {
   const [profile, setProfile] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isOtherUserProfile, setIsOtherUserProfile] = useState(false);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -92,6 +93,12 @@ const PublicProfile = () => {
         // 1. Fetch Public User Details
         const userRes = await API.get(`/users/${userId}`); 
         setProfile(userRes.data);
+
+        // Determine whether we are viewing someone else
+        const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
+        setIsOtherUserProfile(
+          Boolean(loggedInUser?._id && userRes.data?._id && loggedInUser._id !== userRes.data._id)
+        );
 
         // 2. Fetch User's Items
         const itemsRes = await API.get(`/items/user/${userId}`);
@@ -115,9 +122,9 @@ const PublicProfile = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-200">
+      <div className={`min-h-screen ${isOtherUserProfile ? 'bg-gradient-to-br from-indigo-50 via-white to-purple-50 text-slate-800' : 'bg-gray-50 dark:bg-gray-900'} flex flex-col transition-colors duration-200`}>
         <Navbar />
-        <div className="flex-1 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+        <div className={`flex-1 flex flex-col items-center justify-center ${isOtherUserProfile ? 'text-slate-700' : 'text-gray-500 dark:text-gray-400'}`}>
           <FaExclamationCircle className="text-4xl mb-4" />
           <p className="text-lg font-medium">User not found</p>
         </div>
@@ -126,16 +133,16 @@ const PublicProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 font-sans">
+    <div className={`min-h-screen ${isOtherUserProfile ? 'bg-gradient-to-br from-indigo-50 via-white to-purple-50 text-slate-800' : 'bg-gray-50 dark:bg-gray-900'} transition-colors duration-200 font-sans`}>
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
         {/* --- PROFILE HEADER CARD --- */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 relative">
+        <div className={`rounded-3xl overflow-hidden relative transition-all duration-300 ${isOtherUserProfile ? 'bg-white border border-indigo-200 shadow-2xl' : 'bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700'}`}>
           
           {/* 1. Cover Photo */}
-          <div className="h-48 sm:h-64 relative bg-gray-300 dark:bg-gray-700">
+          <div className={`h-48 sm:h-64 relative ${isOtherUserProfile ? 'bg-indigo-100' : 'bg-gray-300 dark:bg-gray-700'}`}>
             {profile.coverImage ? (
               <img 
                 src={profile.coverImage} 
@@ -202,7 +209,7 @@ const PublicProfile = () => {
         </div>
 
         {/* --- ACTIVE LISTINGS GRID --- */}
-        <div className="mt-12">
+        <div className={`mt-12 transition-colors duration-200 ${isOtherUserProfile ? 'bg-white/70 p-5 rounded-3xl border border-indigo-200' : ''}`}>
           <div className="flex items-center mb-6">
             <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl mr-4">
                 <FaBoxOpen className="text-2xl text-indigo-600 dark:text-indigo-400" />
