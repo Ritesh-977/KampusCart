@@ -1,21 +1,129 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ActivityIndicator, SafeAreaView, Image, StatusBar,
+  ActivityIndicator, SafeAreaView, Image, StatusBar, Alert,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+
+// ── PDF.js HTML template ──────────────────────────────────────────────────────
+// Mozilla's PDF.js renders the PDF entirely in JavaScript inside the WebView.
+// No third-party service dependency — just the CDN script + Cloudinary URL.
+
+const buildPdfHtml = (pdfUrl) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #0f172a; width: 100%; overflow-x: hidden; }
+    #container { display: flex; flex-direction: column; align-items: center; padding: 8px 4px; }
+    canvas { display: block; width: 100%; margin-bottom: 6px; box-shadow: 0 2px 12px rgba(0,0,0,0.6); }
+    #status {
+      color: #94a3b8;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px; padding: 60px 20px; text-align: center;
+    }
+    #progress {
+      color: #818cf8;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 12px; padding: 8px 20px; text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="status">Loading PDF…</div>
+  <div id="progress"></div>
+  <div id="container"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const status    = document.getElementById('status');
+    const progress  = document.getElementById('progress');
+    const container = document.getElementById('container');
+    const pdfUrl    = '${pdfUrl.replace(/'/g, "\\'")}';
+
+    pdfjsLib.getDocument({ url: pdfUrl, withCredentials: false }).promise
+      .then(async (pdf) => {
+        status.style.display = 'none';
+        const total = pdf.numPages;
+        for (let i = 1; i <= total; i++) {
+          progress.textContent = 'Rendering page ' + i + ' of ' + total + '…';
+          const page     = await pdf.getPage(i);
+          const scale    = (window.innerWidth - 8) / page.getViewport({ scale: 1 }).width;
+          const viewport = page.getViewport({ scale });
+          const canvas   = document.createElement('canvas');
+          const ctx      = canvas.getContext('2d');
+          canvas.width   = viewport.width;
+          canvas.height  = viewport.height;
+          container.appendChild(canvas);
+          await page.render({ canvasContext: ctx, viewport }).promise;
+        }
+        progress.style.display = 'none';
+      })
+      .catch((err) => {
+        status.textContent = 'Failed to render PDF. Please try downloading instead.';
+        status.style.color = '#ef4444';
+        progress.style.display = 'none';
+      });
+  </script>
+</body>
+</html>
+`;
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 const MaterialViewerScreen = ({ navigation, route }) => {
   const { title, fileUrl, fileType } = route.params;
 
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(false);
+  const [webLoading, setWebLoading]   = useState(true);
+  const [webError, setWebError]       = useState(false);
+  const [imgLoading, setImgLoading]   = useState(true);
+  const [imgError, setImgError]       = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
-  // Google Docs viewer wraps any public PDF URL into a browser-renderable page
-  const viewerUrl = fileType === 'pdf'
-    ? `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`
-    : fileUrl;
+  // ── Download ────────────────────────────────────────────────────────────────
+
+  const handleDownload = async () => {
+    if (downloading) return;
+    try {
+      setDownloading(true);
+
+      // Derive a safe filename from the title
+      const ext      = fileType === 'pdf' ? 'pdf' : 'jpg';
+      const safeName = title.replace(/[^a-zA-Z0-9_\-. ]/g, '_').trim();
+      const fileName = `${safeName}.${ext}`;
+      const localUri = FileSystem.cacheDirectory + fileName;
+
+      // Download to cache
+      const { status } = await FileSystem.downloadAsync(fileUrl, localUri);
+      if (status !== 200) throw new Error('Download failed');
+
+      // Open native share/save sheet
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(localUri, {
+          mimeType: fileType === 'pdf' ? 'application/pdf' : 'image/jpeg',
+          dialogTitle: `Save "${title}"`,
+          UTI: fileType === 'pdf' ? 'com.adobe.pdf' : 'public.jpeg',
+        });
+      } else {
+        Alert.alert('Saved', `File saved to: ${localUri}`);
+      }
+    } catch {
+      Alert.alert('Download Failed', 'Could not download the file. Please check your connection.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -23,64 +131,78 @@ const MaterialViewerScreen = ({ navigation, route }) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
           <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
         </TouchableOpacity>
+
         <Text style={styles.headerTitle} numberOfLines={1}>{title}</Text>
-        <View style={{ width: 40 }} />
+
+        {/* Download button */}
+        <TouchableOpacity
+          style={[styles.iconBtn, styles.downloadBtn, downloading && styles.downloadBtnActive]}
+          onPress={handleDownload}
+          disabled={downloading}
+        >
+          {downloading
+            ? <ActivityIndicator size="small" color="#fff" />
+            : <Ionicons name="download-outline" size={20} color="#fff" />
+          }
+        </TouchableOpacity>
       </View>
 
-      {/* Content */}
+      {/* ── Image viewer ── */}
       {fileType === 'image' ? (
         <View style={styles.imageContainer}>
-          {loading && (
+          {imgLoading && (
             <ActivityIndicator size="large" color="#818cf8" style={StyleSheet.absoluteFill} />
           )}
-          <Image
-            source={{ uri: fileUrl }}
-            style={styles.image}
-            resizeMode="contain"
-            onLoad={() => setLoading(false)}
-            onError={() => { setLoading(false); setError(true); }}
-          />
-          {error && <Text style={styles.errorText}>Could not load image.</Text>}
+          {imgError ? (
+            <View style={styles.errorContainer}>
+              <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
+              <Text style={styles.errorTitle}>Could not load image</Text>
+              <Text style={styles.errorSub}>Try downloading it instead.</Text>
+            </View>
+          ) : (
+            <Image
+              source={{ uri: fileUrl }}
+              style={styles.image}
+              resizeMode="contain"
+              onLoad={() => setImgLoading(false)}
+              onError={() => { setImgLoading(false); setImgError(true); }}
+            />
+          )}
         </View>
+
       ) : (
+        /* ── PDF viewer (PDF.js in WebView) ── */
         <View style={styles.webviewContainer}>
-          {loading && !error && (
+          {webLoading && !webError && (
             <View style={styles.loadingOverlay}>
               <ActivityIndicator size="large" color="#818cf8" />
               <Text style={styles.loadingText}>Loading PDF…</Text>
             </View>
           )}
-          {error ? (
+
+          {webError ? (
             <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
-              <Text style={styles.errorTitle}>Could not load PDF</Text>
-              <Text style={styles.errorSub}>Try pulling to refresh or check your connection.</Text>
-              <TouchableOpacity
-                style={styles.retryBtn}
-                onPress={() => { setError(false); setLoading(true); }}
-              >
-                <Text style={styles.retryText}>Retry</Text>
-              </TouchableOpacity>
+              <Ionicons name="document-outline" size={48} color="#ef4444" />
+              <Text style={styles.errorTitle}>Could not render PDF</Text>
+              <Text style={styles.errorSub}>
+                Tap the download button above to save and open with a PDF app.
+              </Text>
             </View>
           ) : (
             <WebView
-              source={{ uri: viewerUrl }}
+              source={{ html: buildPdfHtml(fileUrl) }}
               style={styles.webview}
-              onLoadEnd={() => setLoading(false)}
-              onError={() => { setLoading(false); setError(true); }}
-              onHttpError={(e) => {
-                if (e.nativeEvent.statusCode >= 400) {
-                  setLoading(false);
-                  setError(true);
-                }
-              }}
-              startInLoadingState={false}
+              onLoadEnd={() => setWebLoading(false)}
+              onError={() => { setWebLoading(false); setWebError(true); }}
               javaScriptEnabled
               domStorageEnabled
+              originWhitelist={['*']}
+              mixedContentMode="always"
               allowsFullscreenVideo={false}
+              scrollEnabled
             />
           )}
         </View>
@@ -91,25 +213,50 @@ const MaterialViewerScreen = ({ navigation, route }) => {
 
 export default MaterialViewerScreen;
 
+// ── Styles ────────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0f172a' },
 
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#1e293b',
   },
-  backBtn:     { width: 40, height: 40, justifyContent: 'center' },
-  headerTitle: { flex: 1, color: '#f1f5f9', fontSize: 16, fontWeight: '600', marginHorizontal: 8 },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    flex: 1,
+    color: '#f1f5f9',
+    fontSize: 15,
+    fontWeight: '600',
+    marginHorizontal: 6,
+  },
+  downloadBtn: {
+    backgroundColor: '#818cf8',
+    borderRadius: 20,
+  },
+  downloadBtnActive: {
+    backgroundColor: '#6366f1',
+  },
 
   // Image viewer
-  imageContainer: { flex: 1, backgroundColor: '#020617', justifyContent: 'center', alignItems: 'center' },
-  image:          { width: '100%', height: '100%' },
+  imageContainer: {
+    flex: 1,
+    backgroundColor: '#020617',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  image: { width: '100%', height: '100%' },
 
-  // WebView / PDF
+  // WebView (PDF.js)
   webviewContainer: { flex: 1 },
   webview:          { flex: 1, backgroundColor: '#0f172a' },
 
@@ -123,6 +270,7 @@ const styles = StyleSheet.create({
   },
   loadingText: { color: '#94a3b8', fontSize: 14 },
 
+  // Shared error state
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -132,14 +280,4 @@ const styles = StyleSheet.create({
   },
   errorTitle: { color: '#f1f5f9', fontSize: 17, fontWeight: '700', marginTop: 8 },
   errorSub:   { color: '#64748b', fontSize: 14, textAlign: 'center', lineHeight: 20 },
-  errorText:  { color: '#ef4444', fontSize: 14, position: 'absolute' },
-
-  retryBtn: {
-    marginTop: 8,
-    paddingHorizontal: 28,
-    paddingVertical: 10,
-    backgroundColor: '#818cf8',
-    borderRadius: 20,
-  },
-  retryText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 });
