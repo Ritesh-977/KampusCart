@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useContext, useRef } from 'react';
 import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
-  SafeAreaView, ActivityIndicator, Alert, Linking,
+  SafeAreaView, ActivityIndicator, Alert,
   Platform, RefreshControl, TextInput, Modal, ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -92,12 +92,12 @@ const StudyMaterialsScreen = ({ navigation }) => {
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
-  const handleOpen = async (item) => {
-    try {
-      await Linking.openURL(item.fileUrl);
-    } catch {
-      Alert.alert('Error', 'Could not open this file.');
-    }
+  const handleOpen = (item) => {
+    navigation.navigate('MaterialViewer', {
+      title:    item.title,
+      fileUrl:  item.fileUrl,
+      fileType: item.fileType,
+    });
   };
 
   const handleDelete = (id) => {
