@@ -22,14 +22,17 @@ const formatDisplay = (date) =>
 
 const PostEventScreen = ({ navigation, route }) => {
   const { currentUser } = useContext(AuthContext);
-  const college = route.params?.college || currentUser?.college || '';
+  const existing = route.params?.event || null;          // present when editing
+  const college  = route.params?.college || existing?.college || currentUser?.college || '';
+  const isEdit   = !!existing;
 
-  const [title, setTitle]           = useState('');
-  const [description, setDesc]      = useState('');
-  const [location, setLocation]     = useState('');
-  const [duration, setDuration]     = useState('60');
-  const [color, setColor]           = useState('#6366f1');
+  const [title, setTitle]           = useState(existing?.title || '');
+  const [description, setDesc]      = useState(existing?.description || '');
+  const [location, setLocation]     = useState(existing?.location || '');
+  const [duration, setDuration]     = useState(String(existing?.duration ?? 60));
+  const [color, setColor]           = useState(existing?.color || '#6366f1');
   const [date, setDate]             = useState(() => {
+    if (existing?.startTime) return new Date(existing.startTime);
     const d = new Date();
     d.setHours(d.getHours() + 1, 0, 0, 0);
     return d;
@@ -70,23 +73,32 @@ const PostEventScreen = ({ navigation, route }) => {
   const handleSubmit = async () => {
     if (!title.trim())    { Alert.alert('Missing', 'Please enter a title.'); return; }
     if (!location.trim()) { Alert.alert('Missing', 'Please enter a location.'); return; }
-    if (date < new Date()) { Alert.alert('Invalid Date', 'Event date must be in the future.'); return; }
+    if (!isEdit && date < new Date()) { Alert.alert('Invalid Date', 'Event date must be in the future.'); return; }
+
+    const payload = {
+      title:       title.trim(),
+      description: description.trim(),
+      location:    location.trim(),
+      startTime:   date.toISOString(),
+      duration:    parseInt(duration, 10) || 60,
+      color,
+    };
 
     try {
       setSubmitting(true);
-      await API.post('/events', {
-        title:       title.trim(),
-        description: description.trim(),
-        location:    location.trim(),
-        startTime:   date.toISOString(),
-        duration:    parseInt(duration, 10) || 60,
-        color,
-      });
-      Alert.alert('Posted! 🎉', 'Your event has been published to the campus feed.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      if (isEdit) {
+        await API.put(`/events/${existing._id}`, payload);
+        Alert.alert('Updated!', 'Your event has been updated.', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      } else {
+        await API.post('/events', payload);
+        Alert.alert('Posted!', 'Your event has been published to the campus feed.', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      }
     } catch (err) {
-      Alert.alert('Error', err?.response?.data?.message || 'Could not post event.');
+      Alert.alert('Error', err?.response?.data?.message || 'Could not save event.');
     } finally {
       setSubmitting(false);
     }
@@ -99,7 +111,7 @@ const PostEventScreen = ({ navigation, route }) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Post Event</Text>
+        <Text style={styles.headerTitle}>{isEdit ? 'Edit Event' : 'Post Event'}</Text>
         <View style={{ width: 36 }} />
       </View>
 
@@ -233,7 +245,7 @@ const PostEventScreen = ({ navigation, route }) => {
               ? <ActivityIndicator color="#fff" />
               : <>
                   <Ionicons name="megaphone-outline" size={18} color="#fff" />
-                  <Text style={styles.submitText}>Publish Event</Text>
+                  <Text style={styles.submitText}>{isEdit ? 'Save Changes' : 'Publish Event'}</Text>
                 </>
             }
           </TouchableOpacity>

@@ -44,6 +44,29 @@ export const createEvent = async (req, res) => {
   }
 };
 
+// PUT /api/events/:id  — organizer only
+export const updateEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+    const isOwner = String(event.organizer.user) === String(req.user._id);
+    if (!isOwner && !req.user.isAdmin) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    const { title, description, location, startTime, duration, color } = req.body;
+    if (title)       event.title       = title;
+    if (description !== undefined) event.description = description;
+    if (location)    event.location    = location;
+    if (startTime)   event.startTime   = new Date(startTime);
+    if (duration)    event.duration    = Number(duration);
+    if (color)       event.color       = color;
+    await event.save();
+    res.json(event);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
 // DELETE /api/events/:id  — organizer or admin only
 export const deleteEvent = async (req, res) => {
   try {

@@ -130,7 +130,7 @@ const EventsCalendar = ({ events = [], navigation }) => {
         <>
           {/* Featured event banner */}
           {featured && featFmt && (
-            <TouchableOpacity activeOpacity={0.85} onPress={() => navigation.navigate('Events')} style={ev.featured}>
+            <TouchableOpacity activeOpacity={0.85} onPress={() => navigation.navigate('EventDetails', { event: featured })} style={ev.featured}>
               <View style={ev.featuredOverlay} />
               <View style={ev.featuredBadge}>
                 <Text style={ev.featuredBadgeTxt}>UPCOMING EVENT</Text>
@@ -160,7 +160,7 @@ const EventsCalendar = ({ events = [], navigation }) => {
                     key={e._id}
                     style={[ev.card, { borderColor: color + '40' }]}
                     activeOpacity={0.8}
-                    onPress={() => navigation.navigate('Events')}
+                    onPress={() => navigation.navigate('EventDetails', { event: e })}
                   >
                     <View style={[ev.cardDate, { backgroundColor: color + '22', borderColor: color + '50' }]}>
                       <Text style={[ev.cardDay, { color }]}>{fmt.date}</Text>
