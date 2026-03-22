@@ -6,6 +6,8 @@ import LostFoundScreen from '../screens/LostFoundScreen';
 import EventsScreen from '../screens/EventsScreen';
 import EventDetailsScreen from '../screens/EventDetailsScreen';
 import PostEventScreen from '../screens/PostEventScreen';
+import StudyMaterialsScreen from '../screens/StudyMaterialsScreen';
+import UploadMaterialScreen from '../screens/UploadMaterialScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -47,6 +49,16 @@ const HomeStackNavigator = () => {
       <Stack.Screen
         name="PostEvent"
         component={PostEventScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="StudyMaterials"
+        component={StudyMaterialsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="UploadMaterial"
+        component={UploadMaterialScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
