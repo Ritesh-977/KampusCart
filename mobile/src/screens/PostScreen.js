@@ -463,8 +463,8 @@ const PostScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f172a' },
-  pageHeader: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
-  pageTitle: { fontSize: 26, fontWeight: '800', color: '#f1f5f9' },
+  pageHeader: { paddingHorizontal: 20, paddingTop: 40, paddingBottom: 12 },
+  pageTitle: { fontSize: 26, fontWeight: '800', color: '#f1f5f9', marginTop: 10},
   pageSubtitle: { fontSize: 14, color: '#94a3b8', marginTop: 4 },
 
   sectionCard: {

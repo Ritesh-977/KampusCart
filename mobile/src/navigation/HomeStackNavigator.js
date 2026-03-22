@@ -3,6 +3,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../screens/HomeScreen';
 import ItemDetailsScreen from '../screens/ItemDetailsScreen';
 import LostFoundScreen from '../screens/LostFoundScreen';
+import EventsScreen from '../screens/EventsScreen';
+import PostEventScreen from '../screens/PostEventScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -29,6 +31,16 @@ const HomeStackNavigator = () => {
       <Stack.Screen
         name="LostFound"
         component={LostFoundScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Events"
+        component={EventsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="PostEvent"
+        component={PostEventScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

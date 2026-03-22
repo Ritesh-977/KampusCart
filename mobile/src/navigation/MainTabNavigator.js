@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -27,7 +27,8 @@ const MainTabNavigator = () => {
               iconName = focused ? 'home' : 'home-outline';
               break;
             case 'Sell':
-              iconName = focused ? 'add-circle' : 'add-circle-outline';
+              // Changed from 'add-circle' to 'camera'
+              iconName = focused ? 'camera' : 'camera-outline';
               break;
             case 'ChatTab':
               iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
@@ -59,21 +60,19 @@ const MainTabNavigator = () => {
       <Tab.Screen
         name="Sell"
         component={PostScreen}
-        options={{
-          title: 'Sell',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.sellIconWrapper, focused && styles.sellIconActive]}>
-              <Ionicons name="add" size={28} color="#ffffff" />
-            </View>
-          ),
-          tabBarLabel: () => null, // Hide label for sell button
-        }}
+        // Removed the custom floating button overrides so it renders the label and uses the camera icon
+        options={{ title: 'Sell' }} 
       />
       {!isGuest && (
         <Tab.Screen
           name="ChatTab"
           component={ChatStackNavigator}
           options={{ title: 'Messages' }}
+          listeners={({ navigation }) => ({
+            tabPress: () => {
+              navigation.navigate('ChatTab', { screen: 'ChatList' });
+            },
+          })}
         />
       )}
       <Tab.Screen
@@ -114,23 +113,6 @@ const styles = StyleSheet.create({
   tabBarLabel: {
     fontSize: 11,
     fontWeight: '600',
-  },
-  sellIconWrapper: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#4f46e5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: -8,
-    shadowColor: '#4f46e5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  sellIconActive: {
-    backgroundColor: '#3730a3',
   },
 });
 

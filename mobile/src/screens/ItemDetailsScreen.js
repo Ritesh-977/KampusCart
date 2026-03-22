@@ -79,8 +79,13 @@ const ItemDetailsScreen = ({ route, navigation }) => {
       setLoadingAction(true);
       const response = await API.post('/chat', { userId: sellerId });
       navigation.navigate('ChatTab', {
-        screen: 'ChatRoom',
-        params: { chat: response.data, otherUser: { _id: sellerId, name: item.sellerName, profilePic: null } },
+        screen: 'ChatList',
+        params: {
+          pendingChat: {
+            chat: response.data,
+            otherUser: { _id: sellerId, name: item.sellerName, profilePic: null },
+          },
+        },
       });
     } catch {
       Alert.alert('Error', 'Could not open chat. Please try again.');
