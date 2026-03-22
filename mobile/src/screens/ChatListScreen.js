@@ -18,13 +18,22 @@ const sortByLatest = (arr) =>
     return bTime - aTime;
   });
 
-const ChatListScreen = ({ navigation }) => {
+const ChatListScreen = ({ navigation, route }) => {
   const { currentUser, isGuest, logout } = useContext(AuthContext);
   const { socketRef, onlineUsers, connected } = useContext(SocketContext);
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const myId = String(currentUser?._id || currentUser?.id || '');
+
+  // Navigate straight to ChatRoom when arriving from ItemDetailsScreen
+  useEffect(() => {
+    const pending = route.params?.pendingChat;
+    if (pending) {
+      navigation.setParams({ pendingChat: null });
+      navigation.navigate('ChatRoom', pending);
+    }
+  }, [route.params?.pendingChat]);
 
   const fetchChats = async () => {
     try {

@@ -56,13 +56,14 @@ const FEATURES = [
   { label: 'Food Share',     icon: 'fast-food',      color: '#fbbf24', bg: '#2c1800', desc: 'Mess deals & sharing' },
 ];
 
-const EVENTS = [
-  { id: '1', title: 'Annual Tech Fest',    date: '24', month: 'OCT', time: '10:00 AM', venue: 'Main Auditorium', featured: true,  color: '#6366f1', desc: 'The biggest tech event of the year' },
-  { id: '2', title: 'Hackathon 2024',       date: '28', month: 'OCT', time: '10:00 AM', venue: 'Lab Block',       featured: false, color: '#818cf8' },
-  { id: '3', title: 'Career Fair',          date: '02', month: 'NOV', time: '09:00 AM', venue: 'Placement Cell',  featured: false, color: '#34d399' },
-  { id: '4', title: 'Cultural Night',       date: '05', month: 'NOV', time: '06:00 PM', venue: 'Open Ground',     featured: false, color: '#f472b6' },
-  { id: '5', title: 'Quiz Competition',     date: '10', month: 'NOV', time: '11:00 AM', venue: 'Seminar Hall',    featured: false, color: '#fbbf24' },
-];
+const fmtEventDate = (iso) => {
+  const d = new Date(iso);
+  return {
+    date:  String(d.getDate()).padStart(2, '0'),
+    month: d.toLocaleString('en-IN', { month: 'short' }).toUpperCase(),
+    time:  d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+  };
+};
 
 const getRecentKey = (userId) => `@kampuscart/recent_items_${userId || 'guest'}`;
 
@@ -102,23 +103,27 @@ const SpotlightCard = ({ item, onPress }) => {
   );
 };
 
-// ─── Events Calendar ──────────────────────────────────────────────────────────
-const EventsCalendar = () => {
-  const featured = EVENTS.find(e => e.featured);
-  const upcoming = EVENTS.filter(e => !e.featured);
+// ─── Events Calendar (preview strip on home) ──────────────────────────────────
+const EventsCalendar = ({ events = [], navigation }) => {
+  const featured  = events[0] || null;
+  const upcoming  = events.slice(1, 5);
+  if (events.length === 0) return null;
+
+  const featFmt = featured ? fmtEventDate(featured.startTime) : null;
+
   return (
     <View style={ev.wrap}>
       {/* Header */}
       <View style={ev.header}>
         <Text style={ev.title}>Events Calendar</Text>
-        <TouchableOpacity onPress={() => Alert.alert('📅 Full Schedule', 'Full schedule coming soon!')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Events')}>
           <Text style={ev.fullBtn}>Full Schedule</Text>
         </TouchableOpacity>
       </View>
 
       {/* Featured event banner */}
-      {featured && (
-        <View style={ev.featured}>
+      {featured && featFmt && (
+        <TouchableOpacity activeOpacity={0.85} onPress={() => navigation.navigate('Events')} style={ev.featured}>
           <View style={ev.featuredOverlay} />
           <View style={ev.featuredBadge}>
             <Text style={ev.featuredBadgeTxt}>UPCOMING EVENT</Text>
@@ -126,45 +131,47 @@ const EventsCalendar = () => {
           <Text style={ev.featuredTitle}>{featured.title}</Text>
           <View style={ev.featuredMeta}>
             <Ionicons name="time-outline" size={12} color="#a5b4fc" />
-            <Text style={ev.featuredMetaTxt}>{featured.time}</Text>
+            <Text style={ev.featuredMetaTxt}>{featFmt.time}</Text>
             <Ionicons name="location-outline" size={12} color="#a5b4fc" style={{ marginLeft: 8 }} />
-            <Text style={ev.featuredMetaTxt}>{featured.venue}</Text>
+            <Text style={ev.featuredMetaTxt}>{featured.location}</Text>
           </View>
-          {/* Date badge */}
           <View style={ev.dateBadge}>
-            <Text style={ev.dateBadgeDay}>{featured.date}</Text>
-            <Text style={ev.dateBadgeMon}>{featured.month}</Text>
+            <Text style={ev.dateBadgeDay}>{featFmt.date}</Text>
+            <Text style={ev.dateBadgeMon}>{featFmt.month}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
       )}
 
       {/* Upcoming events — horizontal scroll */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 20 }}>
-        {upcoming.map(e => (
-          <TouchableOpacity
-            key={e.id}
-            style={[ev.card, { borderColor: e.color + '40' }]}
-            activeOpacity={0.8}
-            onPress={() => Alert.alert(`📅 ${e.title}`, `${e.time}  ·  ${e.venue}\n\nFull details coming soon!`)}
-          >
-            {/* Date box */}
-            <View style={[ev.cardDate, { backgroundColor: e.color + '22', borderColor: e.color + '50' }]}>
-              <Text style={[ev.cardDay, { color: e.color }]}>{e.date}</Text>
-              <Text style={[ev.cardMon, { color: e.color }]}>{e.month}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={ev.cardTimeRow}>
-                <Ionicons name="time-outline" size={11} color="#64748b" />
-                <Text style={ev.cardTime}>{e.time}</Text>
+        {upcoming.map(e => {
+          const fmt   = fmtEventDate(e.startTime);
+          const color = e.color || '#6366f1';
+          return (
+            <TouchableOpacity
+              key={e._id}
+              style={[ev.card, { borderColor: color + '40' }]}
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('Events')}
+            >
+              <View style={[ev.cardDate, { backgroundColor: color + '22', borderColor: color + '50' }]}>
+                <Text style={[ev.cardDay, { color }]}>{fmt.date}</Text>
+                <Text style={[ev.cardMon, { color }]}>{fmt.month}</Text>
               </View>
-              <Text style={ev.cardTitle} numberOfLines={2}>{e.title}</Text>
-              <View style={ev.cardLocRow}>
-                <Ionicons name="location-outline" size={11} color="#64748b" />
-                <Text style={ev.cardLoc} numberOfLines={1}>{e.venue}</Text>
+              <View style={{ flex: 1 }}>
+                <View style={ev.cardTimeRow}>
+                  <Ionicons name="time-outline" size={11} color="#64748b" />
+                  <Text style={ev.cardTime}>{fmt.time}</Text>
+                </View>
+                <Text style={ev.cardTitle} numberOfLines={2}>{e.title}</Text>
+                <View style={ev.cardLocRow}>
+                  <Ionicons name="location-outline" size={11} color="#64748b" />
+                  <Text style={ev.cardLoc} numberOfLines={1}>{e.location}</Text>
+                </View>
               </View>
-            </View>
-          </TouchableOpacity>
-        ))}
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -277,6 +284,8 @@ const HomeScreen = ({ navigation }) => {
   const isWindowShopping = !isGuest && currentUser &&
     activeCampus.name.toLowerCase() !== (currentUser.college || '').toLowerCase();
 
+  const [events, setEvents] = useState([]);
+
   const fetchItems = useCallback(async () => {
     try {
       const url = `/items?college=${activeCampus.name}`;
@@ -290,13 +299,22 @@ const HomeScreen = ({ navigation }) => {
     }
   }, [activeCampus]);
 
+  const fetchEvents = useCallback(async () => {
+    try {
+      const res = await API.get(`/events?college=${encodeURIComponent(activeCampus.name)}`);
+      setEvents(res.data || []);
+    } catch {
+      /* silent — events section just stays empty */
+    }
+  }, [activeCampus]);
+
   useEffect(() => {
     setLoading(true);
-    const t = setTimeout(fetchItems, 380);
+    const t = setTimeout(() => { fetchItems(); fetchEvents(); }, 380);
     return () => clearTimeout(t);
-  }, [fetchItems]);
+  }, [fetchItems, fetchEvents]);
 
-  const onRefresh = () => { setRefreshing(true); fetchItems(); };
+  const onRefresh = () => { setRefreshing(true); fetchItems(); fetchEvents(); };
 
   // Search suggestions (client-side filter — no debounce needed)
   const suggestions = useMemo(() => {
@@ -700,7 +718,7 @@ const HomeScreen = ({ navigation }) => {
                 </Press>
               )}
               {/* Events Calendar */}
-              <EventsCalendar />
+              <EventsCalendar events={events} navigation={navigation} />
             </View>
           }
           ListEmptyComponent={
