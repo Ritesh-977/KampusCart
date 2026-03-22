@@ -389,24 +389,14 @@ const HomeScreen = ({ navigation }) => {
   const ListHeader = () => (
     <View onLayout={(e) => { headerHeightRef.current = e.nativeEvent.layout.height; }}>
       {/* ── Stats + campus info ── */}
-      <Animated.View style={[styles.statsRow, makeAnim(heroAnim, 10)]}>
-        <View style={styles.statChip}>
-          <Ionicons name="storefront-outline" size={13} color="#818cf8" />
-          <Text style={styles.statText}>{items.length} listings</Text>
-        </View>
-        <View style={styles.statChip}>
-          <Ionicons name="location-outline" size={13} color="#34d399" />
-          <Text style={[styles.statText, { color: '#34d399' }]}>
-            {activeCampus.shortName || activeCampus.name}
-          </Text>
-        </View>
-        {isWindowShopping && (
+      {isWindowShopping && (
+        <Animated.View style={[styles.statsRow, makeAnim(heroAnim, 10)]}>
           <View style={[styles.statChip, { borderColor: '#fbbf2440' }]}>
             <Ionicons name="eye-outline" size={13} color="#fbbf24" />
             <Text style={[styles.statText, { color: '#fbbf24' }]}>Browse only</Text>
           </View>
-        )}
-      </Animated.View>
+        </Animated.View>
+      )}
 
       {/* ── Campus Spotlight ── */}
       {(spots.length > 0 || loading) && (

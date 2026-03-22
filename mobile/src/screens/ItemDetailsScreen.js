@@ -29,7 +29,8 @@ const ItemDetailsScreen = ({ route, navigation }) => {
   const [reportVisible, setReportVisible]     = useState(false);
   const [reportSubmitting, setReportSubmitting] = useState(false);
 
-  const isLocalCampus = item.college === activeCollege;
+  const isLocalCampus =
+    item.college?.toLowerCase() === currentUser?.college?.toLowerCase();
 
   // ── Fetch wishlist status on mount ──────────────────────────────────────────
   useEffect(() => {
@@ -58,11 +59,9 @@ const ItemDetailsScreen = ({ route, navigation }) => {
     let phone = item.contactNumber.replace(/\D/g, '');
     if (phone.length === 10) phone = '91' + phone;
     const message = `Hi! I saw your listing for "${item.title}" (₹${item.price}) on KampusCart. Is it still available?`;
-    const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     try {
-      const canOpen = await Linking.canOpenURL(url);
-      if (canOpen) await Linking.openURL(url);
-      else Alert.alert('WhatsApp Not Found', 'Please install WhatsApp to contact the seller.');
+      await Linking.openURL(url);
     } catch {
       Alert.alert('Error', 'Could not open WhatsApp.');
     }
