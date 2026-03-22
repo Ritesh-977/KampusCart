@@ -3,7 +3,7 @@ import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import { cloudinary } from '../utils/cloudinaryConfig.js'; // reuse already-configured instance
 
 const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-const MAX_SIZE_MB  = 5;
+const MAX_SIZE_MB  = 10;
 
 // Separate Cloudinary storage bucket for study materials
 const studyStorage = new CloudinaryStorage({
