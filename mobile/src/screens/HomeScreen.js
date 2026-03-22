@@ -105,11 +105,9 @@ const SpotlightCard = ({ item, onPress }) => {
 
 // ─── Events Calendar (preview strip on home) ──────────────────────────────────
 const EventsCalendar = ({ events = [], navigation }) => {
-  const featured  = events[0] || null;
-  const upcoming  = events.slice(1, 5);
-  if (events.length === 0) return null;
-
-  const featFmt = featured ? fmtEventDate(featured.startTime) : null;
+  const featured = events[0] || null;
+  const upcoming = events.slice(1, 5);
+  const featFmt  = featured ? fmtEventDate(featured.startTime) : null;
 
   return (
     <View style={ev.wrap}>
@@ -117,62 +115,75 @@ const EventsCalendar = ({ events = [], navigation }) => {
       <View style={ev.header}>
         <Text style={ev.title}>Events Calendar</Text>
         <TouchableOpacity onPress={() => navigation.navigate('Events')}>
-          <Text style={ev.fullBtn}>Full Schedule</Text>
+          <Text style={ev.fullBtn}>Full Schedule →</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Featured event banner */}
-      {featured && featFmt && (
-        <TouchableOpacity activeOpacity={0.85} onPress={() => navigation.navigate('Events')} style={ev.featured}>
-          <View style={ev.featuredOverlay} />
-          <View style={ev.featuredBadge}>
-            <Text style={ev.featuredBadgeTxt}>UPCOMING EVENT</Text>
-          </View>
-          <Text style={ev.featuredTitle}>{featured.title}</Text>
-          <View style={ev.featuredMeta}>
-            <Ionicons name="time-outline" size={12} color="#a5b4fc" />
-            <Text style={ev.featuredMetaTxt}>{featFmt.time}</Text>
-            <Ionicons name="location-outline" size={12} color="#a5b4fc" style={{ marginLeft: 8 }} />
-            <Text style={ev.featuredMetaTxt}>{featured.location}</Text>
-          </View>
-          <View style={ev.dateBadge}>
-            <Text style={ev.dateBadgeDay}>{featFmt.date}</Text>
-            <Text style={ev.dateBadgeMon}>{featFmt.month}</Text>
-          </View>
+      {events.length === 0 ? (
+        /* Empty state — always visible so section is never invisible */
+        <TouchableOpacity style={ev.emptyState} activeOpacity={0.8} onPress={() => navigation.navigate('Events')}>
+          <Ionicons name="calendar-outline" size={32} color="#334155" />
+          <Text style={ev.emptyTitle}>No upcoming events</Text>
+          <Text style={ev.emptySub}>Tap to post the first event on your campus</Text>
         </TouchableOpacity>
-      )}
-
-      {/* Upcoming events — horizontal scroll */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 20 }}>
-        {upcoming.map(e => {
-          const fmt   = fmtEventDate(e.startTime);
-          const color = e.color || '#6366f1';
-          return (
-            <TouchableOpacity
-              key={e._id}
-              style={[ev.card, { borderColor: color + '40' }]}
-              activeOpacity={0.8}
-              onPress={() => navigation.navigate('Events')}
-            >
-              <View style={[ev.cardDate, { backgroundColor: color + '22', borderColor: color + '50' }]}>
-                <Text style={[ev.cardDay, { color }]}>{fmt.date}</Text>
-                <Text style={[ev.cardMon, { color }]}>{fmt.month}</Text>
+      ) : (
+        <>
+          {/* Featured event banner */}
+          {featured && featFmt && (
+            <TouchableOpacity activeOpacity={0.85} onPress={() => navigation.navigate('Events')} style={ev.featured}>
+              <View style={ev.featuredOverlay} />
+              <View style={ev.featuredBadge}>
+                <Text style={ev.featuredBadgeTxt}>UPCOMING EVENT</Text>
               </View>
-              <View style={{ flex: 1 }}>
-                <View style={ev.cardTimeRow}>
-                  <Ionicons name="time-outline" size={11} color="#64748b" />
-                  <Text style={ev.cardTime}>{fmt.time}</Text>
-                </View>
-                <Text style={ev.cardTitle} numberOfLines={2}>{e.title}</Text>
-                <View style={ev.cardLocRow}>
-                  <Ionicons name="location-outline" size={11} color="#64748b" />
-                  <Text style={ev.cardLoc} numberOfLines={1}>{e.location}</Text>
-                </View>
+              <Text style={ev.featuredTitle}>{featured.title}</Text>
+              <View style={ev.featuredMeta}>
+                <Ionicons name="time-outline" size={12} color="#a5b4fc" />
+                <Text style={ev.featuredMetaTxt}>{featFmt.time}</Text>
+                <Ionicons name="location-outline" size={12} color="#a5b4fc" style={{ marginLeft: 8 }} />
+                <Text style={ev.featuredMetaTxt}>{featured.location}</Text>
+              </View>
+              <View style={ev.dateBadge}>
+                <Text style={ev.dateBadgeDay}>{featFmt.date}</Text>
+                <Text style={ev.dateBadgeMon}>{featFmt.month}</Text>
               </View>
             </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+          )}
+
+          {/* Upcoming events — horizontal scroll */}
+          {upcoming.length > 0 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 20 }}>
+              {upcoming.map(e => {
+                const fmt   = fmtEventDate(e.startTime);
+                const color = e.color || '#6366f1';
+                return (
+                  <TouchableOpacity
+                    key={e._id}
+                    style={[ev.card, { borderColor: color + '40' }]}
+                    activeOpacity={0.8}
+                    onPress={() => navigation.navigate('Events')}
+                  >
+                    <View style={[ev.cardDate, { backgroundColor: color + '22', borderColor: color + '50' }]}>
+                      <Text style={[ev.cardDay, { color }]}>{fmt.date}</Text>
+                      <Text style={[ev.cardMon, { color }]}>{fmt.month}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <View style={ev.cardTimeRow}>
+                        <Ionicons name="time-outline" size={11} color="#64748b" />
+                        <Text style={ev.cardTime}>{fmt.time}</Text>
+                      </View>
+                      <Text style={ev.cardTitle} numberOfLines={2}>{e.title}</Text>
+                      <View style={ev.cardLocRow}>
+                        <Ionicons name="location-outline" size={11} color="#64748b" />
+                        <Text style={ev.cardLoc} numberOfLines={1}>{e.location}</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
+        </>
+      )}
     </View>
   );
 };
@@ -1092,6 +1103,15 @@ const ev = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   title: { fontSize: 18, fontWeight: '900', color: '#f1f5f9' },
   fullBtn: { fontSize: 13, fontWeight: '800', color: '#818cf8' },
+
+  emptyState: {
+    alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 28, borderRadius: 16,
+    borderWidth: 1, borderColor: '#1e293b', borderStyle: 'dashed',
+    backgroundColor: '#0f1a2e', gap: 6,
+  },
+  emptyTitle: { fontSize: 15, fontWeight: '700', color: '#475569' },
+  emptySub:   { fontSize: 12, color: '#334155', textAlign: 'center' },
 
   featured: {
     height: 180, borderRadius: 20, overflow: 'hidden', backgroundColor: '#0d1117',
