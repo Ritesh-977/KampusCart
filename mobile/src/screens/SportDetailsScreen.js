@@ -35,7 +35,8 @@ const SportDetailsScreen = ({ navigation, route }) => {
   const [sport, setSport]   = useState(init);
   const { currentUser, isGuest } = useContext(AuthContext);
 
-  const isOrganizer   = !isGuest && String(sport.organizer?.user) === String(currentUser?._id);
+  const userId        = currentUser?._id || currentUser?.id;
+  const isOrganizer   = !isGuest && !!userId && String(sport.organizer?.user) === String(userId);
   const deadlinePassed = new Date(sport.lastRegistrationDate) < new Date();
   const canRegister   = !isGuest && sport.isOpen && !deadlinePassed;
   const isClosed      = !sport.isOpen || deadlinePassed;
@@ -120,9 +121,33 @@ const SportDetailsScreen = ({ navigation, route }) => {
             value={sport.registrationFee > 0 ? `₹${sport.registrationFee}` : 'Free'}
           />
           {sport.registrationCount !== undefined && (
-            <InfoRow icon="checkmark-circle-outline" label="Teams Registered"
-              value={`${sport.registrationCount} team${sport.registrationCount !== 1 ? 's' : ''}`}
-            />
+            isOrganizer ? (
+              <TouchableOpacity
+                style={s.regsRow}
+                onPress={() => navigation.navigate('SportRegistrations', {
+                  sportId: sport._id,
+                  sportTitle: sport.title,
+                })}
+                activeOpacity={0.7}
+              >
+                <View style={s.infoIcon}>
+                  <Ionicons name="checkmark-circle-outline" size={15} color="#818cf8" />
+                </View>
+                <View style={s.infoTexts}>
+                  <Text style={s.infoLabel}>Teams Registered</Text>
+                  <Text style={s.infoValue}>
+                    {sport.registrationCount} team{sport.registrationCount !== 1 ? 's' : ''}
+                  </Text>
+                </View>
+                <View style={s.viewRegsPill}>
+                  <Text style={s.viewRegsPillTxt}>View →</Text>
+                </View>
+              </TouchableOpacity>
+            ) : (
+              <InfoRow icon="checkmark-circle-outline" label="Teams Registered"
+                value={`${sport.registrationCount} team${sport.registrationCount !== 1 ? 's' : ''}`}
+              />
+            )
           )}
         </View>
 
@@ -284,6 +309,11 @@ const s = StyleSheet.create({
   orgBtns:   { flexDirection: 'row', gap: 8 },
   orgBtn:    { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#0f172a' },
   orgBtnTxt: { fontSize: 12, fontWeight: '600' },
+
+  // Tappable registrations row (organizer)
+  regsRow:        { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  viewRegsPill:   { backgroundColor: 'rgba(129,140,248,0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
+  viewRegsPillTxt: { fontSize: 12, color: '#818cf8', fontWeight: '700' },
 
   // Action buttons
   viewRegsBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#1e40af', paddingVertical: 14, borderRadius: 14, marginBottom: 12 },
