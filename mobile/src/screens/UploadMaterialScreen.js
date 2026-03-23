@@ -25,8 +25,7 @@ const CAT_META = {
 const UploadMaterialScreen = ({ navigation }) => {
   const { currentUser } = useContext(AuthContext);
 
-  // Form fields
-  const [title, setTitle]         = useState('');
+  // Form fields (Title removed)
   const [subject, setSubject]     = useState('');
   const [semester, setSemester]   = useState('');
   const [category, setCategory]   = useState('');
@@ -69,7 +68,6 @@ const UploadMaterialScreen = ({ navigation }) => {
 
   const handleSubmit = async () => {
     // Validation
-    if (!title.trim())   { Alert.alert('Missing', 'Please enter a title.');        return; }
     if (!subject.trim()) { Alert.alert('Missing', 'Please enter the subject name.'); return; }
     if (!semester)       { Alert.alert('Missing', 'Please select a semester.');     return; }
     if (!category)       { Alert.alert('Missing', 'Please select a category.');     return; }
@@ -81,7 +79,6 @@ const UploadMaterialScreen = ({ navigation }) => {
 
       // Build multipart/form-data payload
       const form = new FormData();
-      form.append('title',       title.trim());
       form.append('subjectName', subject.trim());
       form.append('semester',    semester);
       form.append('category',    category);
@@ -140,17 +137,6 @@ const UploadMaterialScreen = ({ navigation }) => {
             <Ionicons name="school-outline" size={13} color="#818cf8" />
             <Text style={styles.campusChipText}>{currentUser?.college || 'Your Campus'}</Text>
           </View>
-
-          {/* Title */}
-          <Text style={styles.label}>Title *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. Mid-Term 2023 – Data Structures"
-            placeholderTextColor="#475569"
-            value={title}
-            onChangeText={setTitle}
-            maxLength={120}
-          />
 
           {/* Subject */}
           <Text style={styles.label}>Subject Name *</Text>

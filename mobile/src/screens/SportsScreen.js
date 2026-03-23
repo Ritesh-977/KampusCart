@@ -165,10 +165,10 @@ export default SportsScreen;
 
 const styles = StyleSheet.create({
   safe:         { flex: 1, backgroundColor: '#0f172a' },
-  header:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#1e293b' },
+  header:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#1e293b', marginTop: 26, gap: 12 },
   iconBtn:      { width: 40, height: 40, justifyContent: 'center' },
   headerTitle:  { flex: 1, color: '#f1f5f9', fontSize: 18, fontWeight: '700' },
-  postBtn:      { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#818cf8', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
+  postBtn:      { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#818cf8', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,},
   postBtnTxt:   { color: '#fff', fontSize: 13, fontWeight: '700' },
   center:       { flex: 1, justifyContent: 'center', alignItems: 'center' },
   list:         { padding: 16, gap: 12 },

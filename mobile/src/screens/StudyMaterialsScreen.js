@@ -13,8 +13,8 @@ import { AuthContext } from '../context/AuthContext';
 
 const TABS = [
   { key: 'Exam Paper', label: 'Exam Papers', icon: 'document-text-outline', color: '#818cf8' },
-  { key: 'Note',       label: 'Notes',        icon: 'pencil-outline',         color: '#34d399' },
-  { key: 'Book',       label: 'Books',         icon: 'book-outline',           color: '#f472b6' },
+  { key: 'Note',       label: 'Notes',       icon: 'pencil-outline',        color: '#34d399' },
+  { key: 'Book',       label: 'Books',       icon: 'book-outline',          color: '#f472b6' },
 ];
 
 const SEMESTERS = ['All', '1', '2', '3', '4', '5', '6', '7', '8'];
@@ -94,7 +94,6 @@ const StudyMaterialsScreen = ({ navigation }) => {
 
   const handleOpen = (item) => {
     navigation.navigate('MaterialViewer', {
-      title:    item.title,
       fileUrl:  item.fileUrl,
       fileType: item.fileType,
     });
@@ -147,12 +146,9 @@ const StudyMaterialsScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Title + subject */}
-          <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
-          <View style={styles.cardMeta}>
-            <Ionicons name="book-outline" size={12} color="#64748b" />
-            <Text style={styles.cardSubject} numberOfLines={1}>{item.subjectName}</Text>
-          </View>
+          {/* Subject replacing Title */}
+          <Text style={styles.cardTitle} numberOfLines={2}>{item.subjectName}</Text>
+          
           {item.uploadedBy?.name && (
             <Text style={styles.cardUploader}>by {item.uploadedBy.name}</Text>
           )}
@@ -403,9 +399,7 @@ const styles = StyleSheet.create({
   semText: { fontSize: 11, fontWeight: '700', color: '#94a3b8' },
   delBtn: { padding: 4 },
 
-  cardTitle:    { fontSize: 15, fontWeight: '700', color: '#f1f5f9', lineHeight: 21, marginBottom: 4 },
-  cardMeta:     { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 2 },
-  cardSubject:  { fontSize: 12, color: '#64748b', flex: 1 },
+  cardTitle:    { fontSize: 15, fontWeight: '700', color: '#f1f5f9', lineHeight: 21, marginBottom: 8 },
   cardUploader: { fontSize: 11, color: '#334155', fontStyle: 'italic', marginBottom: 10 },
 
   openBtn: {
