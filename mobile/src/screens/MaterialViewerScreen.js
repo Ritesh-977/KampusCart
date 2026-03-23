@@ -2,16 +2,14 @@ import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   ActivityIndicator, SafeAreaView, Image, StatusBar, Alert,
+  Platform
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
 // ── PDF.js HTML template ──────────────────────────────────────────────────────
-// Mozilla's PDF.js renders the PDF entirely in JavaScript inside the WebView.
-// No third-party service dependency — just the CDN script + Cloudinary URL.
-
 const buildPdfHtml = (pdfUrl) => `
 <!DOCTYPE html>
 <html>
@@ -78,7 +76,6 @@ const buildPdfHtml = (pdfUrl) => `
 `;
 
 // ── Component ─────────────────────────────────────────────────────────────────
-
 const MaterialViewerScreen = ({ navigation, route }) => {
   const { title, fileUrl, fileType } = route.params;
 
@@ -89,28 +86,27 @@ const MaterialViewerScreen = ({ navigation, route }) => {
   const [downloading, setDownloading] = useState(false);
 
   // ── Download ────────────────────────────────────────────────────────────────
-
   const handleDownload = async () => {
     if (downloading) return;
     try {
       setDownloading(true);
 
-      // Derive a safe filename from the title
       const ext      = fileType === 'pdf' ? 'pdf' : 'jpg';
-      const safeName = title.replace(/[^a-zA-Z0-9_\-. ]/g, '_').trim();
+      const safeName = (title || 'Document').replace(/[^a-zA-Z0-9_\-. ]/g, '_').trim();
       const fileName = `${safeName}.${ext}`;
       const localUri = FileSystem.cacheDirectory + fileName;
 
-      // Download to cache
+      // Download directly from the clean Cloudinary URL
       const { status } = await FileSystem.downloadAsync(fileUrl, localUri);
-      if (status !== 200) throw new Error('Download failed');
+      
+      if (status !== 200) throw new Error(`Download failed with status ${status}`);
 
       // Open native share/save sheet
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
         await Sharing.shareAsync(localUri, {
           mimeType: fileType === 'pdf' ? 'application/pdf' : 'image/jpeg',
-          dialogTitle: `Save "${title}"`,
+          dialogTitle: `Save "${title || 'Document'}"`,
           UTI: fileType === 'pdf' ? 'com.adobe.pdf' : 'public.jpeg',
         });
       } else {
@@ -125,7 +121,6 @@ const MaterialViewerScreen = ({ navigation, route }) => {
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────
-
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
@@ -136,7 +131,7 @@ const MaterialViewerScreen = ({ navigation, route }) => {
           <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle} numberOfLines={1}>{title}</Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>{title || 'Document'}</Text>
 
         {/* Download button */}
         <TouchableOpacity
@@ -194,9 +189,6 @@ const MaterialViewerScreen = ({ navigation, route }) => {
             </View>
           ) : (
             <WebView
-              // baseUrl makes the WebView run under an https:// origin instead of
-              // null/file://, which lets PDF.js load CDN scripts and fetch the
-              // Cloudinary URL without CORS being blocked.
               source={{ html: buildPdfHtml(fileUrl), baseUrl: 'https://res.cloudinary.com' }}
               style={styles.webview}
               onLoadEnd={() => setWebLoading(false)}
@@ -221,7 +213,6 @@ const MaterialViewerScreen = ({ navigation, route }) => {
 export default MaterialViewerScreen;
 
 // ── Styles ────────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0f172a' },
 
@@ -229,7 +220,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingBottom: 12,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 20 : 10,
+    marginTop: Platform.OS === 'ios' ? 40 : 0,
     borderBottomWidth: 1,
     borderBottomColor: '#1e293b',
   },
