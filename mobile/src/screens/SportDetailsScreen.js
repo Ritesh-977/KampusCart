@@ -16,7 +16,6 @@ const SPORT_EMOJI = {
 const fmtFull  = (iso) => new Date(iso).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 const fmtShort = (iso) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
-// ── FIXED: Added `actionNode` to allow buttons on the right side ─────────────
 const InfoRow = ({ icon, label, value, actionNode }) => (
   <View style={s.infoRow}>
     <View style={s.infoIcon}>
@@ -26,31 +25,23 @@ const InfoRow = ({ icon, label, value, actionNode }) => (
       <Text style={s.infoLabel}>{label}</Text>
       <Text style={s.infoValue}>{value}</Text>
     </View>
-    {actionNode && (
-      <View style={s.infoActionBox}>
-        {actionNode}
-      </View>
-    )}
+    {actionNode && <View style={s.infoActionBox}>{actionNode}</View>}
   </View>
 );
-// ─────────────────────────────────────────────────────────────────────────────
 
 const SportDetailsScreen = ({ navigation, route }) => {
   const { sport: init } = route.params;
-  const [sport, setSport]   = useState(init);
+  const [sport] = useState(init);
   const { currentUser, isGuest } = useContext(AuthContext);
 
-<<<<<<< Updated upstream
-  const userId        = currentUser?._id || currentUser?.id;
-  const isOrganizer   = !isGuest && !!userId && String(sport.organizer?.user) === String(userId);
-=======
-  // This perfectly hides edit/delete from everyone except the creator
-  const isOrganizer   = !isGuest && String(sport.organizer?.user) === String(currentUser?._id);
->>>>>>> Stashed changes
+  // Support both `id` (auth response) and `_id` (profile response)
+  const userId      = currentUser?._id || currentUser?.id;
+  const isOrganizer = !isGuest && !!userId && String(sport.organizer?.user) === String(userId);
+
   const deadlinePassed = new Date(sport.lastRegistrationDate) < new Date();
-  const canRegister   = !isGuest && sport.isOpen && !deadlinePassed;
-  const isClosed      = !sport.isOpen || deadlinePassed;
-  const emoji         = SPORT_EMOJI[sport.sportType] || '🏆';
+  const canRegister    = !isGuest && sport.isOpen && !deadlinePassed;
+  const isClosed       = !sport.isOpen || deadlinePassed;
+  const emoji          = SPORT_EMOJI[sport.sportType] || '🏆';
 
   const handleDelete = () => {
     Alert.alert(
@@ -73,6 +64,12 @@ const SportDetailsScreen = ({ navigation, route }) => {
     );
   };
 
+  const goToRegistrations = () =>
+    navigation.navigate('SportRegistrations', {
+      sportId: sport._id,
+      sportTitle: sport.title,
+    });
+
   return (
     <SafeAreaView style={s.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
@@ -83,9 +80,9 @@ const SportDetailsScreen = ({ navigation, route }) => {
           <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
         </TouchableOpacity>
         <Text style={s.headerTitle} numberOfLines={1}>{sport.title}</Text>
-        
-        {/* Only Organizer sees Edit & Delete */}
-        {isOrganizer && (
+
+        {/* Edit + Delete — organizer only */}
+        {isOrganizer ? (
           <View style={s.headerActions}>
             <TouchableOpacity
               onPress={() => navigation.navigate('PostSport', { sport })}
@@ -97,6 +94,8 @@ const SportDetailsScreen = ({ navigation, route }) => {
               <Ionicons name="trash-outline" size={18} color="#ef4444" />
             </TouchableOpacity>
           </View>
+        ) : (
+          <View style={{ width: 40 }} />
         )}
       </View>
 
@@ -120,70 +119,36 @@ const SportDetailsScreen = ({ navigation, route }) => {
 
         {/* ── Details ── */}
         <View style={s.section}>
-          <InfoRow icon="calendar-outline"      label="Event Date"             value={fmtFull(sport.eventDate)} />
-          <InfoRow icon="location-outline"      label="Venue"                  value={sport.venue} />
-          <InfoRow icon="time-outline"          label="Registration Deadline"  value={fmtShort(sport.lastRegistrationDate)} />
-          <InfoRow icon="people-outline"        label="Team Size"
+          <InfoRow icon="calendar-outline" label="Event Date"            value={fmtFull(sport.eventDate)} />
+          <InfoRow icon="location-outline" label="Venue"                 value={sport.venue} />
+          <InfoRow icon="time-outline"     label="Registration Deadline" value={fmtShort(sport.lastRegistrationDate)} />
+          <InfoRow
+            icon="people-outline"
+            label="Team Size"
             value={sport.teamSize === 1 ? 'Individual' : `${sport.teamSize} players per team`}
           />
-          {sport.maxTeams && (
+          {!!sport.maxTeams && (
             <InfoRow icon="list-outline" label="Max Teams" value={`${sport.maxTeams} teams`} />
           )}
-          <InfoRow icon="cash-outline" label="Registration Fee"
+          <InfoRow
+            icon="cash-outline"
+            label="Registration Fee"
             value={sport.registrationFee > 0 ? `₹${sport.registrationFee}` : 'Free'}
           />
-          
-          {/* ── Organizer "View Teams" Button ── */}
           {sport.registrationCount !== undefined && (
-<<<<<<< Updated upstream
-            isOrganizer ? (
-              <TouchableOpacity
-                style={s.regsRow}
-                onPress={() => navigation.navigate('SportRegistrations', {
-                  sportId: sport._id,
-                  sportTitle: sport.title,
-                })}
-                activeOpacity={0.7}
-              >
-                <View style={s.infoIcon}>
-                  <Ionicons name="checkmark-circle-outline" size={15} color="#818cf8" />
-                </View>
-                <View style={s.infoTexts}>
-                  <Text style={s.infoLabel}>Teams Registered</Text>
-                  <Text style={s.infoValue}>
-                    {sport.registrationCount} team{sport.registrationCount !== 1 ? 's' : ''}
-                  </Text>
-                </View>
-                <View style={s.viewRegsPill}>
-                  <Text style={s.viewRegsPillTxt}>View →</Text>
-                </View>
-              </TouchableOpacity>
-            ) : (
-              <InfoRow icon="checkmark-circle-outline" label="Teams Registered"
-                value={`${sport.registrationCount} team${sport.registrationCount !== 1 ? 's' : ''}`}
-              />
-            )
-=======
-            <InfoRow 
-              icon="checkmark-circle-outline" 
+            <InfoRow
+              icon="checkmark-circle-outline"
               label="Teams Registered"
               value={`${sport.registrationCount} team${sport.registrationCount !== 1 ? 's' : ''}`}
               actionNode={
                 isOrganizer ? (
-                  <TouchableOpacity
-                    style={s.viewTeamsBtn}
-                    onPress={() => navigation.navigate('SportRegistrations', {
-                      sportId: sport._id,
-                      sportTitle: sport.title,
-                    })}
-                  >
+                  <TouchableOpacity style={s.viewTeamsBtn} onPress={goToRegistrations}>
                     <Text style={s.viewTeamsTxt}>View</Text>
                     <Ionicons name="chevron-forward" size={14} color="#818cf8" />
                   </TouchableOpacity>
                 ) : null
               }
             />
->>>>>>> Stashed changes
           )}
         </View>
 
@@ -248,7 +213,15 @@ const SportDetailsScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* ── Register button ── */}
+        {/* ── View All Registrations button (organizer only) ── */}
+        {isOrganizer && (
+          <TouchableOpacity style={s.viewRegsBtn} onPress={goToRegistrations}>
+            <Ionicons name="people" size={18} color="#fff" />
+            <Text style={s.viewRegsTxt}>View All Registrations</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* ── Register button (non-organizer) ── */}
         {!isOrganizer && (
           <TouchableOpacity
             style={[s.registerBtn, !canRegister && s.registerBtnOff]}
@@ -267,11 +240,7 @@ const SportDetailsScreen = ({ navigation, route }) => {
               color="#fff"
             />
             <Text style={s.registerBtnTxt}>
-              {isGuest
-                ? 'Login to Register'
-                : canRegister
-                  ? 'Register Now'
-                  : 'Registration Closed'}
+              {isGuest ? 'Login to Register' : canRegister ? 'Register Now' : 'Registration Closed'}
             </Text>
           </TouchableOpacity>
         )}
@@ -285,13 +254,13 @@ const SportDetailsScreen = ({ navigation, route }) => {
 export default SportDetailsScreen;
 
 const s = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: '#0f172a' },
-  header:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#1e293b',marginTop: 26 },
-  iconBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+  safe:          { flex: 1, backgroundColor: '#0f172a' },
+  header:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#1e293b', marginTop: 26 },
+  iconBtn:       { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   headerTitle:   { flex: 1, color: '#f1f5f9', fontSize: 16, fontWeight: '700', marginHorizontal: 4 },
   headerActions: { flexDirection: 'row' },
-  scroll:  { flex: 1 },
-  content: { padding: 16 },
+  scroll:        { flex: 1 },
+  content:       { padding: 16 },
 
   // Banner
   banner:      { flexDirection: 'row', gap: 14, backgroundColor: '#1e293b', borderRadius: 20, padding: 18, marginBottom: 12, alignItems: 'flex-start' },
@@ -310,16 +279,16 @@ const s = StyleSheet.create({
   sectionTitle: { fontSize: 13, fontWeight: '800', color: '#818cf8' },
   bodyText:     { fontSize: 14, color: '#94a3b8', lineHeight: 22 },
 
-  // Info row (UPDATED for the inline View Button)
-  infoRow:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  infoIcon:   { width: 30, height: 30, borderRadius: 8, backgroundColor: 'rgba(129,140,248,0.1)', justifyContent: 'center', alignItems: 'center', marginTop: 2 },
-  infoTexts:  { flex: 1 },
-  infoLabel:  { fontSize: 10, color: '#475569', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4 },
-  infoValue:  { fontSize: 14, color: '#f1f5f9', fontWeight: '600', marginTop: 1 },
-  infoActionBox: { justifyContent: 'center', marginLeft: 10 },
+  // Info row
+  infoRow:       { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  infoIcon:      { width: 30, height: 30, borderRadius: 8, backgroundColor: 'rgba(129,140,248,0.1)', justifyContent: 'center', alignItems: 'center' },
+  infoTexts:     { flex: 1 },
+  infoLabel:     { fontSize: 10, color: '#475569', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4 },
+  infoValue:     { fontSize: 14, color: '#f1f5f9', fontWeight: '600', marginTop: 1 },
+  infoActionBox: { justifyContent: 'center' },
 
-  // Inline "View Teams" Button
-  viewTeamsBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(129,140,248,0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, gap: 2 },
+  // Inline "View" button on Teams Registered row
+  viewTeamsBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(129,140,248,0.15)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, gap: 2 },
   viewTeamsTxt: { color: '#818cf8', fontSize: 12, fontWeight: '700' },
 
   // QR
@@ -337,12 +306,11 @@ const s = StyleSheet.create({
   orgBtn:    { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#0f172a' },
   orgBtnTxt: { fontSize: 12, fontWeight: '600' },
 
-  // Tappable registrations row (organizer)
-  regsRow:        { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  viewRegsPill:   { backgroundColor: 'rgba(129,140,248,0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
-  viewRegsPillTxt: { fontSize: 12, color: '#818cf8', fontWeight: '700' },
+  // View all registrations button
+  viewRegsBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#1e40af', paddingVertical: 14, borderRadius: 14, marginBottom: 12 },
+  viewRegsTxt: { color: '#fff', fontWeight: '700', fontSize: 15 },
 
-  // Action buttons
+  // Register button
   registerBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#818cf8', paddingVertical: 16, borderRadius: 14 },
   registerBtnOff: { backgroundColor: '#334155' },
   registerBtnTxt: { color: '#fff', fontWeight: '800', fontSize: 16 },
