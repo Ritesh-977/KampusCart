@@ -2,11 +2,11 @@ import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   StatusBar, FlatList, Alert, ActivityIndicator, Modal,
-  Image, Linking, RefreshControl,
+  Image, Linking, RefreshControl, Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import API from '../api/axios';
 
@@ -79,7 +79,7 @@ const SportRegistrationsListScreen = ({ navigation, route }) => {
       const safeName = sportTitle.replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
       const fileName = `${safeName}_registrations.csv`;
       const fileUri  = FileSystem.cacheDirectory + fileName;
-      await FileSystem.writeAsStringAsync(fileUri, csv, { encoding: FileSystem.EncodingType.UTF8 });
+      await FileSystem.writeAsStringAsync(fileUri, csv, { encoding: 'utf8' });
 
       // Open native share / save sheet
       const canShare = await Sharing.isAvailableAsync();
@@ -336,7 +336,17 @@ export default SportRegistrationsListScreen;
 
 const s = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: '#0f172a' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#1e293b' },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingHorizontal: 12, 
+    paddingVertical: 10, 
+    // Add these two lines to push the header down cleanly
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 10, 
+    marginTop: Platform.OS === 'ios' ? 20 : 0, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#1e293b' 
+  },
   iconBtn:      { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   exportBtn:    { width: 36, height: 36, borderRadius: 18, backgroundColor: '#15803d', justifyContent: 'center', alignItems: 'center' },
   headerCenter: { flex: 1, alignItems: 'center' },
