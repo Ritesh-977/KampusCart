@@ -26,6 +26,17 @@ const SPORT_TYPES = [
 const fmtDate = (d) =>
   d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
+// ── FIXED: Moved Field component OUTSIDE the main screen component ──────────
+const Field = ({ label, children, optional }) => (
+  <View style={styles.field}>
+    <Text style={styles.fieldLabel}>
+      {label}{optional ? <Text style={styles.optional}> (optional)</Text> : <Text style={styles.required}> *</Text>}
+    </Text>
+    {children}
+  </View>
+);
+// ─────────────────────────────────────────────────────────────────────────────
+
 const PostSportScreen = ({ navigation, route }) => {
   const { currentUser } = useContext(AuthContext);
   const editSport = route.params?.sport;
@@ -132,15 +143,6 @@ const PostSportScreen = ({ navigation, route }) => {
     }
   };
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
-  const Field = ({ label, children, optional }) => (
-    <View style={styles.field}>
-      <Text style={styles.fieldLabel}>
-        {label}{optional ? <Text style={styles.optional}> (optional)</Text> : <Text style={styles.required}> *</Text>}
-      </Text>
-      {children}
-    </View>
-  );
 
   const selectedType = SPORT_TYPES.find(t => t.label === sportType);
 
@@ -371,7 +373,15 @@ export default PostSportScreen;
 
 const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: '#0f172a' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#1e293b' },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 10, 
+    paddingHorizontal: 12, 
+    paddingVertical: 10, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#1e293b' 
+  },
   iconBtn:     { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { flex: 1, color: '#f1f5f9', fontSize: 17, fontWeight: '700', textAlign: 'center' },
 

@@ -11,12 +11,21 @@ import API from '../api/axios';
 
 const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Other'];
 
+// ── FIXED: Moved Field component OUTSIDE the main screen component ──────────
+const Field = ({ label, required, children }) => (
+  <View style={s.field}>
+    <Text style={s.label}>{label}{required && <Text style={s.req}> *</Text>}</Text>
+    {children}
+  </View>
+);
+// ─────────────────────────────────────────────────────────────────────────────
+
 const SportRegistrationScreen = ({ navigation, route }) => {
   const { sport } = route.params;
   const { currentUser } = useContext(AuthContext);
 
   const [teamName,       setTeamName]       = useState('');
-  const [captainName,    setCaptainName]     = useState(currentUser?.name || '');
+  const [captainName,    setCaptainName]    = useState(currentUser?.name || '');
   const [captainContact, setCaptainContact] = useState('');
   const [course,         setCourse]         = useState('');
   const [year,           setYear]           = useState('');
@@ -97,12 +106,6 @@ const SportRegistrationScreen = ({ navigation, route }) => {
     }
   };
 
-  const Field = ({ label, required, children }) => (
-    <View style={s.field}>
-      <Text style={s.label}>{label}{required && <Text style={s.req}> *</Text>}</Text>
-      {children}
-    </View>
-  );
 
   return (
     <SafeAreaView style={s.safe}>
@@ -288,7 +291,15 @@ export default SportRegistrationScreen;
 
 const s = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: '#0f172a' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#1e293b' },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 10,
+    paddingHorizontal: 12, 
+    paddingVertical: 10, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#1e293b' 
+  },
   iconBtn:     { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { flex: 1, color: '#f1f5f9', fontSize: 15, fontWeight: '700', textAlign: 'center', marginHorizontal: 4 },
 
