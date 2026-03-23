@@ -55,7 +55,7 @@ const FEATURES = [
   { label: 'Campus Events',  icon: 'calendar',       color: '#818cf8', bg: '#1e1b4b', desc: 'Fests, seminars & more' },
   { label: 'Study Material', icon: 'document-text',  color: '#34d399', bg: '#064e3b', desc: 'Notes, PDFs & resources' },
   { label: 'Exam Schedule',  icon: 'clipboard',      color: '#fb923c', bg: '#431407', desc: 'Mid-sems & end-sems' },
-  { label: 'Food Share',     icon: 'fast-food',      color: '#fbbf24', bg: '#2c1800', desc: 'Mess deals & sharing' },
+  { label: 'Sports',         icon: 'trophy',         color: '#38bdf8', bg: '#0c2336', desc: 'Register & compete' },
 ];
 
 const fmtEventDate = (iso) => {
@@ -401,10 +401,9 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleFeature = (label) => {
-    if (label === 'Study Material') {
-      navigation.navigate('StudyMaterials');
-      return;
-    }
+    if (label === 'Study Material') { navigation.navigate('StudyMaterials'); return; }
+    if (label === 'Sports')         { navigation.navigate('Sports');         return; }
+    if (label === 'Campus Events')  { navigation.navigate('Events');         return; }
     Alert.alert(
       '🚀 Coming Soon',
       `${label} is on its way! We're building this feature for your campus.`,
@@ -513,7 +512,7 @@ const HomeScreen = ({ navigation }) => {
               </View>
               <Text style={styles.featureName}>{f.label}</Text>
               <Text style={styles.featureDesc} numberOfLines={1}>{f.desc}</Text>
-              {f.label === 'Study Material' ? (
+              {['Study Material', 'Sports', 'Campus Events'].includes(f.label) ? (
                 <View style={[styles.featureSoon, { borderColor: f.color + '50' }]}>
                   <Text style={[styles.featureSoonText, { color: f.color }]}>Open →</Text>
                 </View>
