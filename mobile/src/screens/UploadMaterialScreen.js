@@ -79,6 +79,7 @@ const UploadMaterialScreen = ({ navigation }) => {
 
       // Build multipart/form-data payload
       const form = new FormData();
+      form.append('title',       subject.trim());
       form.append('subjectName', subject.trim());
       form.append('semester',    semester);
       form.append('category',    category);
