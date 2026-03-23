@@ -94,6 +94,7 @@ const StudyMaterialsScreen = ({ navigation }) => {
 
   const handleOpen = (item) => {
     navigation.navigate('MaterialViewer', {
+      title:    item.subjectName,
       fileUrl:  item.fileUrl,
       fileType: item.fileType,
     });
