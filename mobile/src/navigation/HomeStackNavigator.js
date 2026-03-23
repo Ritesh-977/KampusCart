@@ -9,6 +9,11 @@ import PostEventScreen from '../screens/PostEventScreen';
 import StudyMaterialsScreen from '../screens/StudyMaterialsScreen';
 import UploadMaterialScreen from '../screens/UploadMaterialScreen';
 import MaterialViewerScreen from '../screens/MaterialViewerScreen';
+import SportsScreen from '../screens/SportsScreen';
+import SportDetailsScreen from '../screens/SportDetailsScreen';
+import PostSportScreen from '../screens/PostSportScreen';
+import SportRegistrationScreen from '../screens/SportRegistrationScreen';
+import SportRegistrationsListScreen from '../screens/SportRegistrationsListScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -67,6 +72,11 @@ const HomeStackNavigator = () => {
         component={MaterialViewerScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen name="Sports"             component={SportsScreen}                options={{ headerShown: false }} />
+      <Stack.Screen name="SportDetails"       component={SportDetailsScreen}          options={{ headerShown: false }} />
+      <Stack.Screen name="PostSport"          component={PostSportScreen}             options={{ headerShown: false }} />
+      <Stack.Screen name="SportRegistration"  component={SportRegistrationScreen}     options={{ headerShown: false }} />
+      <Stack.Screen name="SportRegistrations" component={SportRegistrationsListScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 };
