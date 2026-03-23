@@ -14,7 +14,8 @@ const CATEGORIES = [
   { id: '2', name: 'Books & Notes', icon: 'book' },
   { id: '3', name: 'Electronics', icon: 'laptop' },
   { id: '4', name: 'Hostel Essentials', icon: 'bed' },
-  { id: '5', name: 'Other', icon: 'cube' },
+  { id: '5', name: 'Stationary', icon: 'pencil' },
+  { id: '6', name: 'Other', icon: 'cube' },
 ];
 const MAX_IMAGES = 3;
 

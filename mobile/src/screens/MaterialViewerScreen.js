@@ -116,8 +116,9 @@ const MaterialViewerScreen = ({ navigation, route }) => {
       } else {
         Alert.alert('Saved', `File saved to: ${localUri}`);
       }
-    } catch {
-      Alert.alert('Download Failed', 'Could not download the file. Please check your connection.');
+    } catch (e) {
+      const detail = e?.message || String(e);
+      Alert.alert('Download Failed', `Could not download the file.\n\n${detail}`);
     } finally {
       setDownloading(false);
     }
@@ -193,7 +194,10 @@ const MaterialViewerScreen = ({ navigation, route }) => {
             </View>
           ) : (
             <WebView
-              source={{ html: buildPdfHtml(fileUrl) }}
+              // baseUrl makes the WebView run under an https:// origin instead of
+              // null/file://, which lets PDF.js load CDN scripts and fetch the
+              // Cloudinary URL without CORS being blocked.
+              source={{ html: buildPdfHtml(fileUrl), baseUrl: 'https://res.cloudinary.com' }}
               style={styles.webview}
               onLoadEnd={() => setWebLoading(false)}
               onError={() => { setWebLoading(false); setWebError(true); }}
@@ -201,6 +205,9 @@ const MaterialViewerScreen = ({ navigation, route }) => {
               domStorageEnabled
               originWhitelist={['*']}
               mixedContentMode="always"
+              allowFileAccess
+              allowUniversalAccessFromFileURLs
+              allowFileAccessFromFileURLs
               allowsFullscreenVideo={false}
               scrollEnabled
             />
