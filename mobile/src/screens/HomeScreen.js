@@ -36,8 +36,12 @@ const CATEGORIES = [
   { label: 'Electronics',       icon: 'phone-portrait-outline' },
   { label: 'Books & Notes',     icon: 'book-outline' },
   { label: 'Hostel Essentials', icon: 'bed-outline' },
+  { label: 'Stationery',        icon: 'pencil-outline' },
   { label: 'Other',             icon: 'ellipsis-horizontal-circle-outline' },
 ];
+
+// Categories that have their own dedicated filter chip — "Other" excludes these
+const KNOWN_CATEGORIES = ['Cycles', 'Electronics', 'Books & Notes', 'Hostel Essentials', 'Stationery'];
 
 const QUICK = [
   { label: 'Books',       icon: 'book',           color: '#818cf8', glow: '#6366f1', cat: 'Books & Notes' },
@@ -51,8 +55,6 @@ const FEATURES = [
   { label: 'Campus Events',  icon: 'calendar',       color: '#818cf8', bg: '#1e1b4b', desc: 'Fests, seminars & more' },
   { label: 'Study Material', icon: 'document-text',  color: '#34d399', bg: '#064e3b', desc: 'Notes, PDFs & resources' },
   { label: 'Exam Schedule',  icon: 'clipboard',      color: '#fb923c', bg: '#431407', desc: 'Mid-sems & end-sems' },
-  { label: 'Find Roomies',   icon: 'home',           color: '#38bdf8', bg: '#082f49', desc: 'Room & flatmate search' },
-  { label: 'Campus Jobs',    icon: 'briefcase',      color: '#f472b6', bg: '#2d0a3e', desc: 'Part-time & internships' },
   { label: 'Food Share',     icon: 'fast-food',      color: '#fbbf24', bg: '#2c1800', desc: 'Mess deals & sharing' },
 ];
 
@@ -224,8 +226,10 @@ const HomeScreen = ({ navigation }) => {
   const suggestAnim = useRef(new Animated.Value(0)).current;
   const spotlightRef = useRef(null);
   const spotIdx    = useRef(0);
-  const listRef       = useRef(null);
+  const listRef         = useRef(null);
   const headerHeightRef = useRef(0);
+  const catScrollRef    = useRef(null);   // category filter ScrollView
+  const catScrollX      = useRef(0);      // persists scroll position across remounts
 
   useEffect(() => {
     Animated.loop(Animated.sequence([
@@ -342,8 +346,11 @@ const HomeScreen = ({ navigation }) => {
       const matchesSearch = !q ||
         (item.name || item.title || '').toLowerCase().includes(q) ||
         (item.category || '').toLowerCase().includes(q);
+      const itemCat = (item.category || '').toLowerCase();
       const matchesCategory = activeCategory === 'All' ||
-        (item.category || '').toLowerCase() === activeCategory.toLowerCase();
+        (activeCategory === 'Other'
+          ? !KNOWN_CATEGORIES.some(k => k.toLowerCase() === itemCat)
+          : itemCat === activeCategory.toLowerCase());
       return matchesSearch && matchesCategory;
     });
   }, [searchQuery, activeCategory, items]);
@@ -354,7 +361,7 @@ const HomeScreen = ({ navigation }) => {
     return filteredItems;
   }, [filteredItems, sortOrder]);
 
-  const displayItems = showAll ? sortedItems : sortedItems.slice(0, 10);
+  const displayItems = showAll ? sortedItems : sortedItems.slice(0, 8);
 
   const filteredColleges = colleges
     .filter(c => c.emailDomain !== null)
@@ -549,7 +556,19 @@ const HomeScreen = ({ navigation }) => {
 
       {/* ── Filter Chips ── */}
       <View style={[styles.section, { paddingBottom: 0, marginBottom: 0 }]}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 20 }}>
+        <ScrollView
+          ref={catScrollRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8, paddingRight: 20 }}
+          scrollEventThrottle={16}
+          onScroll={(e) => { catScrollX.current = e.nativeEvent.contentOffset.x; }}
+          onLayout={() => {
+            if (catScrollX.current > 0) {
+              catScrollRef.current?.scrollTo({ x: catScrollX.current, animated: false });
+            }
+          }}
+        >
           {CATEGORIES.map((cat) => {
             const active = activeCategory === cat.label;
             return (
@@ -726,11 +745,11 @@ const HomeScreen = ({ navigation }) => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366f1']} tintColor="#6366f1" />
           }
           renderItem={renderItem}
-          ListHeaderComponent={<ListHeader />}
+          ListHeaderComponent={ListHeader()}
           ListFooterComponent={
             <View>
               {/* View All / Show Less */}
-              {!loading && sortedItems.length > 10 && (
+              {!loading && sortedItems.length > 8 && (
                 <Press onPress={() => setShowAll(v => !v)} style={styles.viewAllBtn}>
                   <Text style={styles.viewAllTxt}>
                     {showAll ? '↑  Show Less' : `View All  (${sortedItems.length})`}

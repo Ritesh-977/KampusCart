@@ -294,6 +294,148 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
+// --- GOOGLE LOGIN (existing users only) ---
+export const googleLogin = async (req, res) => {
+  try {
+    const { access_token } = req.body;
+
+    if (!access_token) {
+      return res.status(400).json({ message: 'Missing access_token.' });
+    }
+
+    const googleRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+
+    if (!googleRes.ok) {
+      return res.status(401).json({ message: 'Invalid or expired Google token.' });
+    }
+
+    const profile = await googleRes.json();
+    const { email, email_verified } = profile;
+
+    if (!email_verified) {
+      return res.status(401).json({ message: 'Google account email is not verified.' });
+    }
+
+    const emailDomain = email.split('@')[1];
+    if (!supportedColleges[emailDomain]) {
+      return res.status(403).json({
+        message: `Access restricted. KampusCart is not currently available for ${emailDomain}.`,
+      });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(404).json({
+        message: 'No account found for this Google email. Please sign up first.',
+      });
+    }
+
+    if (user.isBanned) {
+      const currentDate = new Date();
+      if (!user.banExpiresAt || currentDate <= new Date(user.banExpiresAt)) {
+        const banMessage = user.banExpiresAt
+          ? `Your account is suspended.`
+          : 'Your account has been permanently banned.';
+        return res.status(403).json({ message: banMessage });
+      }
+      user.isBanned = false;
+      user.banExpiresAt = null;
+      await user.save();
+    }
+
+    sendToken(user, 200, res);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// --- GOOGLE SIGNUP / LOGIN ---
+export const googleSignup = async (req, res) => {
+  try {
+    const { access_token, emailDomain } = req.body;
+
+    if (!access_token || !emailDomain) {
+      return res.status(400).json({ message: 'Missing access_token or emailDomain.' });
+    }
+
+    // 1. Fetch the user profile from Google using the access token
+    const googleRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+
+    if (!googleRes.ok) {
+      return res.status(401).json({ message: 'Invalid or expired Google token.' });
+    }
+
+    const profile = await googleRes.json();
+    const { email, name, picture, email_verified } = profile;
+
+    if (!email_verified) {
+      return res.status(401).json({ message: 'Google account email is not verified.' });
+    }
+
+    // 2. Security check: the user's actual email domain must match the selected campus
+    const userEmailDomain = email.split('@')[1];
+    if (userEmailDomain !== emailDomain) {
+      return res.status(403).json({
+        message: 'Access denied. Please use your official email ID for the selected campus.',
+      });
+    }
+
+    // 3. Validate that the domain is supported by KampusCart
+    if (!supportedColleges[emailDomain]) {
+      return res.status(403).json({
+        message: `Access restricted. KampusCart is not currently available for ${emailDomain}.`,
+      });
+    }
+
+    const collegeName = supportedColleges[emailDomain];
+
+    // 4. Find or create the user
+    let user = await User.findOne({ email: email.toLowerCase() });
+
+    if (user) {
+      // Ban check
+      if (user.isBanned) {
+        const currentDate = new Date();
+        if (!user.banExpiresAt || currentDate <= new Date(user.banExpiresAt)) {
+          const banMessage = user.banExpiresAt
+            ? `Your account is suspended.`
+            : 'Your account has been permanently banned.';
+          return res.status(403).json({ message: banMessage });
+        }
+        user.isBanned = false;
+        user.banExpiresAt = null;
+      }
+      // Ensure account is marked verified and college is set
+      if (!user.isVerified) user.isVerified = true;
+      if (!user.college) user.college = collegeName;
+      if (!user.profilePic && picture) user.profilePic = picture;
+      await user.save();
+    } else {
+      // New user — generate a random placeholder password (they use Google to log in)
+      const placeholderPassword = await bcrypt.hash(
+        crypto.randomBytes(32).toString('hex'),
+        10
+      );
+      user = await User.create({
+        name: name || email.split('@')[0],
+        email: email.toLowerCase(),
+        password: placeholderPassword,
+        college: collegeName,
+        profilePic: picture || '',
+        isVerified: true,
+      });
+    }
+
+    sendToken(user, 200, res);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // --- RESET PASSWORD ---
 export const resetPassword = async (req, res) => {
   try {

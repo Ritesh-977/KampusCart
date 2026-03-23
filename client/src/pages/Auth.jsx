@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash, FaStore } from "react-icons/fa";
 import API from '../api/axios'; // ✅ Using configured Axios instance
 import { toast } from 'react-toastify';
 import { colleges } from '../data/colleges';
+import { useGoogleLogin } from '@react-oauth/google';
 
 // --- IMPORTS FOR PARTICLES ---
 import Particles, { initParticlesEngine } from "@tsparticles/react";
@@ -71,6 +72,89 @@ const Auth = () => {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // --- GOOGLE SIGNUP STATES ---
+  const [isCampusModalOpen, setIsCampusModalOpen] = useState(false);
+  const [modalCollege, setModalCollege] = useState(null);
+  const [pendingGoogleLogin, setPendingGoogleLogin] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  // --- GOOGLE SIGNUP HOOK (signup tab — filtered by campus domain) ---
+  // Re-configured on every render so hosted_domain always reflects current signupCollege
+  const googleSignupHook = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setGoogleLoading(true);
+      try {
+        const response = await API.post('/auth/google-signup', {
+          access_token: tokenResponse.access_token,
+          emailDomain: signupCollege?.emailDomain,
+        });
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        toast.success('Account created with Google!');
+        navigate('/');
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Google sign-up failed. Please try again.');
+      } finally {
+        setGoogleLoading(false);
+      }
+    },
+    onError: () => {
+      toast.error('Google sign-up was cancelled or failed.');
+    },
+    hosted_domain: signupCollege?.emailDomain || undefined,
+  });
+
+  // --- GOOGLE LOGIN HOOK (login tab — no domain filter) ---
+  const googleSigninHook = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setGoogleLoading(true);
+      try {
+        const response = await API.post('/auth/google-login', {
+          access_token: tokenResponse.access_token,
+        });
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        toast.success('Signed in with Google successfully!');
+        navigate('/');
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Google sign-in failed. Please try again.');
+      } finally {
+        setGoogleLoading(false);
+      }
+    },
+    onError: () => {
+      toast.error('Google sign-in was cancelled or failed.');
+    },
+  });
+
+  // Ref so the useEffect can always call the latest version of googleSignupHook
+  const googleSignupRef = useRef(googleSignupHook);
+  useEffect(() => { googleSignupRef.current = googleSignupHook; });
+
+  // Trigger Google signup after college is set from the modal (state has settled)
+  useEffect(() => {
+    if (pendingGoogleLogin && signupCollege) {
+      setPendingGoogleLogin(false);
+      googleSignupRef.current();
+    }
+  }, [pendingGoogleLogin, signupCollege]);
+
+  const handleGoogleSignupClick = () => {
+    if (!signupCollege) {
+      setIsCampusModalOpen(true);
+    } else {
+      googleSignupHook();
+    }
+  };
+
+  const handleModalConfirm = () => {
+    if (!modalCollege) {
+      toast.error('Please select a college to continue.');
+      return;
+    }
+    setSignupCollege(modalCollege);
+    setPendingGoogleLogin(true);
+    setIsCampusModalOpen(false);
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -418,6 +502,68 @@ const Auth = () => {
 
             </form>
 
+            {/* Google Sign-in — only visible on login tab */}
+            {isLogin && (
+              <div className="mt-6">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                      — OR —
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => googleSigninHook()}
+                  disabled={googleLoading}
+                  className="mt-4 w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                  {googleLoading ? 'Signing in...' : 'Sign in with Google'}
+                </button>
+              </div>
+            )}
+
+            {/* Google Sign-up — only visible on signup step 1 */}
+            {!isLogin && signupStep === 1 && (
+              <div className="mt-6">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                      — OR —
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleGoogleSignupClick}
+                  disabled={googleLoading}
+                  className="mt-4 w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                  {googleLoading ? 'Signing in...' : 'Continue with Google'}
+                </button>
+              </div>
+            )}
+
             <div className="mt-6">
                 <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -448,6 +594,60 @@ const Auth = () => {
             </div>
         </div>
       </div>
+
+      {/* Campus Selection Modal */}
+      {isCampusModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setIsCampusModalOpen(false)}
+          />
+          <div className="relative z-10 w-full max-w-md bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-1">Select Your Campus</h3>
+            <p className="text-sm text-gray-400 mb-5">
+              We need to verify your campus before connecting with Google.
+            </p>
+
+            <label className="block text-sm font-medium text-gray-300 mb-1">Your College</label>
+            <select
+              value={modalCollege?.id || ''}
+              onChange={(e) => {
+                const found = colleges.find(c => c.id === e.target.value);
+                setModalCollege(found || null);
+              }}
+              className="w-full px-3 py-2.5 border border-gray-600 rounded-md bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+            >
+              <option value="">— Select your college —</option>
+              {colleges.filter(c => c.id !== 'other').map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+
+            {modalCollege?.emailDomain && (
+              <p className="mt-2 text-xs text-indigo-400">
+                Google will filter accounts ending with <strong>@{modalCollege.emailDomain}</strong>
+              </p>
+            )}
+
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => { setIsCampusModalOpen(false); setModalCollege(null); }}
+                className="flex-1 py-2 px-4 border border-gray-600 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleModalConfirm}
+                className="flex-1 py-2 px-4 bg-indigo-600 hover:bg-indigo-500 rounded-md text-sm font-medium text-white transition-colors"
+              >
+                Continue with Google
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
