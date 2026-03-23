@@ -53,13 +53,27 @@ const buildPdfHtml = (pdfUrl) => `
         const total = pdf.numPages;
         for (let i = 1; i <= total; i++) {
           progress.textContent = 'Rendering page ' + i + ' of ' + total + '…';
-          const page     = await pdf.getPage(i);
-          const scale    = (window.innerWidth - 8) / page.getViewport({ scale: 1 }).width;
-          const viewport = page.getViewport({ scale });
+          const page = await pdf.getPage(i);
+          
+          // 1. Calculate the base scale to fit the phone screen width
+          const baseScale = (window.innerWidth - 8) / page.getViewport({ scale: 1 }).width;
+          
+          // 2. Get the phone's pixel density (usually 2 or 3 on modern phones)
+          const pixelRatio = window.devicePixelRatio || 1;
+          
+          // 3. Render the PDF at the ultra-high physical resolution
+          const viewport = page.getViewport({ scale: baseScale * pixelRatio });
           const canvas   = document.createElement('canvas');
           const ctx      = canvas.getContext('2d');
+          
+          // Set the internal canvas resolution to be huge
           canvas.width   = viewport.width;
           canvas.height  = viewport.height;
+          
+          // 4. Use CSS to shrink the huge canvas back down to the screen size
+          canvas.style.width  = (viewport.width / pixelRatio) + 'px';
+          canvas.style.height = (viewport.height / pixelRatio) + 'px';
+          
           container.appendChild(canvas);
           await page.render({ canvasContext: ctx, viewport }).promise;
         }
