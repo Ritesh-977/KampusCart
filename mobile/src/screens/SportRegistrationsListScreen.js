@@ -6,6 +6,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import API from '../api/axios';
 
 const STATUS_META = {
@@ -45,6 +47,57 @@ const SportRegistrationsListScreen = ({ navigation, route }) => {
   useFocusEffect(useCallback(() => { fetchRegs(); }, [fetchRegs]));
 
   const onRefresh = () => { setRefreshing(true); fetchRegs(true); };
+
+  // ── Export to CSV ────────────────────────────────────────────────────────────
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    if (!regs.length) {
+      Alert.alert('No Data', 'There are no registrations to export yet.');
+      return;
+    }
+    try {
+      setExporting(true);
+
+      // Build CSV content
+      const headers = ['Team Name', 'Captain Name', 'Captain Contact', 'Course', 'Year', 'Status', 'Registered On'];
+      const rows = regs.map(r => [
+        r.teamName,
+        r.captainName,
+        r.captainContact,
+        r.course,
+        r.year,
+        r.status.charAt(0).toUpperCase() + r.status.slice(1),
+        new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      ]);
+
+      const csv = [headers, ...rows]
+        .map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+      // Write to cache
+      const safeName = sportTitle.replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
+      const fileName = `${safeName}_registrations.csv`;
+      const fileUri  = FileSystem.cacheDirectory + fileName;
+      await FileSystem.writeAsStringAsync(fileUri, csv, { encoding: FileSystem.EncodingType.UTF8 });
+
+      // Open native share / save sheet
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'text/csv',
+          dialogTitle: `Save ${sportTitle} Registrations`,
+          UTI: 'public.comma-separated-values-text',
+        });
+      } else {
+        Alert.alert('Saved', `File saved to cache:\n${fileName}`);
+      }
+    } catch (e) {
+      Alert.alert('Export Failed', e?.message || 'Could not export. Try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // ── Status update ────────────────────────────────────────────────────────────
   const updateStatus = async (regId, status) => {
@@ -201,7 +254,16 @@ const SportRegistrationsListScreen = ({ navigation, route }) => {
           <Text style={s.headerTitle} numberOfLines={1}>{sportTitle}</Text>
           <Text style={s.headerSub}>Registrations</Text>
         </View>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity
+          style={[s.exportBtn, exporting && { opacity: 0.5 }]}
+          onPress={handleExport}
+          disabled={exporting}
+        >
+          {exporting
+            ? <ActivityIndicator size="small" color="#fff" />
+            : <Ionicons name="download-outline" size={18} color="#fff" />
+          }
+        </TouchableOpacity>
       </View>
 
       {loading ? (
@@ -276,6 +338,7 @@ const s = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: '#0f172a' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#1e293b' },
   iconBtn:      { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+  exportBtn:    { width: 36, height: 36, borderRadius: 18, backgroundColor: '#15803d', justifyContent: 'center', alignItems: 'center' },
   headerCenter: { flex: 1, alignItems: 'center' },
   headerTitle:  { fontSize: 15, fontWeight: '700', color: '#f1f5f9' },
   headerSub:    { fontSize: 11, color: '#64748b', marginTop: 1 },
