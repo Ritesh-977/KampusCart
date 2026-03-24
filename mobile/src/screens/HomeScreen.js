@@ -113,7 +113,7 @@ const SpotlightCard = ({ item, onPress }) => {
 
 // ─── Events Calendar ──────────────────────────────────────────────────────────
 const EventsCalendar = ({ events = [], navigation }) => {
-  const { theme } = useContext(ThemeContext);
+  const { theme, themeId } = useContext(ThemeContext);
   const featured = events[0] || null;
   const upcoming = events.slice(1, 5);
   const featFmt  = featured ? fmtEventDate(featured.startTime) : null;
@@ -127,19 +127,19 @@ const EventsCalendar = ({ events = [], navigation }) => {
       borderWidth: 1, borderColor: theme.inputBorder, borderStyle: 'dashed', backgroundColor: theme.inputBg, gap: 6 },
     emptyTitle: { fontSize: 15, fontWeight: '700', color: theme.textTertiary },
     emptySub: { fontSize: 12, color: theme.inputBorder, textAlign: 'center' },
-    featured: { height: 180, borderRadius: 20, overflow: 'hidden', backgroundColor: '#0d1117',
+    featured: { height: 180, borderRadius: 20, overflow: 'hidden', backgroundColor: theme.card,
       marginBottom: 16, padding: 18, justifyContent: 'flex-end', borderWidth: 1, borderColor: theme.primaryAccent + '50',
       shadowColor: theme.primaryAction, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 14, elevation: 10 },
-    featuredOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(20,16,50,0.72)' },
+    featuredOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: themeId === 'premiumGold' ? 'rgba(139,30,15,0.06)' : 'rgba(20,16,50,0.72)' },
     featuredBadge: { position: 'absolute', top: 16, left: 18, backgroundColor: theme.primaryAccent + 'B3', borderRadius: 6,
       paddingHorizontal: 10, paddingVertical: 4 },
-    featuredBadgeTxt: { fontSize: 10, fontWeight: '900', color: '#e0e7ff', letterSpacing: 1 },
-    featuredTitle: { fontSize: 22, fontWeight: '900', color: '#fff', marginBottom: 8 },
+    featuredBadgeTxt: { fontSize: 10, fontWeight: '900', color: themeId === 'premiumGold' ? '#fff' : '#e0e7ff', letterSpacing: 1 },
+    featuredTitle: { fontSize: 22, fontWeight: '900', color: theme.textMain, marginBottom: 8 },
     featuredMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    featuredMetaTxt: { fontSize: 12, color: '#a5b4fc', fontWeight: '600' },
+    featuredMetaTxt: { fontSize: 12, color: theme.textSub, fontWeight: '600' },
     dateBadge: { position: 'absolute', top: 12, right: 16, backgroundColor: theme.primaryAccent + '25', borderRadius: 12,
       width: 52, alignItems: 'center', paddingVertical: 8, borderWidth: 1, borderColor: theme.primaryAccent + '65' },
-    dateBadgeDay: { fontSize: 22, fontWeight: '900', color: '#fff', lineHeight: 26 },
+    dateBadgeDay: { fontSize: 22, fontWeight: '900', color: theme.textMain, lineHeight: 26 },
     dateBadgeMon: { fontSize: 10, fontWeight: '900', color: theme.primaryAccent, letterSpacing: 1 },
     card: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, width: 210, backgroundColor: theme.inputBg,
       borderRadius: 18, padding: 14, borderWidth: 1, borderColor: theme.inputBorder },
@@ -178,9 +178,9 @@ const EventsCalendar = ({ events = [], navigation }) => {
               </View>
               <Text style={evStyles.featuredTitle}>{featured.title}</Text>
               <View style={evStyles.featuredMeta}>
-                <Ionicons name="time-outline" size={12} color="#a5b4fc" />
+                <Ionicons name="time-outline" size={12} color={theme.textSub} />
                 <Text style={evStyles.featuredMetaTxt}>{featFmt.time}</Text>
-                <Ionicons name="location-outline" size={12} color="#a5b4fc" style={{ marginLeft: 8 }} />
+                <Ionicons name="location-outline" size={12} color={theme.textSub} style={{ marginLeft: 8 }} />
                 <Text style={evStyles.featuredMetaTxt}>{featured.location}</Text>
               </View>
               <View style={evStyles.dateBadge}>
