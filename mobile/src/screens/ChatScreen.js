@@ -12,6 +12,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
 import { SocketContext } from '../context/SocketContext';
 import API from '../api/axios';
+import { useThemeStyles } from '../hooks/useThemeStyles'; // <-- Make sure path is correct
 
 const FALLBACK_AVATAR =
   'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
@@ -38,6 +39,9 @@ const formatTime = (dateStr) => {
 
 // ─── component ──────────────────────────────────────────────────────────────
 export default function ChatScreen({ route, navigation }) {
+  // 1. Initialize dynamic theme hook
+  const { styles, colors } = useThemeStyles(createStyles);
+
   const { chat, otherUser } = route.params;
   const { currentUser } = useContext(AuthContext);
   const { socketRef, connected, onlineUsers } = useContext(SocketContext);
@@ -113,27 +117,27 @@ export default function ChatScreen({ route, navigation }) {
       headerShown: true,
       
       // ── THE FIX FOR THE WHITE FLASH ──
-      contentStyle: { backgroundColor: '#0f172a' }, // Fixes NativeStack transitions
-      cardStyle: { backgroundColor: '#0f172a' },    // Fixes standard Stack transitions
+      contentStyle: { backgroundColor: colors.background }, 
+      cardStyle: { backgroundColor: colors.background },    
       // ─────────────────────────────────
 
       headerStyle: {
-        backgroundColor: '#1e293b',
+        backgroundColor: colors.header,
         elevation: 4,
         shadowColor: '#000',
         shadowOpacity: 0.3,
         shadowOffset: { width: 0, height: 2 },
         borderBottomWidth: 1,
-        borderBottomColor: '#2d3f5f',
+        borderBottomColor: colors.headerDivider,
       },
-      headerTintColor: '#fff',
+      headerTintColor: colors.textMain,
       headerLeft: () => (
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={{ paddingLeft: 4, paddingRight: 2 }}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <Ionicons name="arrow-back" size={22} color="#fff" />
+          <Ionicons name="arrow-back" size={22} color={colors.textMain} />
         </TouchableOpacity>
       ),
       headerTitle: () => (
@@ -169,13 +173,11 @@ export default function ChatScreen({ route, navigation }) {
           style={{ marginRight: 14, padding: 4 }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="search-outline" size={22} color="#94a3b8" />
+          <Ionicons name="search-outline" size={22} color={colors.textTertiary} />
         </TouchableOpacity>
       ),
     });
-  }, [isOnline, isTyping, searchVisible]);
-
-  // ... (The rest of your ChatScreen code stays exactly the same)
+  }, [isOnline, isTyping, searchVisible, colors]); // Added colors dependency here
 
   // ── fetch messages ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -388,7 +390,7 @@ export default function ChatScreen({ route, navigation }) {
         </Text>
       );
     },
-    [searchQuery]
+    [searchQuery, styles]
   );
 
   // ── render message ─────────────────────────────────────────────────────────
@@ -448,7 +450,7 @@ export default function ChatScreen({ route, navigation }) {
                   <Ionicons
                     name={item._pending ? 'time-outline' : item._failed ? 'alert-circle-outline' : 'checkmark-done-outline'}
                     size={13}
-                    color={item._failed ? '#ef4444' : isRead ? '#818cf8' : '#475569'}
+                    color={item._failed ? '#ef4444' : isRead ? colors.primaryAccent : colors.textTertiary}
                     style={{ marginLeft: 3 }}
                   />
                 )}
@@ -458,24 +460,24 @@ export default function ChatScreen({ route, navigation }) {
         </View>
       );
     },
-    [checkIsMe, messages, searchQuery, matchIndices, currentMatch, otherUser, otherUserId, renderHighlightedText]
+    [checkIsMe, messages, searchQuery, matchIndices, currentMatch, otherUser, otherUserId, renderHighlightedText, colors, styles]
   );
 
   // ── main render ────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safe} edges={['left', 'right', 'bottom']}>
-      <StatusBar backgroundColor="#1e293b" barStyle="light-content" />
+      <StatusBar backgroundColor={colors.header} barStyle={colors.statusBarStyle} />
       <Animated.View style={[styles.flex, { paddingBottom: kbOffset }]}>
         {searchVisible && (
           <View style={styles.searchBar}>
             <TouchableOpacity onPress={closeSearch} style={{ padding: 4 }}>
-              <Ionicons name="arrow-back" size={20} color="#f1f5f9" />
+              <Ionicons name="arrow-back" size={20} color={colors.textMain} />
             </TouchableOpacity>
             <TextInput
               ref={searchRef}
               style={styles.searchInput}
               placeholder="Search messages"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textTertiary}
               value={searchQuery}
               onChangeText={handleSearch}
             />
@@ -483,10 +485,10 @@ export default function ChatScreen({ route, navigation }) {
               <View style={styles.searchNav}>
                 <Text style={styles.searchCount}>{currentMatch + 1}/{matchIndices.length}</Text>
                 <TouchableOpacity onPress={goToPrevMatch} style={styles.navBtn}>
-                  <Ionicons name="chevron-up" size={20} color="#4f46e5" />
+                  <Ionicons name="chevron-up" size={20} color={colors.primaryAction} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={goToNextMatch} style={styles.navBtn}>
-                  <Ionicons name="chevron-down" size={20} color="#4f46e5" />
+                  <Ionicons name="chevron-down" size={20} color={colors.primaryAction} />
                 </TouchableOpacity>
               </View>
             ) : searchQuery ? (
@@ -496,7 +498,7 @@ export default function ChatScreen({ route, navigation }) {
         )}
 
         {loading ? (
-          <View style={styles.center}><ActivityIndicator size="large" color="#4f46e5" /></View>
+          <View style={styles.center}><ActivityIndicator size="large" color={colors.primaryAction} /></View>
         ) : (
           <FlatList
             ref={flatListRef}
@@ -535,12 +537,12 @@ export default function ChatScreen({ route, navigation }) {
         <View style={styles.inputRow}>
           <View style={styles.inputWrap}>
             <TouchableOpacity style={styles.attachBtn} onPress={handleAttach}>
-              <Ionicons name="attach" size={22} color="#94a3b8" />
+              <Ionicons name="attach" size={22} color={colors.textTertiary} />
             </TouchableOpacity>
             <TextInput
               style={styles.input}
               placeholder="Message"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textTertiary}
               value={newMessage}
               onChangeText={handleChangeText}
               multiline
@@ -560,9 +562,9 @@ export default function ChatScreen({ route, navigation }) {
   );
 }
 
-// ─── styles ─────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0f172a' },
+// ─── Theme-Aware Style Generator ────────────────────────────────────────────
+const createStyles = (theme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: theme.background },
   flex: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
@@ -571,23 +573,23 @@ const styles = StyleSheet.create({
   headerOnlineDot: {
     position: 'absolute', bottom: 0, right: 0,
     width: 11, height: 11, borderRadius: 6,
-    backgroundColor: '#22c55e', borderWidth: 2, borderColor: '#1e293b',
+    backgroundColor: '#22c55e', borderWidth: 2, borderColor: theme.header,
   },
-  headerName: { fontSize: 15, fontWeight: '700', color: '#f1f5f9', maxWidth: 180 },
-  headerStatusTyping: { fontSize: 12, color: '#6ee7b7', fontStyle: 'italic', marginTop: 1 },
+  headerName: { fontSize: 15, fontWeight: '700', color: theme.textMain, maxWidth: 180 },
+  headerStatusTyping: { fontSize: 12, color: theme.secondaryAccent, fontStyle: 'italic', marginTop: 1 },
   headerStatusOnline: { fontSize: 12, color: '#22c55e', marginTop: 1 },
-  headerStatusOffline: { fontSize: 11, color: '#475569', marginTop: 1 },
+  headerStatusOffline: { fontSize: 11, color: theme.textTertiary, marginTop: 1 },
 
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#1e293b', paddingHorizontal: 10,
-    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#334155',
+    backgroundColor: theme.header, paddingHorizontal: 10,
+    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: theme.headerDivider,
   },
-  searchInput: { flex: 1, fontSize: 15, color: '#f1f5f9', marginHorizontal: 8 },
+  searchInput: { flex: 1, fontSize: 15, color: theme.textMain, marginHorizontal: 8 },
   searchNav: { flexDirection: 'row', alignItems: 'center' },
-  searchCount: { fontSize: 13, color: '#94a3b8', marginRight: 4 },
+  searchCount: { fontSize: 13, color: theme.textSub, marginRight: 4 },
   navBtn: { padding: 4 },
-  noResults: { fontSize: 13, color: '#64748b', marginRight: 8 },
+  noResults: { fontSize: 13, color: theme.textTertiary, marginRight: 8 },
 
   list: { paddingHorizontal: 10, paddingVertical: 12 },
 
@@ -597,34 +599,34 @@ const styles = StyleSheet.create({
   rowSpaced: { marginBottom: 6 },
 
   avatarSlot: { width: 30, marginRight: 4, alignSelf: 'flex-end' },
-  msgAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#ddd' },
+  msgAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: theme.cardAccent },
 
   bubbleCol: { maxWidth: '75%', position: 'relative' },
   bubbleColLeft: { alignItems: 'flex-start' },
   bubbleColRight: { alignItems: 'flex-end' },
 
-  matchCurrent: { backgroundColor: '#fbbf24', color: '#0f172a', borderRadius: 3 },
+  matchCurrent: { backgroundColor: '#fbbf24', color: '#1a1a1a', borderRadius: 3 },
   matchOther: { backgroundColor: 'rgba(251, 191, 36, 0.35)', borderRadius: 3 },
   bubbleCurrentMatch: { borderWidth: 2, borderColor: '#fbbf24' },
   imgBubbleCurrentMatch: { borderWidth: 2, borderColor: '#fbbf24', borderRadius: 14 },
 
   bubble: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, marginBottom: 1 },
-  bubbleMe: { backgroundColor: '#4338ca', borderTopRightRadius: 18, borderBottomRightRadius: 6 },
+  bubbleMe: { backgroundColor: theme.primaryAction, borderTopRightRadius: 18, borderBottomRightRadius: 6 },
   bubbleOther: {
-    backgroundColor: '#1e293b', borderTopLeftRadius: 18, borderBottomLeftRadius: 6,
-    borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.card, borderTopLeftRadius: 18, borderBottomLeftRadius: 6,
+    borderWidth: 1, borderColor: theme.cardAccent,
   },
   tailTopRight: { borderTopRightRadius: 4 },
   tailTopLeft: { borderTopLeftRadius: 4 },
 
   bubbleText: { fontSize: 15, lineHeight: 21 },
-  textMe: { color: '#ffffff' },
-  textOther: { color: '#f1f5f9' },
+  textMe: { color: '#ffffff' }, // Always white to contrast with solid primaryAction backgrounds
+  textOther: { color: theme.textBody },
 
   metaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2, marginBottom: 2 },
   metaRight: { justifyContent: 'flex-end', paddingRight: 4 },
   metaLeft: { justifyContent: 'flex-start', paddingLeft: 4 },
-  timeText: { fontSize: 11, color: '#64748b' },
+  timeText: { fontSize: 11, color: theme.textTertiary },
 
   imgBubble: { borderRadius: 14, overflow: 'hidden', marginBottom: 1 },
   imgBubbleMe: { borderBottomRightRadius: 4 },
@@ -639,11 +641,11 @@ const styles = StyleSheet.create({
   typingRow: { flexDirection: 'row', alignItems: 'flex-end', paddingLeft: 12, paddingBottom: 8 },
   typingAvatar: { width: 26, height: 26, borderRadius: 13, marginRight: 6 },
   typingBubble: {
-    backgroundColor: '#1e293b', paddingHorizontal: 14, paddingVertical: 10,
-    borderRadius: 18, borderBottomLeftRadius: 4, borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.card, paddingHorizontal: 14, paddingVertical: 10,
+    borderRadius: 18, borderBottomLeftRadius: 4, borderWidth: 1, borderColor: theme.cardAccent,
   },
   typingDots: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#64748b' },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: theme.textTertiary },
   d1: { opacity: 0.35 },
   d2: { opacity: 0.65 },
   d3: { opacity: 1 },
@@ -651,30 +653,30 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 8, paddingVertical: 4,
-    backgroundColor: '#0f172a', borderTopWidth: 1, borderTopColor: '#1e293b',
+    backgroundColor: theme.background, borderTopWidth: 1, borderTopColor: theme.headerDivider,
   },
   inputWrap: {
     flex: 1, flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#1e293b', borderRadius: 20,
+    backgroundColor: theme.inputBg, borderRadius: 20,
     paddingHorizontal: 8, paddingVertical: Platform.OS === 'ios' ? 6 : 2,
-    marginRight: 8, minHeight: 36, borderWidth: 1, borderColor: '#334155',
+    marginRight: 8, minHeight: 36, borderWidth: 1, borderColor: theme.inputBorder,
   },
   attachBtn: { padding: 6, alignSelf: 'flex-end' },
   input: {
-    flex: 1, fontSize: 15, color: '#f1f5f9',
+    flex: 1, fontSize: 15, color: theme.textMain,
     maxHeight: 120, paddingHorizontal: 6,
     paddingVertical: Platform.OS === 'ios' ? 0 : 6,
   },
   sendBtn: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: '#4f46e5',
+    width: 36, height: 36, borderRadius: 18, backgroundColor: theme.primaryAction,
     justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 2 },
+    shadowColor: theme.primaryAction, shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4, shadowRadius: 3, elevation: 3,
   },
-  sendOff: { backgroundColor: '#334155' },
+  sendOff: { backgroundColor: theme.cardAccent },
 
   emptyBox: { alignItems: 'center', paddingTop: 60 },
-  emptyAvatar: { width: 72, height: 72, borderRadius: 36, marginBottom: 12, backgroundColor: '#273549' },
-  emptyName: { fontSize: 17, fontWeight: '700', color: '#f1f5f9', marginBottom: 4 },
-  emptyHint: { fontSize: 14, color: '#64748b' },
+  emptyAvatar: { width: 72, height: 72, borderRadius: 36, marginBottom: 12, backgroundColor: theme.cardAccent },
+  emptyName: { fontSize: 17, fontWeight: '700', color: theme.textMain, marginBottom: 4 },
+  emptyHint: { fontSize: 14, color: theme.textSub },
 });

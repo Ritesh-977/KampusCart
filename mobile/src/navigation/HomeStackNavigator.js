@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useTheme } from '../context/ThemeContext';
 import HomeScreen from '../screens/HomeScreen';
 import ItemDetailsScreen from '../screens/ItemDetailsScreen';
 import LostFoundScreen from '../screens/LostFoundScreen';
@@ -18,15 +19,16 @@ import SportRegistrationsListScreen from '../screens/SportRegistrationsListScree
 const Stack = createNativeStackNavigator();
 
 const HomeStackNavigator = () => {
+  const { theme } = useTheme();
+  const navOptions = useMemo(() => ({
+    headerStyle: { backgroundColor: theme.header },
+    headerTintColor: theme.textMain,
+    headerTitleStyle: { fontWeight: '700', color: theme.textMain },
+    headerShadowVisible: false,
+  }), [theme]);
+
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: '#0f172a' },
-        headerTintColor: '#f1f5f9',
-        headerTitleStyle: { fontWeight: '700', color: '#f1f5f9' },
-        headerShadowVisible: false,
-      }}
-    >
+    <Stack.Navigator screenOptions={navOptions}>
       <Stack.Screen
         name="HomeFeed"
         component={HomeScreen}

@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
   Modal, FlatList, SafeAreaView, StatusBar, ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 import { colleges } from '../utils/colleges';
 import API from '../api/axios';
 
 const RegisterScreen = ({ navigation }) => {
+  const { theme } = useTheme();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,6 +24,66 @@ const RegisterScreen = ({ navigation }) => {
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (c.shortName && c.shortName.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  const memoStyles = useMemo(() => ({
+    safeArea: { flex: 1, backgroundColor: theme.background },
+    formContainer: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 40 },
+    backBtn: { marginBottom: 20, width: 40, height: 40, justifyContent: 'center' },
+    title: { fontSize: 30, fontWeight: '800', color: theme.textMain, marginBottom: 6 },
+    subtitle: { fontSize: 15, color: theme.textTertiary, marginBottom: 28 },
+    inputGroup: { marginBottom: 18 },
+    label: { fontSize: 14, fontWeight: '600', color: theme.textSub, marginBottom: 8 },
+    inputWrapper: {
+      flexDirection: 'row', alignItems: 'center',
+      backgroundColor: theme.inputBg, borderWidth: 1, borderColor: theme.inputBorder,
+      borderRadius: 12, paddingHorizontal: 14,
+    },
+    inputIcon: { marginRight: 10, color: theme.textTertiary },
+    input: { flex: 1, paddingVertical: 14, fontSize: 16, color: theme.textMain },
+    eyeIcon: { padding: 4 },
+    dropdownButton: {
+      flexDirection: 'row', alignItems: 'center',
+      backgroundColor: theme.inputBg, borderWidth: 1, borderColor: theme.inputBorder,
+      borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
+    },
+    loginButton: {
+      backgroundColor: theme.primaryAction, borderRadius: 12,
+      paddingVertical: 16, alignItems: 'center', marginTop: 8,
+      shadowColor: theme.primaryAction, shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4, shadowRadius: 8, elevation: 4,
+    },
+    loginButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
+    footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 28 },
+    footerText: { color: theme.textTertiary, fontSize: 14 },
+    linkText: { color: theme.primaryAccent, fontSize: 14, fontWeight: 'bold' },
+    waitlistCard: {
+      backgroundColor: theme.primaryAccent + '25', padding: 24, borderRadius: 16,
+      borderWidth: 1, borderColor: theme.primaryAccent + '40', alignItems: 'center', marginBottom: 10,
+    },
+    waitlistEmoji: { fontSize: 36, marginBottom: 10 },
+    waitlistTitle: { fontSize: 20, fontWeight: 'bold', color: theme.primaryAccent, marginBottom: 8 },
+    waitlistDesc: { fontSize: 14, color: theme.textSub, textAlign: 'center', lineHeight: 22, marginBottom: 16 },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'flex-end' },
+    modalContent: {
+      backgroundColor: theme.background, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+      maxHeight: '80%', paddingBottom: 20,
+    },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+      paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: theme.inputBorder },
+    modalTitle: { fontSize: 18, fontWeight: '700', color: theme.textMain },
+    searchWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: theme.inputBg,
+      borderWidth: 1, borderColor: theme.inputBorder, borderRadius: 12, marginHorizontal: 16, marginVertical: 12,
+      paddingHorizontal: 12, paddingVertical: 10 },
+    searchInput: { flex: 1, fontSize: 15, color: theme.textMain },
+    collegeItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14,
+      borderBottomWidth: 1, borderBottomColor: theme.inputBorder },
+    collegeEmoji: { fontSize: 24, marginRight: 12 },
+    collegeItemText: { fontSize: 15, fontWeight: '600', color: theme.textMain, flex: 1 },
+    collegeLocation: { fontSize: 12, color: theme.textTertiary, marginTop: 2 },
+    comingSoonBadge: { backgroundColor: theme.primaryAccent + '25', borderRadius: 6,
+      paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: theme.primaryAccent + '50' },
+    comingSoonText: { fontSize: 11, fontWeight: '700', color: theme.primaryAccent },
+  }), [theme]);
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password || !selectedCollege) {
@@ -72,48 +134,48 @@ const RegisterScreen = ({ navigation }) => {
 
   const renderCollegeItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.collegeItem}
+      style={memoStyles.collegeItem}
       onPress={() => {
         setSelectedCollege(item);
         setModalVisible(false);
         setSearchQuery('');
       }}
     >
-      <Text style={styles.collegeEmoji}>{item.emoji}</Text>
+      <Text style={memoStyles.collegeEmoji}>{item.emoji}</Text>
       <View style={{ flex: 1 }}>
-        <Text style={styles.collegeItemText}>{item.name}</Text>
-        {item.location && <Text style={styles.collegeLocation}>{item.location}</Text>}
+        <Text style={memoStyles.collegeItemText}>{item.name}</Text>
+        {item.location && <Text style={memoStyles.collegeLocation}>{item.location}</Text>}
       </View>
       {item.emailDomain === null && (
-        <View style={styles.comingSoonBadge}>
-          <Text style={styles.comingSoonText}>Soon</Text>
+        <View style={memoStyles.comingSoonBadge}>
+          <Text style={memoStyles.comingSoonText}>Soon</Text>
         </View>
       )}
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
+    <SafeAreaView style={memoStyles.safeArea}>
+      <StatusBar barStyle={theme.statusBarStyle === 'light-content' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView contentContainerStyle={styles.formContainer} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={memoStyles.formContainer} keyboardShouldPersistTaps="handled">
 
           {/* Back button */}
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
+          <TouchableOpacity style={memoStyles.backBtn} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={22} color={theme.textMain} />
           </TouchableOpacity>
 
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join your campus marketplace today.</Text>
+          <Text style={memoStyles.title}>Create Account</Text>
+          <Text style={memoStyles.subtitle}>Join your campus marketplace today.</Text>
 
           {/* Campus Selector */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Your Campus</Text>
-            <TouchableOpacity style={styles.dropdownButton} onPress={() => setModalVisible(true)}>
-              <Text style={{ color: selectedCollege ? '#f1f5f9' : '#64748b', fontSize: 16, flex: 1 }}>
+          <View style={memoStyles.inputGroup}>
+            <Text style={memoStyles.label}>Your Campus</Text>
+            <TouchableOpacity style={memoStyles.dropdownButton} onPress={() => setModalVisible(true)}>
+              <Text style={{ color: selectedCollege ? theme.textMain : theme.textBody, fontSize: 16, flex: 1 }}>
                 {selectedCollege ? `${selectedCollege.emoji} ${selectedCollege.name}` : 'Select your college...'}
               </Text>
-              <Ionicons name="chevron-down" size={20} color="#9ca3af" />
+              <Ionicons name="chevron-down" size={20} color={theme.textTertiary} />
             </TouchableOpacity>
           </View>
 
@@ -121,26 +183,26 @@ const RegisterScreen = ({ navigation }) => {
           {!selectedCollege ? null : selectedCollege.emailDomain === null ? (
 
             /* WAITLIST UI */
-            <View style={styles.waitlistCard}>
-              <Text style={styles.waitlistEmoji}>🚀</Text>
-              <Text style={styles.waitlistTitle}>Coming Soon!</Text>
-              <Text style={styles.waitlistDesc}>
+            <View style={memoStyles.waitlistCard}>
+              <Text style={memoStyles.waitlistEmoji}>🚀</Text>
+              <Text style={memoStyles.waitlistTitle}>Coming Soon!</Text>
+              <Text style={memoStyles.waitlistDesc}>
                 KampusCart is expanding to {selectedCollege.name}! Enter your email to get notified at launch.
               </Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="mail-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
+              <View style={memoStyles.inputWrapper}>
+                <Ionicons name="mail-outline" size={20} color={theme.textTertiary} style={memoStyles.inputIcon} />
                 <TextInput
-                  style={styles.input}
+                  style={memoStyles.input}
                   placeholder="Your email address"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={theme.textTertiary}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
               </View>
-              <TouchableOpacity style={styles.loginButton} onPress={handleWaitlist}>
-                <Text style={styles.loginButtonText}>Join Waitlist</Text>
+              <TouchableOpacity style={memoStyles.loginButton} onPress={handleWaitlist}>
+                <Text style={memoStyles.loginButtonText}>Join Waitlist</Text>
               </TouchableOpacity>
             </View>
 
@@ -148,28 +210,28 @@ const RegisterScreen = ({ navigation }) => {
 
             /* STANDARD REGISTRATION */
             <View>
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Full Name</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="person-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
+              <View style={memoStyles.inputGroup}>
+                <Text style={memoStyles.label}>Full Name</Text>
+                <View style={memoStyles.inputWrapper}>
+                  <Ionicons name="person-outline" size={20} color={theme.textTertiary} style={memoStyles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={memoStyles.input}
                     placeholder="John Doe"
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={theme.textTertiary}
                     value={name}
                     onChangeText={setName}
                   />
                 </View>
               </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>College Email</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="mail-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
+              <View style={memoStyles.inputGroup}>
+                <Text style={memoStyles.label}>College Email</Text>
+                <View style={memoStyles.inputWrapper}>
+                  <Ionicons name="mail-outline" size={20} color={theme.textTertiary} style={memoStyles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={memoStyles.input}
                     placeholder={`name@${selectedCollege.emailDomain}`}
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={theme.textTertiary}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     value={email}
@@ -178,39 +240,39 @@ const RegisterScreen = ({ navigation }) => {
                 </View>
               </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Password</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
+              <View style={memoStyles.inputGroup}>
+                <Text style={memoStyles.label}>Password</Text>
+                <View style={memoStyles.inputWrapper}>
+                  <Ionicons name="lock-closed-outline" size={20} color={theme.textTertiary} style={memoStyles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={memoStyles.input}
                     placeholder="At least 6 characters"
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={theme.textTertiary}
                     secureTextEntry={!showPassword}
                     value={password}
                     onChangeText={setPassword}
                   />
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                    <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#9ca3af" />
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={memoStyles.eyeIcon}>
+                    <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={theme.textTertiary} />
                   </TouchableOpacity>
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.loginButton} onPress={handleRegister} disabled={loading}>
+              <TouchableOpacity style={memoStyles.loginButton} onPress={handleRegister} disabled={loading}>
                 {loading ? (
-                  <ActivityIndicator color="#ffffff" />
+                  <ActivityIndicator color={theme.textMain} />
                 ) : (
-                  <Text style={styles.loginButtonText}>Create Account</Text>
+                  <Text style={memoStyles.loginButtonText}>Create Account</Text>
                 )}
               </TouchableOpacity>
             </View>
           )}
 
           {/* Login link */}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
+          <View style={memoStyles.footer}>
+            <Text style={memoStyles.footerText}>Already have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.linkText}>Sign In</Text>
+              <Text style={memoStyles.linkText}>Sign In</Text>
             </TouchableOpacity>
           </View>
 
@@ -219,21 +281,21 @@ const RegisterScreen = ({ navigation }) => {
 
       {/* College Selection Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Campus</Text>
+        <View style={memoStyles.modalOverlay}>
+          <View style={memoStyles.modalContent}>
+            <View style={memoStyles.modalHeader}>
+              <Text style={memoStyles.modalTitle}>Select Campus</Text>
               <TouchableOpacity onPress={() => { setModalVisible(false); setSearchQuery(''); }}>
-                <Ionicons name="close" size={24} color="#94a3b8" />
+                <Ionicons name="close" size={24} color={theme.textSub} />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.searchWrapper}>
-              <Ionicons name="search" size={18} color="#9ca3af" style={{ marginRight: 8 }} />
+            <View style={memoStyles.searchWrapper}>
+              <Ionicons name="search" size={18} color={theme.textTertiary} style={{ marginRight: 8 }} />
               <TextInput
-                style={styles.searchInput}
+                style={memoStyles.searchInput}
                 placeholder="Search college..."
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={theme.textTertiary}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 autoFocus
@@ -255,73 +317,5 @@ const RegisterScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#0f172a' },
-  formContainer: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 40 },
-  backBtn: { marginBottom: 20, width: 40, height: 40, justifyContent: 'center' },
-  title: { fontSize: 30, fontWeight: '800', color: '#f1f5f9', marginBottom: 6 },
-  subtitle: { fontSize: 15, color: '#64748b', marginBottom: 28 },
-  inputGroup: { marginBottom: 18 },
-  label: { fontSize: 14, fontWeight: '600', color: '#94a3b8', marginBottom: 8 },
-  inputWrapper: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#1e293b', borderWidth: 1, borderColor: '#334155',
-    borderRadius: 12, paddingHorizontal: 14,
-  },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, paddingVertical: 14, fontSize: 16, color: '#f1f5f9' },
-  eyeIcon: { padding: 4 },
-  dropdownButton: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#1e293b', borderWidth: 1, borderColor: '#334155',
-    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
-  },
-  loginButton: {
-    backgroundColor: '#4f46e5', borderRadius: 12,
-    paddingVertical: 16, alignItems: 'center', marginTop: 8,
-    shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4, shadowRadius: 8, elevation: 4,
-  },
-  loginButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
-  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 28 },
-  footerText: { color: '#64748b', fontSize: 14 },
-  linkText: { color: '#818cf8', fontSize: 14, fontWeight: 'bold' },
-
-  // Waitlist
-  waitlistCard: {
-    backgroundColor: 'rgba(79,70,229,0.15)', padding: 24, borderRadius: 16,
-    borderWidth: 1, borderColor: 'rgba(79,70,229,0.3)', alignItems: 'center', marginBottom: 10,
-  },
-  waitlistEmoji: { fontSize: 36, marginBottom: 10 },
-  waitlistTitle: { fontSize: 20, fontWeight: 'bold', color: '#818cf8', marginBottom: 8 },
-  waitlistDesc: { fontSize: 14, color: '#94a3b8', textAlign: 'center', lineHeight: 22, marginBottom: 16 },
-
-  // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'flex-end' },
-  modalContent: {
-    backgroundColor: '#1e293b', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 20, maxHeight: '80%', borderWidth: 1, borderColor: '#334155',
-  },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  modalTitle: { fontSize: 20, fontWeight: '700', color: '#f1f5f9' },
-  searchWrapper: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#273549', borderRadius: 10, paddingHorizontal: 12,
-    paddingVertical: 10, marginBottom: 12, borderWidth: 1, borderColor: '#334155',
-  },
-  searchInput: { flex: 1, fontSize: 15, color: '#f1f5f9' },
-  collegeItem: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: '#334155',
-  },
-  collegeEmoji: { fontSize: 22, marginRight: 12 },
-  collegeItemText: { fontSize: 15, fontWeight: '600', color: '#f1f5f9' },
-  collegeLocation: { fontSize: 12, color: '#64748b', marginTop: 2 },
-  comingSoonBadge: {
-    backgroundColor: 'rgba(245,158,11,0.15)', paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 6, borderWidth: 1, borderColor: 'rgba(245,158,11,0.3)',
-  },
-  comingSoonText: { fontSize: 11, color: '#fbbf24', fontWeight: '600' },
-});
 
 export default RegisterScreen;

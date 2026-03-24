@@ -9,6 +9,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
 import API from '../api/axios';
+import { useThemeStyles } from '../hooks/useThemeStyles'; // <-- Update path as needed
 
 const CATEGORIES = ['All', 'ID Card', 'Keys', 'Electronics', 'Books', 'Other'];
 const ITEM_CATEGORIES = ['ID Card', 'Keys', 'Electronics', 'Books', 'Other'];
@@ -22,6 +23,9 @@ const CATEGORY_ICONS = {
 };
 
 const LostFoundScreen = ({ navigation }) => {
+  // 1. Initialize dynamic theme hook
+  const { styles, colors } = useThemeStyles(createStyles);
+
   const { isGuest, logout } = useContext(AuthContext);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -154,8 +158,11 @@ const LostFoundScreen = ({ navigation }) => {
       )}
       <View style={styles.cardContent}>
         <View style={styles.cardTopRow}>
+          {/* Maintained hardcoded semantic colors for Lost/Found state badging */}
           <View style={[styles.typeBadge, item.type === 'Lost' ? styles.lostBadge : styles.foundBadge]}>
-            <Text style={styles.typeBadgeText}>{item.type}</Text>
+            <Text style={[styles.typeBadgeText, item.type === 'Lost' ? styles.lostBadgeText : styles.foundBadgeText]}>
+              {item.type}
+            </Text>
           </View>
           <Text style={styles.timeText}>{getTimeSince(item.createdAt)}</Text>
         </View>
@@ -167,11 +174,11 @@ const LostFoundScreen = ({ navigation }) => {
 
         <View style={styles.cardMeta}>
           <View style={styles.metaItem}>
-            <Ionicons name="location-outline" size={14} color="#6b7280" />
+            <Ionicons name="location-outline" size={14} color={colors.textTertiary} />
             <Text style={styles.metaText}>{item.location}</Text>
           </View>
           <View style={styles.metaItem}>
-            <Ionicons name="pricetag-outline" size={14} color="#6b7280" />
+            <Ionicons name="pricetag-outline" size={14} color={colors.textTertiary} />
             <Text style={styles.metaText}>{item.category}</Text>
           </View>
         </View>
@@ -181,7 +188,7 @@ const LostFoundScreen = ({ navigation }) => {
             style={styles.contactBtn}
             onPress={() => Alert.alert('Contact', `Reach out to: ${item.contact}`)}
           >
-            <Ionicons name="call-outline" size={16} color="#4f46e5" />
+            <Ionicons name="call-outline" size={16} color={colors.primaryAction} />
             <Text style={styles.contactBtnText}>Contact Reporter</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.resolveBtn} onPress={() => handleResolve(item._id)}>
@@ -198,7 +205,7 @@ const LostFoundScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
+          <Ionicons name="arrow-back" size={22} color={colors.textMain} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Lost & Found</Text>
         <View style={{ width: 40 }} />
@@ -230,7 +237,7 @@ const LostFoundScreen = ({ navigation }) => {
             <Ionicons
               name={CATEGORY_ICONS[cat]}
               size={12}
-              color={activeCategory === cat ? '#ffffff' : '#6b7280'}
+              color={activeCategory === cat ? '#ffffff' : colors.textTertiary}
               style={{ marginRight: 3 }}
             />
             <Text style={[styles.catChipText, activeCategory === cat && styles.catChipTextActive]}>
@@ -243,7 +250,7 @@ const LostFoundScreen = ({ navigation }) => {
       {/* Item List */}
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#4f46e5" />
+          <ActivityIndicator size="large" color={colors.primaryAction} />
         </View>
       ) : (
         <FlatList
@@ -251,7 +258,7 @@ const LostFoundScreen = ({ navigation }) => {
           keyExtractor={(item) => item._id}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4f46e5']} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primaryAction} colors={[colors.primaryAction]} />}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={{ fontSize: 40, marginBottom: 12 }}>
@@ -300,7 +307,7 @@ const LostFoundScreen = ({ navigation }) => {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Report an Item</Text>
                 <TouchableOpacity onPress={() => { setReportModalVisible(false); resetForm(); }}>
-                  <Ionicons name="close" size={24} color="#94a3b8" />
+                  <Ionicons name="close" size={24} color={colors.textSub} />
                 </TouchableOpacity>
               </View>
 
@@ -328,7 +335,7 @@ const LostFoundScreen = ({ navigation }) => {
                     placeholder="e.g. Blue Water Bottle"
                     value={formTitle}
                     onChangeText={setFormTitle}
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={colors.textTertiary}
                   />
                 </View>
 
@@ -354,7 +361,7 @@ const LostFoundScreen = ({ navigation }) => {
                     placeholder="e.g. Library, Ground Floor"
                     value={formLocation}
                     onChangeText={setFormLocation}
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={colors.textTertiary}
                   />
                 </View>
 
@@ -367,7 +374,7 @@ const LostFoundScreen = ({ navigation }) => {
                     onChangeText={setFormDescription}
                     multiline
                     numberOfLines={3}
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={colors.textTertiary}
                   />
                 </View>
 
@@ -379,7 +386,7 @@ const LostFoundScreen = ({ navigation }) => {
                     value={formContact}
                     onChangeText={setFormContact}
                     keyboardType="phone-pad"
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={colors.textTertiary}
                   />
                 </View>
 
@@ -389,7 +396,7 @@ const LostFoundScreen = ({ navigation }) => {
                     <Image source={{ uri: formImage }} style={styles.imagePreview} />
                   ) : (
                     <>
-                      <Ionicons name="camera-outline" size={24} color="#6b7280" />
+                      <Ionicons name="camera-outline" size={24} color={colors.textTertiary} />
                       <Text style={styles.imagePickerText}>Add Photo (optional)</Text>
                     </>
                   )}
@@ -401,7 +408,7 @@ const LostFoundScreen = ({ navigation }) => {
                   disabled={submitting}
                 >
                   {submitting ? (
-                    <ActivityIndicator color="#fff" />
+                    <ActivityIndicator color="#ffffff" />
                   ) : (
                     <Text style={styles.submitBtnText}>Submit Report</Text>
                   )}
@@ -417,113 +424,122 @@ const LostFoundScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f172a' },
+// ─── Theme-Aware Style Generator ─────────────────────────────────────────────
+const createStyles = (theme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 50 : 14,
-    paddingBottom: 14, backgroundColor: '#0f172a',
-    borderBottomWidth: 1, borderBottomColor: '#1e293b',
+    paddingBottom: 14, backgroundColor: theme.header,
+    borderBottomWidth: 1, borderBottomColor: theme.headerDivider,
   },
   backBtn: { width: 40, height: 40, justifyContent: 'center' },
-  headerTitle: { fontSize: 20, fontWeight: '800', color: '#f1f5f9' },
+  headerTitle: { fontSize: 20, fontWeight: '800', color: theme.textMain },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
   typeToggle: {
     flexDirection: 'row', margin: 16,
-    backgroundColor: '#1e293b', borderRadius: 12, padding: 4,
-    borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.card, borderRadius: 12, padding: 4,
+    borderWidth: 1, borderColor: theme.cardAccent,
   },
   toggleBtn: {
     flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center',
   },
-  toggleBtnActive: { backgroundColor: '#334155', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.3, shadowRadius: 2, elevation: 2 },
-  toggleText: { fontSize: 15, fontWeight: '600', color: '#64748b' },
-  toggleTextActive: { color: '#f1f5f9' },
+  toggleBtnActive: { 
+    backgroundColor: theme.inputBg, // Slightly varied background for the active toggle pill
+    shadowColor: theme.textMain, shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.15, shadowRadius: 2, elevation: 2 
+  },
+  toggleText: { fontSize: 15, fontWeight: '600', color: theme.textSub },
+  toggleTextActive: { color: theme.textMain },
 
   categoryRow: { paddingLeft: 16, marginBottom: 8 },
   catChip: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     height: 28, paddingHorizontal: 11, borderRadius: 14,
-    backgroundColor: '#1e293b', marginRight: 7, marginBottom: 10,
-    borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.card, marginRight: 7, marginBottom: 10,
+    borderWidth: 1, borderColor: theme.cardAccent,
   },
-  catChipActive: { backgroundColor: '#4f46e5', borderColor: '#4f46e5' },
-  catChipText: { fontSize: 12, fontWeight: '600', color: '#64748b', lineHeight: 16 },
-  catChipTextActive: { color: '#ffffff' },
+  catChipActive: { backgroundColor: theme.primaryAction, borderColor: theme.primaryAction },
+  catChipText: { fontSize: 12, fontWeight: '600', color: theme.textSub, lineHeight: 16 },
+  catChipTextActive: { color: '#ffffff' }, // Always white text on primaryAction backgrounds
 
   list: { padding: 16 },
   card: {
-    backgroundColor: '#1e293b', borderRadius: 14, marginBottom: 14,
-    borderWidth: 1, borderColor: '#334155',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3, shadowRadius: 4, elevation: 2,
+    backgroundColor: theme.card, borderRadius: 14, marginBottom: 14,
+    borderWidth: 1, borderColor: theme.cardAccent,
+    shadowColor: theme.textMain, shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
     overflow: 'hidden',
   },
-  cardImage: { width: '100%', height: 160, backgroundColor: '#273549' },
+  cardImage: { width: '100%', height: 160, backgroundColor: theme.cardAccent },
   cardContent: { padding: 14 },
   cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   typeBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  
+  // Kept Semantic Status Badges (Red for Lost, Green for Found/Resolved)
   lostBadge: { backgroundColor: 'rgba(239,68,68,0.15)' },
   foundBadge: { backgroundColor: 'rgba(22,163,74,0.15)' },
-  typeBadgeText: { fontSize: 12, fontWeight: '700', color: '#f1f5f9' },
-  timeText: { fontSize: 12, color: '#64748b' },
-  cardTitle: { fontSize: 17, fontWeight: '700', color: '#f1f5f9', marginBottom: 4 },
-  cardDesc: { fontSize: 14, color: '#94a3b8', lineHeight: 20, marginBottom: 10 },
+  lostBadgeText: { fontSize: 12, fontWeight: '700', color: '#f87171' },
+  foundBadgeText: { fontSize: 12, fontWeight: '700', color: '#4ade80' },
+  
+  timeText: { fontSize: 12, color: theme.textTertiary },
+  cardTitle: { fontSize: 17, fontWeight: '700', color: theme.textMain, marginBottom: 4 },
+  cardDesc: { fontSize: 14, color: theme.textSub, lineHeight: 20, marginBottom: 10 },
   cardMeta: { flexDirection: 'row', marginBottom: 12 },
   metaItem: { flexDirection: 'row', alignItems: 'center', marginRight: 16 },
-  metaText: { fontSize: 13, color: '#94a3b8', marginLeft: 4 },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#334155', paddingTop: 12 },
+  metaText: { fontSize: 13, color: theme.textTertiary, marginLeft: 4 },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: theme.cardAccent, paddingTop: 12 },
   contactBtn: { flexDirection: 'row', alignItems: 'center' },
-  contactBtnText: { fontSize: 14, color: '#818cf8', fontWeight: '600', marginLeft: 4 },
+  contactBtnText: { fontSize: 14, color: theme.primaryAccent, fontWeight: '600', marginLeft: 4 },
   resolveBtn: { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(22,163,74,0.15)', borderRadius: 8 },
   resolveBtnText: { fontSize: 13, color: '#4ade80', fontWeight: '600' },
 
   emptyContainer: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#f1f5f9', marginBottom: 8 },
-  emptySubtitle: { fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 22 },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: theme.textMain, marginBottom: 8 },
+  emptySubtitle: { fontSize: 14, color: theme.textSub, textAlign: 'center', lineHeight: 22 },
 
   fab: {
     position: 'absolute', right: 20, bottom: 24,
     width: 58, height: 58, borderRadius: 29,
-    backgroundColor: '#4f46e5', justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 4 },
+    backgroundColor: theme.primaryAction, justifyContent: 'center', alignItems: 'center',
+    shadowColor: theme.primaryAction, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.5, shadowRadius: 8, elevation: 6,
   },
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)' },
   modalContent: {
-    backgroundColor: '#1e293b', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 20, maxHeight: '90%', borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.card, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: 20, maxHeight: '90%', borderWidth: 1, borderColor: theme.cardAccent,
   },
   modalHeader: {
     flexDirection: 'row', justifyContent: 'space-between',
     alignItems: 'center', marginBottom: 16,
   },
-  modalTitle: { fontSize: 20, fontWeight: '700', color: '#f1f5f9' },
+  modalTitle: { fontSize: 20, fontWeight: '700', color: theme.textMain },
 
-  formTypeRow: { flexDirection: 'row', backgroundColor: '#273549', borderRadius: 12, padding: 4, marginBottom: 16 },
+  formTypeRow: { flexDirection: 'row', backgroundColor: theme.inputBg, borderRadius: 12, padding: 4, marginBottom: 16 },
   formTypeBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
-  formTypeBtnActive: { backgroundColor: '#4f46e5' },
-  formTypeBtnText: { fontSize: 14, fontWeight: '600', color: '#64748b' },
+  formTypeBtnActive: { backgroundColor: theme.primaryAction },
+  formTypeBtnText: { fontSize: 14, fontWeight: '600', color: theme.textSub },
   formTypeBtnTextActive: { color: '#ffffff' },
 
   formGroup: { marginBottom: 16 },
-  formLabel: { fontSize: 14, fontWeight: '600', color: '#94a3b8', marginBottom: 8 },
+  formLabel: { fontSize: 14, fontWeight: '600', color: theme.textSub, marginBottom: 8 },
   formInput: {
-    backgroundColor: '#273549', borderWidth: 1, borderColor: '#334155',
-    borderRadius: 10, padding: 13, fontSize: 15, color: '#f1f5f9',
+    backgroundColor: theme.inputBg, borderWidth: 1, borderColor: theme.inputBorder,
+    borderRadius: 10, padding: 13, fontSize: 15, color: theme.textMain,
   },
   imagePickerBtn: {
-    height: 120, backgroundColor: '#273549', borderRadius: 12,
-    borderWidth: 1, borderColor: '#4f46e5', borderStyle: 'dashed',
+    height: 120, backgroundColor: theme.inputBg, borderRadius: 12,
+    borderWidth: 1, borderColor: theme.primaryAction, borderStyle: 'dashed',
     justifyContent: 'center', alignItems: 'center', marginBottom: 16, overflow: 'hidden',
   },
   imagePreview: { width: '100%', height: '100%' },
-  imagePickerText: { fontSize: 14, color: '#64748b', marginTop: 6 },
+  imagePickerText: { fontSize: 14, color: theme.textTertiary, marginTop: 6 },
   submitBtn: {
-    backgroundColor: '#4f46e5', borderRadius: 12,
+    backgroundColor: theme.primaryAction, borderRadius: 12,
     paddingVertical: 16, alignItems: 'center', marginBottom: 20,
   },
   submitBtnText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },

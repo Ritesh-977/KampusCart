@@ -2,33 +2,39 @@ import React, { useState, useCallback, useContext, useRef, useEffect } from 'rea
 import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
   SafeAreaView, ActivityIndicator, Alert,
-  Platform, RefreshControl, TextInput, Modal, ScrollView,
+  Platform, RefreshControl, TextInput, Modal, ScrollView, StatusBar
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
+import { useThemeStyles } from '../hooks/useThemeStyles'; // <-- Update path as needed
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const TABS = [
-  { key: 'Exam Paper', label: 'Exam Papers', icon: 'document-text-outline', color: '#818cf8' },
-  { key: 'Note',       label: 'Notes',       icon: 'pencil-outline',        color: '#34d399' },
-  { key: 'Book',       label: 'Books',       icon: 'book-outline',          color: '#f472b6' },
-];
-
 const SEMESTERS = ['All', '1', '2', '3', '4', '5', '6', '7', '8'];
 
-const CATEGORY_META = {
-  'Exam Paper': { color: '#818cf8', bg: 'rgba(129,140,248,0.12)', icon: 'document-text-outline' },
-  'Note':       { color: '#34d399', bg: 'rgba(52,211,153,0.12)',  icon: 'pencil-outline' },
-  'Book':       { color: '#f472b6', bg: 'rgba(244,114,182,0.12)', icon: 'book-outline' },
-};
+// ── Helper to build dynamic tab/category meta ──
+const getCategoryMeta = (colors) => ({
+  'Exam Paper': { color: colors.primaryAccent,   bg: colors.primaryAccent + '1A',   icon: 'document-text-outline', label: 'Exam Papers' },
+  'Note':       { color: colors.secondaryAccent, bg: colors.secondaryAccent + '1A', icon: 'pencil-outline',        label: 'Notes' },
+  'Book':       { color: colors.tertiaryAccent,  bg: colors.tertiaryAccent + '1A',  icon: 'book-outline',          label: 'Books' },
+});
 
 // ── StudyMaterialsScreen ──────────────────────────────────────────────────────
 
 const StudyMaterialsScreen = ({ navigation }) => {
+  // 1. Initialize dynamic theme hook
+  const { styles, colors } = useThemeStyles(createStyles);
+  
+  // Create dynamic category colors
+  const CATEGORY_META = getCategoryMeta(colors);
+  const TABS = Object.keys(CATEGORY_META).map(key => ({
+    key,
+    ...CATEGORY_META[key]
+  }));
+
   const { currentUser, isGuest } = useContext(AuthContext);
 
   const [activeTab, setActiveTab]       = useState('Exam Paper');
@@ -220,14 +226,16 @@ const StudyMaterialsScreen = ({ navigation }) => {
   };
 
   // ── Active tab meta ───────────────────────────────────────────────────────────
-  const activeTabMeta = TABS.find(t => t.key === activeTab);
+  const activeTabMeta = CATEGORY_META[activeTab];
 
   return (
     <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.header} />
+
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
+          <Ionicons name="arrow-back" size={22} color={colors.textMain} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Study Materials</Text>
         {!isGuest && (
@@ -235,7 +243,7 @@ const StudyMaterialsScreen = ({ navigation }) => {
             style={styles.uploadBtn}
             onPress={() => navigation.navigate('UploadMaterial')}
           >
-            <Ionicons name="cloud-upload-outline" size={18} color="#fff" />
+            <Ionicons name="cloud-upload-outline" size={18} color="#ffffff" />
           </TouchableOpacity>
         )}
       </View>
@@ -248,10 +256,10 @@ const StudyMaterialsScreen = ({ navigation }) => {
             <TouchableOpacity
               key={tab.key}
               style={[styles.tab, active && { borderBottomColor: tab.color, borderBottomWidth: 2.5 }]}
-              onPress={() => handleTabSelect(tab.key)} // <-- NOW USES THE SAVE FUNCTION
+              onPress={() => handleTabSelect(tab.key)} 
             >
-              <Ionicons name={tab.icon} size={14} color={active ? tab.color : '#475569'} />
-              <Text style={[styles.tabText, active && { color: tab.color }]}>{tab.label}</Text>
+              <Ionicons name={tab.icon} size={14} color={active ? tab.color : colors.textTertiary} />
+              <Text style={[styles.tabText, active ? { color: tab.color } : { color: colors.textSub }]}>{tab.label}</Text>
             </TouchableOpacity>
           );
         })}
@@ -261,20 +269,20 @@ const StudyMaterialsScreen = ({ navigation }) => {
       <View style={styles.filterRow}>
         {/* Semester picker */}
         <TouchableOpacity style={styles.filterChip} onPress={() => setShowSemPicker(true)}>
-          <Ionicons name="layers-outline" size={13} color="#818cf8" />
+          <Ionicons name="layers-outline" size={13} color={colors.primaryAction} />
           <Text style={styles.filterChipText}>
             {semester === 'All' ? 'All Sems' : `Sem ${semester}`}
           </Text>
-          <Ionicons name="chevron-down" size={12} color="#64748b" />
+          <Ionicons name="chevron-down" size={12} color={colors.textTertiary} />
         </TouchableOpacity>
 
         {/* Subject search */}
         <View style={styles.searchBox}>
-          <Ionicons name="search-outline" size={14} color="#64748b" />
+          <Ionicons name="search-outline" size={14} color={colors.textTertiary} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search subject…"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.textTertiary}
             value={subjectQuery}
             onChangeText={setSubjectQuery}
             onSubmitEditing={() => fetchMaterials(true)}
@@ -282,7 +290,7 @@ const StudyMaterialsScreen = ({ navigation }) => {
           />
           {subjectQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSubjectQuery('')}>
-              <Ionicons name="close-circle" size={15} color="#475569" />
+              <Ionicons name="close-circle" size={15} color={colors.textTertiary} />
             </TouchableOpacity>
           )}
         </View>
@@ -291,7 +299,7 @@ const StudyMaterialsScreen = ({ navigation }) => {
       {/* ── List ── */}
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={activeTabMeta?.color || '#818cf8'} />
+          <ActivityIndicator size="large" color={activeTabMeta?.color || colors.primaryAction} />
         </View>
       ) : (
         <FlatList
@@ -304,18 +312,18 @@ const StudyMaterialsScreen = ({ navigation }) => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[activeTabMeta?.color || '#818cf8']}
-              tintColor={activeTabMeta?.color || '#818cf8'}
+              colors={[activeTabMeta?.color || colors.primaryAction]}
+              tintColor={activeTabMeta?.color || colors.primaryAction}
             />
           }
           onEndReached={onLoadMore}
           onEndReachedThreshold={0.4}
           ListFooterComponent={loadingMore ? (
-            <ActivityIndicator color="#475569" style={{ marginVertical: 16 }} />
+            <ActivityIndicator color={colors.textTertiary} style={{ marginVertical: 16 }} />
           ) : null}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons name="folder-open-outline" size={64} color="#1e293b" />
+              <Ionicons name="folder-open-outline" size={64} color={colors.cardAccent} />
               <Text style={styles.emptyTitle}>No {activeTabMeta?.label} yet</Text>
               <Text style={styles.emptySub}>
                 {isGuest
@@ -350,7 +358,7 @@ const StudyMaterialsScreen = ({ navigation }) => {
                 <Text style={[styles.pickerRowText, semester === s && styles.pickerRowTextActive]}>
                   {s === 'All' ? 'All Semesters' : `Semester ${s}`}
                 </Text>
-                {semester === s && <Ionicons name="checkmark" size={18} color="#818cf8" />}
+                {semester === s && <Ionicons name="checkmark" size={18} color={colors.primaryAccent} />}
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -362,59 +370,59 @@ const StudyMaterialsScreen = ({ navigation }) => {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: '#0f172a' },
+const createStyles = (theme) => StyleSheet.create({
+  safe:   { flex: 1, backgroundColor: theme.background },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
   // Header
   header: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? 48 : 12,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 12 : 12,
     paddingBottom: 14,
-    borderBottomWidth: 1, borderBottomColor: '#1e293b',
-    backgroundColor: '#0f172a',
+    borderBottomWidth: 1, borderBottomColor: theme.headerDivider,
+    backgroundColor: theme.header,
   },
   backBtn:     { padding: 4, marginRight: 10 },
-  headerTitle: { flex: 1, fontSize: 20, fontWeight: '800', color: '#f1f5f9' },
+  headerTitle: { flex: 1, fontSize: 20, fontWeight: '800', color: theme.textMain },
   uploadBtn: {
     width: 36, height: 36, borderRadius: 10,
-    backgroundColor: '#4f46e5',
+    backgroundColor: theme.primaryAction,
     justifyContent: 'center', alignItems: 'center',
   },
 
   // Tabs
   tabRow: {
     flexDirection: 'row',
-    backgroundColor: '#0f172a',
-    borderBottomWidth: 1, borderBottomColor: '#1e293b',
+    backgroundColor: theme.header,
+    borderBottomWidth: 1, borderBottomColor: theme.headerDivider,
   },
   tab: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     paddingVertical: 13, gap: 5,
     borderBottomWidth: 2, borderBottomColor: 'transparent',
   },
-  tabText: { fontSize: 13, fontWeight: '700', color: '#475569' },
+  tabText: { fontSize: 13, fontWeight: '700' },
 
   // Filters
   filterRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 14, paddingVertical: 10, gap: 10,
-    backgroundColor: '#0a0f1a',
-    borderBottomWidth: 1, borderBottomColor: '#1e293b',
+    backgroundColor: theme.formBackground,
+    borderBottomWidth: 1, borderBottomColor: theme.headerDivider,
   },
   filterChip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#1e293b', paddingHorizontal: 12, paddingVertical: 8,
-    borderRadius: 10, borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.card, paddingHorizontal: 12, paddingVertical: 8,
+    borderRadius: 10, borderWidth: 1, borderColor: theme.cardAccent,
   },
-  filterChipText: { fontSize: 12, fontWeight: '600', color: '#94a3b8' },
+  filterChipText: { fontSize: 12, fontWeight: '600', color: theme.textSub },
   searchBox: {
     flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#1e293b', paddingHorizontal: 12, paddingVertical: 8,
-    borderRadius: 10, borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.card, paddingHorizontal: 12, paddingVertical: 8,
+    borderRadius: 10, borderWidth: 1, borderColor: theme.cardAccent,
   },
-  searchInput: { flex: 1, color: '#f1f5f9', fontSize: 13, padding: 0 },
+  searchInput: { flex: 1, color: theme.textMain, fontSize: 13, padding: 0 },
 
   // List
   list: { padding: 14, paddingBottom: 40 },
@@ -422,11 +430,10 @@ const styles = StyleSheet.create({
   // Card
   card: {
     flexDirection: 'row',
-    backgroundColor: '#1e293b',
-    borderRadius: 14, borderWidth: 1, borderColor: '#273549',
+    backgroundColor: theme.card,
+    borderRadius: 14, borderWidth: 1, borderColor: theme.cardAccent,
     marginBottom: 12, overflow: 'hidden',
   },
-  cardAccent:  { width: 4 },
   cardContent: { flex: 1, padding: 13 },
   cardTop: {
     flexDirection: 'row', alignItems: 'center',
@@ -440,10 +447,10 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 11, fontWeight: '700' },
   cardTopRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   semBadge: {
-    backgroundColor: '#273549', paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: theme.cardAccent, paddingHorizontal: 8, paddingVertical: 3,
     borderRadius: 6,
   },
-  semText: { fontSize: 11, fontWeight: '700', color: '#94a3b8' },
+  semText: { fontSize: 11, fontWeight: '700', color: theme.textSub },
   delBtn: { 
     padding: 6, 
     backgroundColor: 'rgba(239, 68, 68, 0.12)',
@@ -451,8 +458,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  cardTitle:    { fontSize: 15, fontWeight: '700', color: '#f1f5f9', lineHeight: 21, marginBottom: 8 },
-  cardUploader: { fontSize: 11, color: '#334155', fontStyle: 'italic', marginBottom: 10 },
+  cardTitle:    { fontSize: 15, fontWeight: '700', color: theme.textMain, lineHeight: 21, marginBottom: 8 },
+  cardUploader: { fontSize: 11, color: theme.textTertiary, fontStyle: 'italic', marginBottom: 10 },
 
   openBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -463,25 +470,25 @@ const styles = StyleSheet.create({
 
   // Empty state
   empty: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 32 },
-  emptyTitle:      { fontSize: 18, fontWeight: '700', color: '#f1f5f9', marginTop: 14, marginBottom: 6 },
-  emptySub:        { fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20 },
+  emptyTitle:      { fontSize: 18, fontWeight: '700', color: theme.textMain, marginTop: 14, marginBottom: 6 },
+  emptySub:        { fontSize: 14, color: theme.textSub, textAlign: 'center', lineHeight: 20 },
   emptyUploadBtn:  { marginTop: 20, paddingVertical: 12, paddingHorizontal: 28, borderRadius: 12 },
-  emptyUploadText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  emptyUploadText: { color: '#ffffff', fontWeight: '700', fontSize: 15 }, // Keep white for contrast on colored background
 
   // Semester modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
   pickerSheet: {
-    backgroundColor: '#1e293b',
+    backgroundColor: theme.card,
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 20, paddingBottom: 36,
-    borderTopWidth: 1, borderColor: '#334155',
+    borderTopWidth: 1, borderColor: theme.cardAccent,
     maxHeight: '60%',
   },
-  pickerTitle:         { fontSize: 16, fontWeight: '800', color: '#f1f5f9', marginBottom: 12 },
-  pickerRow:           { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#273549', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  pickerRowActive:     { backgroundColor: 'rgba(129,140,248,0.07)', borderRadius: 8, paddingHorizontal: 8 },
-  pickerRowText:       { fontSize: 15, color: '#94a3b8' },
-  pickerRowTextActive: { color: '#818cf8', fontWeight: '700' },
+  pickerTitle:         { fontSize: 16, fontWeight: '800', color: theme.textMain, marginBottom: 12 },
+  pickerRow:           { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: theme.cardAccent, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  pickerRowActive:     { backgroundColor: theme.primaryAction + '1A', borderRadius: 8, paddingHorizontal: 8 },
+  pickerRowText:       { fontSize: 15, color: theme.textSub },
+  pickerRowTextActive: { color: theme.primaryAccent, fontWeight: '700' },
 });
 
 export default StudyMaterialsScreen;

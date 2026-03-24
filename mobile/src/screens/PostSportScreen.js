@@ -9,6 +9,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
 import API from '../api/axios';
+import { useThemeStyles } from '../hooks/useThemeStyles'; // <-- Update path as needed
 
 const SPORT_TYPES = [
   { label: 'Cricket',      emoji: '🏏' },
@@ -27,7 +28,8 @@ const fmtDate = (d) =>
   d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
 // ── FIXED: Moved Field component OUTSIDE the main screen component ──────────
-const Field = ({ label, children, optional }) => (
+// Added `styles` as a prop so it can access the dynamic theme safely
+const Field = ({ label, children, optional, styles }) => (
   <View style={styles.field}>
     <Text style={styles.fieldLabel}>
       {label}{optional ? <Text style={styles.optional}> (optional)</Text> : <Text style={styles.required}> *</Text>}
@@ -38,6 +40,9 @@ const Field = ({ label, children, optional }) => (
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PostSportScreen = ({ navigation, route }) => {
+  // 1. Initialize dynamic theme hook
+  const { styles, colors } = useThemeStyles(createStyles);
+
   const { currentUser } = useContext(AuthContext);
   const editSport = route.params?.sport;
   const isEdit    = !!editSport;
@@ -143,17 +148,16 @@ const PostSportScreen = ({ navigation, route }) => {
     }
   };
 
-
   const selectedType = SPORT_TYPES.find(t => t.label === sportType);
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.header} />
 
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
-          <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
+          <Ionicons name="arrow-back" size={22} color={colors.textMain} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{isEdit ? 'Edit Sport Event' : 'Post Sport Event'}</Text>
         <View style={{ width: 40 }} />
@@ -162,42 +166,42 @@ const PostSportScreen = ({ navigation, route }) => {
       <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
         {/* Sport type */}
-        <Field label="Sport Type">
+        <Field label="Sport Type" styles={styles}>
           <TouchableOpacity style={styles.picker} onPress={() => setShowTypePicker(true)}>
             {selectedType
               ? <Text style={styles.pickerValue}>{selectedType.emoji}  {selectedType.label}</Text>
               : <Text style={styles.pickerPlaceholder}>Select sport type…</Text>
             }
-            <Ionicons name="chevron-down" size={16} color="#475569" />
+            <Ionicons name="chevron-down" size={16} color={colors.textTertiary} />
           </TouchableOpacity>
         </Field>
 
         {/* Title */}
-        <Field label="Title">
+        <Field label="Title" styles={styles}>
           <TextInput
             style={styles.input}
             placeholder="e.g. Inter-Branch Cricket Tournament"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.textTertiary}
             value={title}
             onChangeText={setTitle}
           />
         </Field>
 
         {/* Venue */}
-        <Field label="Venue">
+        <Field label="Venue" styles={styles}>
           <TextInput
             style={styles.input}
             placeholder="e.g. College Ground, Sector 5"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.textTertiary}
             value={venue}
             onChangeText={setVenue}
           />
         </Field>
 
         {/* Event Date */}
-        <Field label="Event Date">
+        <Field label="Event Date" styles={styles}>
           <TouchableOpacity style={styles.picker} onPress={() => setShowEventDP(true)}>
-            <Ionicons name="calendar-outline" size={16} color="#64748b" />
+            <Ionicons name="calendar-outline" size={16} color={colors.textTertiary} />
             <Text style={styles.pickerValue}>{fmtDate(eventDate)}</Text>
           </TouchableOpacity>
           {showEventDP && (
@@ -205,15 +209,16 @@ const PostSportScreen = ({ navigation, route }) => {
               value={eventDate}
               mode="date"
               minimumDate={new Date()}
+              textColor={colors.textMain} // Improves visibility on iOS picker
               onChange={(_, d) => { setShowEventDP(false); if (d) setEventDate(d); }}
             />
           )}
         </Field>
 
         {/* Registration Deadline */}
-        <Field label="Registration Deadline">
+        <Field label="Registration Deadline" styles={styles}>
           <TouchableOpacity style={styles.picker} onPress={() => setShowDeadDP(true)}>
-            <Ionicons name="time-outline" size={16} color="#64748b" />
+            <Ionicons name="time-outline" size={16} color={colors.textTertiary} />
             <Text style={styles.pickerValue}>{fmtDate(deadline)}</Text>
           </TouchableOpacity>
           {showDeadDP && (
@@ -222,6 +227,7 @@ const PostSportScreen = ({ navigation, route }) => {
               mode="date"
               minimumDate={new Date()}
               maximumDate={eventDate}
+              textColor={colors.textMain} // Improves visibility on iOS picker
               onChange={(_, d) => { setShowDeadDP(false); if (d) setDeadline(d); }}
             />
           )}
@@ -234,7 +240,7 @@ const PostSportScreen = ({ navigation, route }) => {
             <TextInput
               style={styles.input}
               placeholder="1"
-              placeholderTextColor="#475569"
+              placeholderTextColor={colors.textTertiary}
               keyboardType="number-pad"
               value={teamSize}
               onChangeText={setTeamSize}
@@ -245,7 +251,7 @@ const PostSportScreen = ({ navigation, route }) => {
             <TextInput
               style={styles.input}
               placeholder="No limit"
-              placeholderTextColor="#475569"
+              placeholderTextColor={colors.textTertiary}
               keyboardType="number-pad"
               value={maxTeams}
               onChangeText={setMaxTeams}
@@ -254,11 +260,11 @@ const PostSportScreen = ({ navigation, route }) => {
         </View>
 
         {/* Registration Fee */}
-        <Field label="Registration Fee (₹)">
+        <Field label="Registration Fee (₹)" styles={styles}>
           <TextInput
             style={styles.input}
             placeholder="0 for free"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.textTertiary}
             keyboardType="number-pad"
             value={fee}
             onChangeText={setFee}
@@ -266,7 +272,7 @@ const PostSportScreen = ({ navigation, route }) => {
         </Field>
 
         {/* Payment QR */}
-        <Field label="Payment QR Code" optional>
+        <Field label="Payment QR Code" optional styles={styles}>
           <Text style={styles.fieldHint}>
             Upload a QR code image so participants can pay the fee before registering.
           </Text>
@@ -275,7 +281,7 @@ const PostSportScreen = ({ navigation, route }) => {
               <Image source={{ uri: qrUri || existingQr }} style={styles.qrPreview} resizeMode="contain" />
             ) : (
               <View style={styles.qrPlaceholder}>
-                <Ionicons name="qr-code-outline" size={36} color="#334155" />
+                <Ionicons name="qr-code-outline" size={36} color={colors.textTertiary} />
                 <Text style={styles.qrPlaceholderTxt}>Tap to upload QR code</Text>
               </View>
             )}
@@ -288,11 +294,11 @@ const PostSportScreen = ({ navigation, route }) => {
         </Field>
 
         {/* Organizer Phone */}
-        <Field label="Your Contact Number">
+        <Field label="Your Contact Number" styles={styles}>
           <TextInput
             style={styles.input}
             placeholder="10-digit mobile number"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.textTertiary}
             keyboardType="phone-pad"
             value={organizerPhone}
             onChangeText={setOrganizerPhone}
@@ -300,11 +306,11 @@ const PostSportScreen = ({ navigation, route }) => {
         </Field>
 
         {/* Description */}
-        <Field label="Description" optional>
+        <Field label="Description" optional styles={styles}>
           <TextInput
             style={[styles.input, styles.multiline]}
             placeholder="Brief overview of the tournament…"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.textTertiary}
             multiline
             numberOfLines={3}
             value={description}
@@ -313,11 +319,11 @@ const PostSportScreen = ({ navigation, route }) => {
         </Field>
 
         {/* Rules */}
-        <Field label="Rules & Guidelines" optional>
+        <Field label="Rules & Guidelines" optional styles={styles}>
           <TextInput
             style={[styles.input, styles.multiline]}
             placeholder="List the rules, eligibility criteria, etc."
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.textTertiary}
             multiline
             numberOfLines={4}
             value={rules}
@@ -332,9 +338,9 @@ const PostSportScreen = ({ navigation, route }) => {
           disabled={submitting}
         >
           {submitting
-            ? <ActivityIndicator color="#fff" />
+            ? <ActivityIndicator color="#ffffff" />
             : <>
-                <Ionicons name="trophy-outline" size={18} color="#fff" />
+                <Ionicons name="trophy-outline" size={18} color="#ffffff" />
                 <Text style={styles.submitTxt}>{isEdit ? 'Save Changes' : 'Post Sport Event'}</Text>
               </>
           }
@@ -371,8 +377,9 @@ const PostSportScreen = ({ navigation, route }) => {
 
 export default PostSportScreen;
 
-const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: '#0f172a' },
+// ─── Theme-Aware Style Generator ─────────────────────────────────────────────
+const createStyles = (theme) => StyleSheet.create({
+  safe:   { flex: 1, backgroundColor: theme.background },
   header: { 
     flexDirection: 'row', 
     alignItems: 'center',
@@ -380,26 +387,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, 
     paddingVertical: 10, 
     borderBottomWidth: 1, 
-    borderBottomColor: '#1e293b' 
+    borderBottomColor: theme.headerDivider,
+    backgroundColor: theme.header,
   },
   iconBtn:     { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { flex: 1, color: '#f1f5f9', fontSize: 17, fontWeight: '700', textAlign: 'center' },
+  headerTitle: { flex: 1, color: theme.textMain, fontSize: 17, fontWeight: '700', textAlign: 'center' },
 
   form: { padding: 16 },
   row:  { flexDirection: 'row', gap: 12 },
 
   field:       { marginBottom: 16 },
-  fieldLabel:  { fontSize: 13, fontWeight: '700', color: '#94a3b8', marginBottom: 6 },
-  required:    { color: '#ef4444' },
-  optional:    { color: '#475569', fontWeight: '500' },
-  fieldHint:   { fontSize: 12, color: '#475569', marginBottom: 8, lineHeight: 17 },
+  fieldLabel:  { fontSize: 13, fontWeight: '700', color: theme.textSub, marginBottom: 6 },
+  required:    { color: '#ef4444' }, // Kept semantic red for required fields
+  optional:    { color: theme.textTertiary, fontWeight: '500' },
+  fieldHint:   { fontSize: 12, color: theme.textTertiary, marginBottom: 8, lineHeight: 17 },
 
   input: {
-    backgroundColor: '#1e293b',
+    backgroundColor: theme.inputBg,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#334155',
-    color: '#f1f5f9',
+    borderColor: theme.inputBorder,
+    color: theme.textMain,
     fontSize: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -407,40 +415,40 @@ const styles = StyleSheet.create({
   multiline: { height: 90, textAlignVertical: 'top', paddingTop: 12 },
 
   picker: {
-    backgroundColor: '#1e293b',
+    backgroundColor: theme.inputBg,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: theme.inputBorder,
     paddingHorizontal: 14,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  pickerValue:       { flex: 1, color: '#f1f5f9', fontSize: 14 },
-  pickerPlaceholder: { flex: 1, color: '#475569', fontSize: 14 },
+  pickerValue:       { flex: 1, color: theme.textMain, fontSize: 14 },
+  pickerPlaceholder: { flex: 1, color: theme.textTertiary, fontSize: 14 },
 
   // QR
-  qrPickerBtn:    { borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: '#334155', borderStyle: 'dashed' },
-  qrPreview:      { width: '100%', height: 160, backgroundColor: '#fff' },
-  qrPlaceholder:  { height: 120, justifyContent: 'center', alignItems: 'center', gap: 8 },
-  qrPlaceholderTxt: { fontSize: 13, color: '#475569' },
-  removeLink:     { fontSize: 12, color: '#ef4444', marginTop: 6, textAlign: 'center' },
+  qrPickerBtn:    { borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: theme.inputBorder, borderStyle: 'dashed' },
+  qrPreview:      { width: '100%', height: 160, backgroundColor: theme.cardAccent }, // Off-white/gray base for transparent images
+  qrPlaceholder:  { height: 120, justifyContent: 'center', alignItems: 'center', gap: 8, backgroundColor: theme.inputBg },
+  qrPlaceholderTxt: { fontSize: 13, color: theme.textTertiary },
+  removeLink:     { fontSize: 12, color: '#ef4444', marginTop: 6, textAlign: 'center' }, // Kept semantic red for destructive action
 
   // Submit
-  submitBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#818cf8', paddingVertical: 16, borderRadius: 14, marginTop: 8 },
+  submitBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: theme.primaryAction, paddingVertical: 16, borderRadius: 14, marginTop: 8 },
   submitBtnOff: { opacity: 0.6 },
-  submitTxt:    { color: '#fff', fontWeight: '800', fontSize: 16 },
+  submitTxt:    { color: '#ffffff', fontWeight: '800', fontSize: 16 }, // Contrast lock
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
-  modalSheet:   { backgroundColor: '#1e293b', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 36 },
-  modalHandle:  { width: 40, height: 4, borderRadius: 2, backgroundColor: '#334155', alignSelf: 'center', marginBottom: 16 },
-  modalTitle:   { fontSize: 16, fontWeight: '800', color: '#f1f5f9', marginBottom: 16 },
+  modalSheet:   { backgroundColor: theme.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 36 },
+  modalHandle:  { width: 40, height: 4, borderRadius: 2, backgroundColor: theme.cardAccent, alignSelf: 'center', marginBottom: 16 },
+  modalTitle:   { fontSize: 16, fontWeight: '800', color: theme.textMain, marginBottom: 16 },
   typeGrid:     { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  typeItem:     { width: '18%', alignItems: 'center', paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: '#334155', backgroundColor: '#0f172a', flexGrow: 1 },
-  typeItemActive: { borderColor: '#818cf8', backgroundColor: 'rgba(129,140,248,0.12)' },
+  typeItem:     { width: '18%', alignItems: 'center', paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: theme.cardAccent, backgroundColor: theme.background, flexGrow: 1 },
+  typeItemActive: { borderColor: theme.primaryAction, backgroundColor: theme.primaryAction + '1A' }, // 10% opacity tint
   typeEmoji:    { fontSize: 24, marginBottom: 4 },
-  typeLabel:    { fontSize: 10, color: '#64748b', fontWeight: '600', textAlign: 'center' },
-  typeLabelActive: { color: '#818cf8' },
+  typeLabel:    { fontSize: 10, color: theme.textSub, fontWeight: '600', textAlign: 'center' },
+  typeLabelActive: { color: theme.primaryAccent },
 });

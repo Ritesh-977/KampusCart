@@ -8,7 +8,9 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import API from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
+import { useThemeStyles } from '../hooks/useThemeStyles'; // <-- Make sure path is correct
 
+// Hardcoded accent colors specifically for the event cards
 const COLORS = [
   '#6366f1', '#818cf8', '#34d399', '#f472b6',
   '#fbbf24', '#38bdf8', '#fb923c', '#a78bfa',
@@ -21,6 +23,9 @@ const formatDisplay = (date) =>
   });
 
 const PostEventScreen = ({ navigation, route }) => {
+  // 1. Initialize dynamic theme hook
+  const { styles, colors } = useThemeStyles(createStyles);
+
   const { currentUser } = useContext(AuthContext);
   const existing = route.params?.event || null;          // present when editing
   const college  = route.params?.college || existing?.college || currentUser?.college || '';
@@ -30,7 +35,7 @@ const PostEventScreen = ({ navigation, route }) => {
   const [description, setDesc]      = useState(existing?.description || '');
   const [location, setLocation]     = useState(existing?.location || '');
   const [duration, setDuration]     = useState(String(existing?.duration ?? 60));
-  const [color, setColor]           = useState(existing?.color || '#6366f1');
+  const [color, setColor]           = useState(existing?.color || COLORS[0]);
   const [date, setDate]             = useState(() => {
     if (existing?.startTime) return new Date(existing.startTime);
     const d = new Date();
@@ -109,7 +114,7 @@ const PostEventScreen = ({ navigation, route }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
+          <Ionicons name="arrow-back" size={22} color={colors.textMain} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{isEdit ? 'Edit Event' : 'Post Event'}</Text>
         <View style={{ width: 36 }} />
@@ -126,7 +131,7 @@ const PostEventScreen = ({ navigation, route }) => {
         >
           {/* Campus tag */}
           <View style={styles.campusTag}>
-            <Ionicons name="location-outline" size={14} color="#818cf8" />
+            <Ionicons name="location-outline" size={14} color={colors.primaryAccent} />
             <Text style={styles.campusText}>{college}</Text>
           </View>
 
@@ -135,7 +140,7 @@ const PostEventScreen = ({ navigation, route }) => {
           <TextInput
             style={styles.input}
             placeholder="e.g. Annual Tech Fest"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.textTertiary}
             value={title}
             onChangeText={setTitle}
             maxLength={80}
@@ -146,7 +151,7 @@ const PostEventScreen = ({ navigation, route }) => {
           <TextInput
             style={[styles.input, styles.multiline]}
             placeholder="What's this event about?"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.textTertiary}
             value={description}
             onChangeText={setDesc}
             multiline
@@ -159,7 +164,7 @@ const PostEventScreen = ({ navigation, route }) => {
           <TextInput
             style={styles.input}
             placeholder="e.g. Main Auditorium, LT-1"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.textTertiary}
             value={location}
             onChangeText={setLocation}
             maxLength={100}
@@ -168,9 +173,9 @@ const PostEventScreen = ({ navigation, route }) => {
           {/* Date & Time */}
           <Text style={styles.label}>Date & Time *</Text>
           <TouchableOpacity style={styles.dateBtn} onPress={openDatePicker}>
-            <Ionicons name="calendar-outline" size={18} color="#818cf8" />
+            <Ionicons name="calendar-outline" size={18} color={colors.primaryAccent} />
             <Text style={styles.dateBtnText}>{formatDisplay(date)}</Text>
-            <Ionicons name="chevron-down" size={16} color="#64748b" />
+            <Ionicons name="chevron-down" size={16} color={colors.textTertiary} />
           </TouchableOpacity>
 
           {/* iOS inline picker */}
@@ -182,7 +187,7 @@ const PostEventScreen = ({ navigation, route }) => {
               onChange={onPickerChange}
               minimumDate={new Date()}
               style={styles.iosPicker}
-              textColor="#f1f5f9"
+              textColor={colors.textMain}
             />
           )}
 
@@ -202,7 +207,7 @@ const PostEventScreen = ({ navigation, route }) => {
           <TextInput
             style={styles.input}
             placeholder="60"
-            placeholderTextColor="#475569"
+            placeholderTextColor={colors.textTertiary}
             value={duration}
             onChangeText={setDuration}
             keyboardType="number-pad"
@@ -222,14 +227,14 @@ const PostEventScreen = ({ navigation, route }) => {
                   color === c && styles.colorSelected,
                 ]}
               >
-                {color === c && <Ionicons name="checkmark" size={14} color="#fff" />}
+                {color === c && <Ionicons name="checkmark" size={14} color="#ffffff" />}
               </TouchableOpacity>
             ))}
           </View>
 
           {/* Organizer info note */}
           <View style={styles.infoCard}>
-            <Ionicons name="information-circle-outline" size={16} color="#818cf8" />
+            <Ionicons name="information-circle-outline" size={16} color={colors.primaryAccent} />
             <Text style={styles.infoText}>
               Your name and phone number will be shown as the organizer so students can contact you.
             </Text>
@@ -242,9 +247,9 @@ const PostEventScreen = ({ navigation, route }) => {
             disabled={submitting}
           >
             {submitting
-              ? <ActivityIndicator color="#fff" />
+              ? <ActivityIndicator color="#ffffff" />
               : <>
-                  <Ionicons name="megaphone-outline" size={18} color="#fff" />
+                  <Ionicons name="megaphone-outline" size={18} color="#ffffff" />
                   <Text style={styles.submitText}>{isEdit ? 'Save Changes' : 'Publish Event'}</Text>
                 </>
             }
@@ -255,46 +260,48 @@ const PostEventScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: '#0f172a' },
+// ─── Theme-Aware Style Generator ─────────────────────────────────────────────
+const createStyles = (theme) => StyleSheet.create({
+  safe:   { flex: 1, backgroundColor: theme.background },
 
   header: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'android' ? 48 : 12,
     paddingBottom: 14,
-    borderBottomWidth: 1, borderBottomColor: '#1e293b',
+    borderBottomWidth: 1, borderBottomColor: theme.headerDivider,
+    backgroundColor: theme.header,
   },
   backBtn: { padding: 4 },
-  headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '800', color: '#f1f5f9' },
+  headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '800', color: theme.textMain },
 
   form: { padding: 20, paddingBottom: 40 },
 
   campusTag: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: 'rgba(129,140,248,0.1)',
+    backgroundColor: theme.primaryAction + '15',
     alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 20, borderWidth: 1, borderColor: '#4f46e540',
+    borderRadius: 20, borderWidth: 1, borderColor: theme.primaryAction + '40',
     marginBottom: 24,
   },
-  campusText: { fontSize: 13, color: '#818cf8', fontWeight: '600' },
+  campusText: { fontSize: 13, color: theme.primaryAccent, fontWeight: '600' },
 
-  label: { fontSize: 13, fontWeight: '700', color: '#94a3b8', marginBottom: 6, marginTop: 16, textTransform: 'uppercase', letterSpacing: 0.5 },
+  label: { fontSize: 13, fontWeight: '700', color: theme.textSub, marginBottom: 6, marginTop: 16, textTransform: 'uppercase', letterSpacing: 0.5 },
 
   input: {
-    backgroundColor: '#1e293b', color: '#f1f5f9',
+    backgroundColor: theme.inputBg, color: theme.textMain,
     borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
-    fontSize: 15, borderWidth: 1, borderColor: '#334155',
+    fontSize: 15, borderWidth: 1, borderColor: theme.inputBorder,
   },
   multiline: { height: 100, textAlignVertical: 'top', paddingTop: 14 },
 
   dateBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#1e293b', borderRadius: 12,
+    backgroundColor: theme.inputBg, borderRadius: 12,
     paddingHorizontal: 16, paddingVertical: 14,
-    borderWidth: 1, borderColor: '#4f46e540',
+    borderWidth: 1, borderColor: theme.inputBorder,
   },
-  dateBtnText: { flex: 1, color: '#f1f5f9', fontSize: 15 },
+  dateBtnText: { flex: 1, color: theme.textMain, fontSize: 15 },
   iosPicker: { marginTop: 8 },
 
   colorRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 },
@@ -303,25 +310,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   colorSelected: {
-    borderWidth: 3, borderColor: '#fff',
-    shadowColor: '#fff', shadowOpacity: 0.5, shadowRadius: 6, elevation: 4,
+    borderWidth: 3, borderColor: '#ffffff', // Always white so it stands out against any selected swatch color
+    shadowColor: theme.textMain, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4,
   },
 
   infoCard: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
-    backgroundColor: 'rgba(99,102,241,0.08)',
+    backgroundColor: theme.primaryAction + '10',
     padding: 14, borderRadius: 12,
-    borderWidth: 1, borderColor: '#4f46e530',
+    borderWidth: 1, borderColor: theme.primaryAction + '30',
     marginTop: 24,
   },
-  infoText: { flex: 1, fontSize: 13, color: '#94a3b8', lineHeight: 18 },
+  infoText: { flex: 1, fontSize: 13, color: theme.textSub, lineHeight: 18 },
 
   submitBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: '#4f46e5', borderRadius: 14,
+    backgroundColor: theme.primaryAction, borderRadius: 14,
     paddingVertical: 16, marginTop: 28,
   },
-  submitText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  submitText: { color: '#ffffff', fontWeight: '800', fontSize: 16 }, // Contrast lock for buttons
 });
 
 export default PostEventScreen;
