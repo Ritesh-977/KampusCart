@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
 import API from '../api/axios';
+import { useThemeStyles } from '../hooks/useThemeStyles'; // <-- Update path as needed
 
 const SPORT_EMOJI = {
   Cricket: '🏏', Football: '⚽', Basketball: '🏀', Volleyball: '🏐',
@@ -17,20 +18,24 @@ const SPORT_EMOJI = {
 const fmtFull  = (iso) => new Date(iso).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 const fmtShort = (iso) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
-const InfoRow = ({ icon, label, value, actionNode }) => (
-  <View style={s.infoRow}>
-    <View style={s.infoIcon}>
-      <Ionicons name={icon} size={15} color="#818cf8" />
+// Passed styles and colors as props to access the dynamic theme
+const InfoRow = ({ icon, label, value, actionNode, styles, colors }) => (
+  <View style={styles.infoRow}>
+    <View style={styles.infoIcon}>
+      <Ionicons name={icon} size={15} color={colors.primaryAccent} />
     </View>
-    <View style={s.infoTexts}>
-      <Text style={s.infoLabel}>{label}</Text>
-      <Text style={s.infoValue}>{value}</Text>
+    <View style={styles.infoTexts}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
     </View>
-    {actionNode && <View style={s.infoActionBox}>{actionNode}</View>}
+    {actionNode && <View style={styles.infoActionBox}>{actionNode}</View>}
   </View>
 );
 
 const SportDetailsScreen = ({ navigation, route }) => {
+  // 1. Initialize dynamic theme hook
+  const { styles, colors } = useThemeStyles(createStyles);
+
   const { sport: init } = route.params;
   const [sport, setSport] = useState(init);
   const { currentUser, isGuest } = useContext(AuthContext);
@@ -93,26 +98,26 @@ const SportDetailsScreen = ({ navigation, route }) => {
     });
 
   return (
-    <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.header} />
 
       {/* Header */}
-      <View style={s.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={s.iconBtn}>
-          <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
+          <Ionicons name="arrow-back" size={22} color={colors.textMain} />
         </TouchableOpacity>
-        <Text style={s.headerTitle} numberOfLines={1}>{sport.title}</Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>{sport.title}</Text>
 
         {/* Edit + Delete — organizer only */}
         {isOrganizer ? (
-          <View style={s.headerActions}>
+          <View style={styles.headerActions}>
             <TouchableOpacity
               onPress={() => navigation.navigate('PostSport', { sport })}
-              style={s.iconBtn}
+              style={styles.iconBtn}
             >
-              <Ionicons name="pencil" size={18} color="#818cf8" />
+              <Ionicons name="pencil" size={18} color={colors.primaryAccent} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleDelete} style={s.iconBtn}>
+            <TouchableOpacity onPress={handleDelete} style={styles.iconBtn}>
               <Ionicons name="trash-outline" size={18} color="#ef4444" />
             </TouchableOpacity>
           </View>
@@ -121,18 +126,18 @@ const SportDetailsScreen = ({ navigation, route }) => {
         )}
       </View>
 
-      <ScrollView style={s.scroll} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
         {/* ── Banner ── */}
-        <View style={s.banner}>
-          <Text style={s.bannerEmoji}>{emoji}</Text>
-          <View style={s.bannerInfo}>
-            <View style={s.typeBadge}>
-              <Text style={s.typeText}>{sport.sportType}</Text>
+        <View style={styles.banner}>
+          <Text style={styles.bannerEmoji}>{emoji}</Text>
+          <View style={styles.bannerInfo}>
+            <View style={styles.typeBadge}>
+              <Text style={styles.typeText}>{sport.sportType}</Text>
             </View>
-            <Text style={s.bannerTitle}>{sport.title}</Text>
-            <View style={[s.openBadge, isClosed ? s.badgeRed : s.badgeGreen]}>
-              <Text style={[s.openTxt, { color: isClosed ? '#ef4444' : '#34d399' }]}>
+            <Text style={styles.bannerTitle}>{sport.title}</Text>
+            <View style={[styles.openBadge, isClosed ? styles.badgeRed : styles.badgeGreen]}>
+              <Text style={[styles.openTxt, { color: isClosed ? '#ef4444' : '#34d399' }]}>
                 {isClosed ? '● Registration Closed' : '● Registration Open'}
               </Text>
             </View>
@@ -140,33 +145,33 @@ const SportDetailsScreen = ({ navigation, route }) => {
         </View>
 
         {/* ── Details ── */}
-        <View style={s.section}>
-          <InfoRow icon="calendar-outline" label="Event Date"            value={fmtFull(sport.eventDate)} />
-          <InfoRow icon="location-outline" label="Venue"                 value={sport.venue} />
-          <InfoRow icon="time-outline"     label="Registration Deadline" value={fmtShort(sport.lastRegistrationDate)} />
-          <InfoRow
+        <View style={styles.section}>
+          <InfoRow styles={styles} colors={colors} icon="calendar-outline" label="Event Date"            value={fmtFull(sport.eventDate)} />
+          <InfoRow styles={styles} colors={colors} icon="location-outline" label="Venue"                 value={sport.venue} />
+          <InfoRow styles={styles} colors={colors} icon="time-outline"     label="Registration Deadline" value={fmtShort(sport.lastRegistrationDate)} />
+          <InfoRow styles={styles} colors={colors}
             icon="people-outline"
             label="Team Size"
             value={sport.teamSize === 1 ? 'Individual' : `${sport.teamSize} players per team`}
           />
           {!!sport.maxTeams && (
-            <InfoRow icon="list-outline" label="Max Teams" value={`${sport.maxTeams} teams`} />
+            <InfoRow styles={styles} colors={colors} icon="list-outline" label="Max Teams" value={`${sport.maxTeams} teams`} />
           )}
-          <InfoRow
+          <InfoRow styles={styles} colors={colors}
             icon="cash-outline"
             label="Registration Fee"
             value={sport.registrationFee > 0 ? `₹${sport.registrationFee}` : 'Free'}
           />
           {(sport.registrationCount !== undefined || isOrganizer) && (
-            <InfoRow
+            <InfoRow styles={styles} colors={colors}
               icon="checkmark-circle-outline"
               label="Teams Registered"
               value={`${sport.registrationCount || 0} team${sport.registrationCount !== 1 ? 's' : ''}`}
               actionNode={
                 isOrganizer ? (
-                  <TouchableOpacity style={s.viewTeamsBtn} onPress={goToRegistrations}>
-                    <Text style={s.viewTeamsTxt}>View</Text>
-                    <Ionicons name="chevron-forward" size={14} color="#818cf8" />
+                  <TouchableOpacity style={styles.viewTeamsBtn} onPress={goToRegistrations}>
+                    <Text style={styles.viewTeamsTxt}>View</Text>
+                    <Ionicons name="chevron-forward" size={14} color={colors.primaryAccent} />
                   </TouchableOpacity>
                 ) : null
               }
@@ -176,58 +181,58 @@ const SportDetailsScreen = ({ navigation, route }) => {
 
         {/* ── Description ── */}
         {!!sport.description && (
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>About</Text>
-            <Text style={s.bodyText}>{sport.description}</Text>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>About</Text>
+            <Text style={styles.bodyText}>{sport.description}</Text>
           </View>
         )}
 
         {/* ── Rules ── */}
         {!!sport.rules && (
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>Rules & Guidelines</Text>
-            <Text style={s.bodyText}>{sport.rules}</Text>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Rules & Guidelines</Text>
+            <Text style={styles.bodyText}>{sport.rules}</Text>
           </View>
         )}
 
         {/* ── Payment QR ── */}
         {sport.registrationFee > 0 && !!sport.qrCodeUrl && (
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>Payment QR Code</Text>
-            <Text style={s.qrSub}>Scan to pay ₹{sport.registrationFee} registration fee</Text>
-            <View style={s.qrWrapper}>
-              <Image source={{ uri: sport.qrCodeUrl }} style={s.qrImage} resizeMode="contain" />
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Payment QR Code</Text>
+            <Text style={styles.qrSub}>Scan to pay ₹{sport.registrationFee} registration fee</Text>
+            <View style={styles.qrWrapper}>
+              <Image source={{ uri: sport.qrCodeUrl }} style={styles.qrImage} resizeMode="contain" />
             </View>
-            <Text style={s.qrNote}>
+            <Text style={styles.qrNote}>
               After payment, attach the screenshot as payment proof when registering.
             </Text>
           </View>
         )}
 
         {/* ── Organizer ── */}
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>Organizer</Text>
-          <View style={s.orgCard}>
-            <View style={s.orgAvatar}>
-              <Ionicons name="person" size={20} color="#818cf8" />
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Organizer</Text>
+          <View style={styles.orgCard}>
+            <View style={styles.orgAvatar}>
+              <Ionicons name="person" size={20} color={colors.primaryAccent} />
             </View>
-            <View style={s.orgInfo}>
-              <Text style={s.orgName}>{sport.organizer?.name}</Text>
+            <View style={styles.orgInfo}>
+              <Text style={styles.orgName}>{sport.organizer?.name}</Text>
               {!!sport.organizer?.phone && (
-                <View style={s.orgBtns}>
+                <View style={styles.orgBtns}>
                   <TouchableOpacity
-                    style={s.orgBtn}
+                    style={styles.orgBtn}
                     onPress={() => Linking.openURL(`tel:${sport.organizer.phone}`)}
                   >
                     <Ionicons name="call-outline" size={14} color="#34d399" />
-                    <Text style={[s.orgBtnTxt, { color: '#34d399' }]}>Call</Text>
+                    <Text style={[styles.orgBtnTxt, { color: '#34d399' }]}>Call</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={s.orgBtn}
+                    style={styles.orgBtn}
                     onPress={() => Linking.openURL(`https://wa.me/${sport.organizer.phone.replace(/\D/g, '')}`)}
                   >
                     <Ionicons name="logo-whatsapp" size={14} color="#25d366" />
-                    <Text style={[s.orgBtnTxt, { color: '#25d366' }]}>WhatsApp</Text>
+                    <Text style={[styles.orgBtnTxt, { color: '#25d366' }]}>WhatsApp</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -237,9 +242,9 @@ const SportDetailsScreen = ({ navigation, route }) => {
 
         {/* ── View All Registrations button (organizer only) ── */}
         {isOrganizer && (
-          <TouchableOpacity style={s.viewRegsBtn} onPress={goToRegistrations}>
-            <Ionicons name="people" size={18} color="#fff" />
-            <Text style={s.viewRegsTxt}>View All Registrations</Text>
+          <TouchableOpacity style={styles.viewRegsBtn} onPress={goToRegistrations}>
+            <Ionicons name="people" size={18} color="#ffffff" />
+            <Text style={styles.viewRegsTxt}>View All Registrations</Text>
           </TouchableOpacity>
         )}
 
@@ -247,8 +252,8 @@ const SportDetailsScreen = ({ navigation, route }) => {
         {!isOrganizer && (
           <TouchableOpacity
             style={[
-              s.registerBtn, 
-              (!canRegister || sport.hasRegistered) && s.registerBtnOff // Grays out if closed OR already registered
+              styles.registerBtn, 
+              (!canRegister || sport.hasRegistered) && styles.registerBtnOff // Grays out if closed OR already registered
             ]}
             onPress={() => {
               if (isGuest) {
@@ -269,9 +274,9 @@ const SportDetailsScreen = ({ navigation, route }) => {
                 'lock-closed-outline'                      // Lock if closed
               }
               size={18}
-              color="#fff"
+              color="#ffffff"
             />
-            <Text style={s.registerBtnTxt}>
+            <Text style={styles.registerBtnTxt}>
               {isGuest
                 ? 'Login to Register'
                 : sport.hasRegistered
@@ -291,65 +296,68 @@ const SportDetailsScreen = ({ navigation, route }) => {
 
 export default SportDetailsScreen;
 
-const s = StyleSheet.create({
-  safe:          { flex: 1, backgroundColor: '#0f172a' },
-  header:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#1e293b', marginTop: 26 },
+// ─── Theme-Aware Style Generator ─────────────────────────────────────────────
+const createStyles = (theme) => StyleSheet.create({
+  safe:          { flex: 1, backgroundColor: theme.background },
+  header:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: theme.headerDivider, marginTop: 26, backgroundColor: theme.header },
   iconBtn:       { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  headerTitle:   { flex: 1, color: '#f1f5f9', fontSize: 16, fontWeight: '700', marginHorizontal: 4 },
+  headerTitle:   { flex: 1, color: theme.textMain, fontSize: 16, fontWeight: '700', marginHorizontal: 4 },
   headerActions: { flexDirection: 'row' },
   scroll:        { flex: 1 },
   content:       { padding: 16 },
 
   // Banner
-  banner:      { flexDirection: 'row', gap: 14, backgroundColor: '#1e293b', borderRadius: 20, padding: 18, marginBottom: 12, alignItems: 'flex-start' },
+  banner:      { flexDirection: 'row', gap: 14, backgroundColor: theme.card, borderRadius: 20, padding: 18, marginBottom: 12, alignItems: 'flex-start', borderWidth: 1, borderColor: theme.cardAccent },
   bannerEmoji: { fontSize: 48, lineHeight: 56 },
   bannerInfo:  { flex: 1, gap: 6 },
-  typeBadge:   { alignSelf: 'flex-start', borderWidth: 1, borderColor: '#818cf840', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
-  typeText:    { fontSize: 11, color: '#818cf8', fontWeight: '700', textTransform: 'uppercase' },
-  bannerTitle: { fontSize: 17, fontWeight: '800', color: '#f1f5f9', lineHeight: 24 },
+  typeBadge:   { alignSelf: 'flex-start', borderWidth: 1, borderColor: theme.primaryAction + '40', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
+  typeText:    { fontSize: 11, color: theme.primaryAccent, fontWeight: '700', textTransform: 'uppercase' },
+  bannerTitle: { fontSize: 17, fontWeight: '800', color: theme.textMain, lineHeight: 24 },
+  
+  // Semantic Open/Closed Badges (Kept semantic red/green)
   openBadge:   { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1 },
   badgeGreen:  { borderColor: '#34d39940', backgroundColor: 'rgba(52,211,153,0.08)' },
   badgeRed:    { borderColor: '#ef444440', backgroundColor: 'rgba(239,68,68,0.08)' },
   openTxt:     { fontSize: 11, fontWeight: '700' },
 
   // Section card
-  section:      { backgroundColor: '#1e293b', borderRadius: 16, padding: 16, marginBottom: 12, gap: 12 },
-  sectionTitle: { fontSize: 13, fontWeight: '800', color: '#818cf8' },
-  bodyText:     { fontSize: 14, color: '#94a3b8', lineHeight: 22 },
+  section:      { backgroundColor: theme.card, borderRadius: 16, padding: 16, marginBottom: 12, gap: 12, borderWidth: 1, borderColor: theme.cardAccent },
+  sectionTitle: { fontSize: 13, fontWeight: '800', color: theme.primaryAccent },
+  bodyText:     { fontSize: 14, color: theme.textSub, lineHeight: 22 },
 
   // Info row
   infoRow:       { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  infoIcon:      { width: 30, height: 30, borderRadius: 8, backgroundColor: 'rgba(129,140,248,0.1)', justifyContent: 'center', alignItems: 'center' },
+  infoIcon:      { width: 30, height: 30, borderRadius: 8, backgroundColor: theme.primaryAction + '1A', justifyContent: 'center', alignItems: 'center' },
   infoTexts:     { flex: 1 },
-  infoLabel:     { fontSize: 10, color: '#475569', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4 },
-  infoValue:     { fontSize: 14, color: '#f1f5f9', fontWeight: '600', marginTop: 1 },
+  infoLabel:     { fontSize: 10, color: theme.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4 },
+  infoValue:     { fontSize: 14, color: theme.textMain, fontWeight: '600', marginTop: 1 },
   infoActionBox: { justifyContent: 'center' },
 
   // Inline "View" button on Teams Registered row
-  viewTeamsBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(129,140,248,0.15)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, gap: 2 },
-  viewTeamsTxt: { color: '#818cf8', fontSize: 12, fontWeight: '700' },
+  viewTeamsBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: theme.primaryAction + '26', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, gap: 2 },
+  viewTeamsTxt: { color: theme.primaryAccent, fontSize: 12, fontWeight: '700' },
 
   // QR
-  qrSub:     { fontSize: 12, color: '#64748b', marginTop: -6 },
-  qrWrapper: { alignItems: 'center', padding: 16, backgroundColor: '#fff', borderRadius: 14 },
+  qrSub:     { fontSize: 12, color: theme.textSub, marginTop: -6 },
+  qrWrapper: { alignItems: 'center', padding: 16, backgroundColor: '#ffffff', borderRadius: 14 }, // QR backgrounds should always be white for scanning reliability
   qrImage:   { width: 200, height: 200 },
-  qrNote:    { fontSize: 12, color: '#fbbf24', textAlign: 'center', lineHeight: 18 },
+  qrNote:    { fontSize: 12, color: '#fbbf24', textAlign: 'center', lineHeight: 18 }, // Semantic warning yellow
 
   // Organizer
   orgCard:   { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  orgAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(129,140,248,0.12)', justifyContent: 'center', alignItems: 'center' },
+  orgAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.primaryAction + '1A', justifyContent: 'center', alignItems: 'center' },
   orgInfo:   { flex: 1 },
-  orgName:   { fontSize: 15, fontWeight: '700', color: '#f1f5f9', marginBottom: 6 },
+  orgName:   { fontSize: 15, fontWeight: '700', color: theme.textMain, marginBottom: 6 },
   orgBtns:   { flexDirection: 'row', gap: 8 },
-  orgBtn:    { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: '#0f172a' },
+  orgBtn:    { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: theme.background, borderWidth: 1, borderColor: theme.cardAccent },
   orgBtnTxt: { fontSize: 12, fontWeight: '600' },
 
   // View all registrations button
-  viewRegsBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#1e40af', paddingVertical: 14, borderRadius: 14, marginBottom: 12 },
-  viewRegsTxt: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  viewRegsBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: theme.secondaryAction, paddingVertical: 14, borderRadius: 14, marginBottom: 12 },
+  viewRegsTxt: { color: '#ffffff', fontWeight: '700', fontSize: 15 },
 
   // Register button
-  registerBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#818cf8', paddingVertical: 16, borderRadius: 14 },
-  registerBtnOff: { backgroundColor: '#334155' },
-  registerBtnTxt: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  registerBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: theme.primaryAction, paddingVertical: 16, borderRadius: 14 },
+  registerBtnOff: { backgroundColor: theme.cardAccent }, // Grey out when closed/registered
+  registerBtnTxt: { color: '#ffffff', fontWeight: '800', fontSize: 16 },
 });

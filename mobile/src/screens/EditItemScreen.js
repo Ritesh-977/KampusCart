@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView,
@@ -6,10 +6,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import API from '../api/axios';
+import { useThemeStyles } from '../hooks/useThemeStyles'; // <-- Update path as needed
 
 const FALLBACK = 'https://cdn.pixabay.com/photo/2016/11/19/14/00/code-1839406_1280.jpg';
 
 const EditItemScreen = ({ route, navigation }) => {
+  // 1. Initialize dynamic theme hook
+  const { styles, colors } = useThemeStyles(createStyles);
+
   const { item } = route.params;
 
   const [title, setTitle] = useState(item.title);
@@ -20,7 +24,7 @@ const EditItemScreen = ({ route, navigation }) => {
   const [isSold, setIsSold] = useState(item.isSold);
   const [loading, setLoading] = useState(false);
 
-  // Trash icon in nav header
+  // Trash icon in nav header (Added colors to dependency array)
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -29,11 +33,12 @@ const EditItemScreen = ({ route, navigation }) => {
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           style={{ marginRight: 4 }}
         >
+          {/* Kept semantic red for the destructive action */}
           <Ionicons name="trash-outline" size={22} color="#ef4444" />
         </TouchableOpacity>
       ),
     });
-  }, [navigation]);
+  }, [navigation, colors]);
 
   const handleUpdate = async () => {
     if (!title.trim() || !price.trim()) {
@@ -147,7 +152,7 @@ const EditItemScreen = ({ route, navigation }) => {
               <Ionicons
                 name="checkmark-circle-outline"
                 size={18}
-                color={!isSold ? '#10b981' : '#9ca3af'}
+                color={!isSold ? '#10b981' : colors.textTertiary}
               />
               <Text style={[styles.toggleLabel, !isSold && styles.toggleLabelActive]}>
                 Available
@@ -161,7 +166,7 @@ const EditItemScreen = ({ route, navigation }) => {
               <Ionicons
                 name="ban-outline"
                 size={18}
-                color={isSold ? '#ef4444' : '#9ca3af'}
+                color={isSold ? '#ef4444' : colors.textTertiary}
               />
               <Text style={[styles.toggleLabel, isSold && styles.toggleLabelSold]}>
                 Mark as Sold
@@ -181,7 +186,7 @@ const EditItemScreen = ({ route, navigation }) => {
               value={title}
               onChangeText={setTitle}
               placeholder="What are you selling?"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textTertiary}
             />
           </View>
 
@@ -195,7 +200,7 @@ const EditItemScreen = ({ route, navigation }) => {
                 value={price}
                 onChangeText={setPrice}
                 placeholder="0"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.textTertiary}
               />
             </View>
           </View>
@@ -208,7 +213,7 @@ const EditItemScreen = ({ route, navigation }) => {
               value={contact}
               onChangeText={setContact}
               placeholder="Your phone number"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textTertiary}
             />
           </View>
 
@@ -219,7 +224,7 @@ const EditItemScreen = ({ route, navigation }) => {
               value={location}
               onChangeText={setLocation}
               placeholder="e.g. Hostel 5, Room 203 or Library Gate"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textTertiary}
               maxLength={80}
             />
           </View>
@@ -233,7 +238,7 @@ const EditItemScreen = ({ route, navigation }) => {
               value={description}
               onChangeText={setDescription}
               placeholder="Describe the condition, age, brand…"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textTertiary}
               textAlignVertical="top"
             />
           </View>
@@ -247,10 +252,10 @@ const EditItemScreen = ({ route, navigation }) => {
           activeOpacity={0.85}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#ffffff" />
           ) : (
             <>
-              <Ionicons name="checkmark" size={20} color="#fff" style={{ marginRight: 8 }} />
+              <Ionicons name="checkmark" size={20} color="#ffffff" style={{ marginRight: 8 }} />
               <Text style={styles.saveBtnText}>Save Changes</Text>
             </>
           )}
@@ -261,29 +266,32 @@ const EditItemScreen = ({ route, navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#0f172a' },
+// ─── Theme-Aware Style Generator ─────────────────────────────────────────────
+const createStyles = (theme) => StyleSheet.create({
+  flex: { flex: 1, backgroundColor: theme.background },
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
 
   // Preview card
   previewCard: {
-    flexDirection: 'row', backgroundColor: '#1e293b',
+    flexDirection: 'row', backgroundColor: theme.card,
     borderRadius: 16, overflow: 'hidden', marginBottom: 12,
-    borderWidth: 1, borderColor: '#334155',
+    borderWidth: 1, borderColor: theme.cardAccent,
   },
   previewImage: { width: 90, height: 90 },
   previewInfo: { flex: 1, padding: 12, justifyContent: 'space-between' },
-  previewTitle: { fontSize: 15, fontWeight: '700', color: '#f1f5f9', lineHeight: 21 },
+  previewTitle: { fontSize: 15, fontWeight: '700', color: theme.textMain, lineHeight: 21 },
   previewMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
   categoryBadge: {
-    backgroundColor: 'rgba(79,70,229,0.2)', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10,
+    backgroundColor: theme.primaryAction + '22', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10,
   },
-  categoryText: { fontSize: 12, color: '#818cf8', fontWeight: '600' },
+  categoryText: { fontSize: 12, color: theme.primaryAccent, fontWeight: '600' },
   statusBadge: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, gap: 5,
   },
+  
+  // Semantic Status Badges (Kept semantic Green/Red for universal recognition)
   statusAvail: { backgroundColor: 'rgba(16,185,129,0.15)' },
   statusSold: { backgroundColor: 'rgba(239,68,68,0.15)' },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
@@ -295,51 +303,51 @@ const styles = StyleSheet.create({
 
   // Section card
   section: {
-    backgroundColor: '#1e293b', borderRadius: 16, padding: 16,
-    marginBottom: 12, borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.card, borderRadius: 16, padding: 16,
+    marginBottom: 12, borderWidth: 1, borderColor: theme.cardAccent,
   },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 14 },
+  sectionTitle: { fontSize: 13, fontWeight: '700', color: theme.textTertiary, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 14 },
 
   // Status toggle
   toggleRow: { flexDirection: 'row', gap: 10 },
   toggleBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6, paddingVertical: 11, borderRadius: 12,
-    borderWidth: 1.5, borderColor: '#334155',
+    borderWidth: 1.5, borderColor: theme.cardAccent,
   },
   toggleActive: { backgroundColor: 'rgba(16,185,129,0.15)', borderColor: '#10b981' },
   toggleSoldActive: { backgroundColor: 'rgba(239,68,68,0.15)', borderColor: '#ef4444' },
-  toggleLabel: { fontSize: 14, fontWeight: '600', color: '#64748b' },
+  toggleLabel: { fontSize: 14, fontWeight: '600', color: theme.textTertiary },
   toggleLabelActive: { color: '#34d399' },
   toggleLabelSold: { color: '#f87171' },
 
   // Form fields
   field: { marginBottom: 14 },
-  label: { fontSize: 13, fontWeight: '600', color: '#94a3b8', marginBottom: 7 },
+  label: { fontSize: 13, fontWeight: '600', color: theme.textSub, marginBottom: 7 },
   input: {
-    backgroundColor: '#273549', borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.inputBg, borderWidth: 1, borderColor: theme.inputBorder,
     borderRadius: 10, paddingHorizontal: 14, paddingVertical: Platform.OS === 'ios' ? 13 : 10,
-    fontSize: 15, color: '#f1f5f9',
+    fontSize: 15, color: theme.textMain,
   },
   inputFlex: { flex: 1, borderWidth: 0, backgroundColor: 'transparent', paddingLeft: 0 },
   prefixInput: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#273549', borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.inputBg, borderWidth: 1, borderColor: theme.inputBorder,
     borderRadius: 10, paddingHorizontal: 14,
   },
-  prefix: { fontSize: 16, color: '#94a3b8', fontWeight: '700', marginRight: 4 },
+  prefix: { fontSize: 16, color: theme.textSub, fontWeight: '700', marginRight: 4 },
   textArea: { height: 110, paddingTop: 12, lineHeight: 22 },
 
   // Save button
   saveBtn: {
-    flexDirection: 'row', backgroundColor: '#4f46e5',
+    flexDirection: 'row', backgroundColor: theme.primaryAction,
     paddingVertical: 16, borderRadius: 14, alignItems: 'center',
     justifyContent: 'center', marginTop: 4,
-    shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 4 },
+    shadowColor: theme.primaryAction, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4, shadowRadius: 8, elevation: 5,
   },
   saveBtnDisabled: { opacity: 0.65 },
-  saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
+  saveBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 }, // Kept explicit white for contrast on action buttons
 });
 
 export default EditItemScreen;

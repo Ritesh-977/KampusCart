@@ -2,27 +2,19 @@ import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, ScrollView, FlatList,
   TouchableOpacity, ActivityIndicator, Alert, RefreshControl,
-  Platform, StatusBar, Modal, TextInput,
+  Platform, StatusBar, Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import API from '../api/axios';
+import { useThemeStyles } from '../hooks/useThemeStyles'; // Update the path as needed
 
 const TABS = ['Stats', 'Users', 'Items', 'Reports'];
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
-const StatCard = ({ icon, label, value, color }) => (
-  <View style={[styles.statCard, { borderLeftColor: color }]}>
-    <View style={[styles.statIconBox, { backgroundColor: color + '22' }]}>
-      <Ionicons name={icon} size={22} color={color} />
-    </View>
-    <Text style={styles.statValue}>{value ?? '—'}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
-  </View>
-);
-
-// ─── Main Component ───────────────────────────────────────────────────────────
 const AdminDashboardScreen = () => {
+  // 1. Initialize dynamic theme hook
+  const { styles, colors } = useThemeStyles(createStyles);
+
   const [activeTab, setActiveTab] = useState('Stats');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -113,32 +105,50 @@ const AdminDashboardScreen = () => {
     } catch { Alert.alert('Error', 'Could not dismiss report.'); }
   };
 
+  // ── Sub-components that need theme access ──────────────────────────────────
+  const StatCard = ({ icon, label, value, color }) => (
+    <View style={[styles.statCard, { borderLeftColor: color }]}>
+      <View style={[styles.statIconBox, { backgroundColor: color + '22' }]}>
+        <Ionicons name={icon} size={22} color={color} />
+      </View>
+      <Text style={styles.statValue}>{value ?? '—'}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+
+  const EmptyState = ({ icon, text }) => (
+    <View style={styles.emptyState}>
+      <Ionicons name={icon} size={48} color={colors.textTertiary} />
+      <Text style={styles.emptyText}>{text}</Text>
+    </View>
+  );
+
   // ── Render helpers ─────────────────────────────────────────────────────────
   const renderStats = () => (
     <ScrollView
       contentContainerStyle={styles.tabContent}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#818cf8" colors={['#4f46e5']} progressBackgroundColor="#1e293b" />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primaryAccent} colors={[colors.primaryAction]} progressBackgroundColor={colors.card} />}
     >
       <Text style={styles.sectionHeading}>Platform Overview</Text>
       <View style={styles.statsGrid}>
-        <StatCard icon="people-outline" label="Users" value={stats?.usersCount} color="#818cf8" />
-        <StatCard icon="pricetag-outline" label="Listings" value={stats?.itemsCount} color="#34d399" />
-        <StatCard icon="checkmark-circle-outline" label="Sold" value={stats?.soldItemsCount} color="#fbbf24" />
+        <StatCard icon="people-outline" label="Users" value={stats?.usersCount} color={colors.primaryAccent} />
+        <StatCard icon="pricetag-outline" label="Listings" value={stats?.itemsCount} color={colors.secondaryAccent} />
+        <StatCard icon="checkmark-circle-outline" label="Sold" value={stats?.soldItemsCount || 0} color="#fbbf24" />
         <StatCard icon="flag-outline" label="Reports" value={reports.length} color="#f87171" />
       </View>
 
       <Text style={[styles.sectionHeading, { marginTop: 24 }]}>Quick Actions</Text>
       {[
-        { label: 'Manage Users', tab: 'Users', icon: 'people', color: '#818cf8' },
-        { label: 'Manage Listings', tab: 'Items', icon: 'grid', color: '#34d399' },
-        { label: 'Review Reports', tab: 'Reports', icon: 'flag', color: '#f87171' },
+        { label: 'Manage Users', tab: 'Users', icon: 'people', color: colors.primaryAccent },
+        { label: 'Manage Listings', tab: 'Items', icon: 'grid', color: colors.secondaryAccent },
+        { label: 'Review Reports', tab: 'Reports', icon: 'flag', color: '#f87171' }, // Kept semantic red for danger
       ].map(a => (
         <TouchableOpacity key={a.tab} style={styles.quickAction} onPress={() => setActiveTab(a.tab)}>
           <View style={[styles.qaIconBox, { backgroundColor: a.color + '22' }]}>
             <Ionicons name={a.icon} size={20} color={a.color} />
           </View>
           <Text style={styles.qaLabel}>{a.label}</Text>
-          <Ionicons name="chevron-forward" size={16} color="#475569" />
+          <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
         </TouchableOpacity>
       ))}
     </ScrollView>
@@ -149,7 +159,7 @@ const AdminDashboardScreen = () => {
       data={users}
       keyExtractor={u => u._id}
       contentContainerStyle={styles.tabContent}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#818cf8" colors={['#4f46e5']} progressBackgroundColor="#1e293b" />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primaryAccent} colors={[colors.primaryAction]} progressBackgroundColor={colors.card} />}
       ListHeaderComponent={<Text style={styles.sectionHeading}>{users.length} Registered Users</Text>}
       renderItem={({ item: u }) => (
         <View style={styles.listCard}>
@@ -202,13 +212,13 @@ const AdminDashboardScreen = () => {
       data={items}
       keyExtractor={i => i._id}
       contentContainerStyle={styles.tabContent}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#818cf8" colors={['#4f46e5']} progressBackgroundColor="#1e293b" />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primaryAccent} colors={[colors.primaryAction]} progressBackgroundColor={colors.card} />}
       ListHeaderComponent={<Text style={styles.sectionHeading}>{items.length} Total Listings</Text>}
       renderItem={({ item }) => (
         <View style={styles.listCard}>
           <View style={styles.listCardLeft}>
-            <View style={[styles.userAvatar, { backgroundColor: 'rgba(52,211,153,0.15)' }]}>
-              <Ionicons name="pricetag-outline" size={18} color="#34d399" />
+            <View style={[styles.userAvatar, { backgroundColor: colors.secondaryAccent + '22' }]}>
+              <Ionicons name="pricetag-outline" size={18} color={colors.secondaryAccent} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
@@ -233,7 +243,7 @@ const AdminDashboardScreen = () => {
       data={reports}
       keyExtractor={i => i._id}
       contentContainerStyle={styles.tabContent}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#818cf8" colors={['#4f46e5']} progressBackgroundColor="#1e293b" />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primaryAccent} colors={[colors.primaryAction]} progressBackgroundColor={colors.card} />}
       ListHeaderComponent={<Text style={styles.sectionHeading}>{reports.length} Reported Items</Text>}
       renderItem={({ item }) => (
         <View style={styles.reportCard}>
@@ -249,17 +259,11 @@ const AdminDashboardScreen = () => {
             <Text style={styles.reportReason}>"{item.reportReason}"</Text>
           ) : null}
           <View style={styles.reportActions}>
-            <TouchableOpacity
-              style={styles.dismissBtn}
-              onPress={() => handleDismissReport(item._id)}
-            >
+            <TouchableOpacity style={styles.dismissBtn} onPress={() => handleDismissReport(item._id)}>
               <Ionicons name="checkmark-circle-outline" size={16} color="#34d399" />
               <Text style={styles.dismissBtnText}>Dismiss</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.deleteReportBtn}
-              onPress={() => handleDeleteItem(item._id, item.title)}
-            >
+            <TouchableOpacity style={styles.deleteReportBtn} onPress={() => handleDeleteItem(item._id, item.title)}>
               <Ionicons name="trash-outline" size={16} color="#f87171" />
               <Text style={styles.deleteReportBtnText}>Delete Listing</Text>
             </TouchableOpacity>
@@ -271,7 +275,7 @@ const AdminDashboardScreen = () => {
   );
 
   const tabContent = () => {
-    if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#4f46e5" /></View>;
+    if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.primaryAction} /></View>;
     switch (activeTab) {
       case 'Stats': return renderStats();
       case 'Users': return renderUsers();
@@ -282,7 +286,7 @@ const AdminDashboardScreen = () => {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.header} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -291,7 +295,7 @@ const AdminDashboardScreen = () => {
           <Text style={styles.headerSub}>KampusCart Control Panel</Text>
         </View>
         <View style={styles.adminBadgeLarge}>
-          <Ionicons name="shield-checkmark" size={16} color="#818cf8" />
+          <Ionicons name="shield-checkmark" size={16} color={colors.primaryAccent} />
           <Text style={styles.adminBadgeLargeText}>Admin</Text>
         </View>
       </View>
@@ -351,46 +355,40 @@ const AdminDashboardScreen = () => {
   );
 };
 
-const EmptyState = ({ icon, text }) => (
-  <View style={styles.emptyState}>
-    <Ionicons name={icon} size={48} color="#334155" />
-    <Text style={styles.emptyText}>{text}</Text>
-  </View>
-);
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0f172a' },
+// ─── Theme-Aware Style Generator ─────────────────────────────────────────────
+const createStyles = (theme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: theme.background },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
   // Header
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, paddingTop: Platform.OS === 'android' ? 50 : 14,
-    paddingBottom: 14, backgroundColor: '#0f172a',
-    borderBottomWidth: 1, borderBottomColor: '#1e293b',
+    paddingBottom: 14, backgroundColor: theme.header,
+    borderBottomWidth: 1, borderBottomColor: theme.headerDivider,
   },
-  headerTitle: { fontSize: 22, fontWeight: '800', color: '#f1f5f9' },
-  headerSub: { fontSize: 13, color: '#475569', marginTop: 2 },
+  headerTitle: { fontSize: 22, fontWeight: '800', color: theme.textMain },
+  headerSub: { fontSize: 13, color: theme.textSub, marginTop: 2 },
   adminBadgeLarge: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(79,70,229,0.2)', paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 20, borderWidth: 1, borderColor: 'rgba(79,70,229,0.35)',
+    backgroundColor: theme.primaryAction + '22', paddingHorizontal: 12, paddingVertical: 6,
+    borderRadius: 20, borderWidth: 1, borderColor: theme.primaryAction + '55',
   },
-  adminBadgeLargeText: { color: '#818cf8', fontSize: 13, fontWeight: '700', marginLeft: 5 },
+  adminBadgeLargeText: { color: theme.primaryAccent, fontSize: 13, fontWeight: '700', marginLeft: 5 },
 
   // Tab bar
   tabBar: {
-    flexDirection: 'row', backgroundColor: '#0f172a',
-    borderBottomWidth: 1, borderBottomColor: '#1e293b',
+    flexDirection: 'row', backgroundColor: theme.header,
+    borderBottomWidth: 1, borderBottomColor: theme.headerDivider,
     paddingHorizontal: 16,
   },
   tab: {
     flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
     paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: 'transparent',
   },
-  tabActive: { borderBottomColor: '#4f46e5' },
-  tabText: { fontSize: 14, fontWeight: '600', color: '#475569' },
-  tabTextActive: { color: '#818cf8' },
+  tabActive: { borderBottomColor: theme.primaryAction },
+  tabText: { fontSize: 14, fontWeight: '600', color: theme.textTertiary },
+  tabTextActive: { color: theme.primaryAccent },
   tabBadge: {
     backgroundColor: '#ef4444', borderRadius: 8,
     paddingHorizontal: 5, paddingVertical: 1, marginLeft: 4,
@@ -399,46 +397,46 @@ const styles = StyleSheet.create({
 
   // Content
   tabContent: { padding: 16, paddingBottom: 40 },
-  sectionHeading: { fontSize: 13, fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 14 },
+  sectionHeading: { fontSize: 13, fontWeight: '700', color: theme.textTertiary, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 14 },
 
   // Stats
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   statCard: {
-    width: '47.5%', backgroundColor: '#1e293b', borderRadius: 14, padding: 14,
+    width: '47.5%', backgroundColor: theme.card, borderRadius: 14, padding: 14,
     borderLeftWidth: 3, borderTopWidth: 1, borderRightWidth: 1, borderBottomWidth: 1,
-    borderTopColor: '#334155', borderRightColor: '#334155', borderBottomColor: '#334155',
+    borderTopColor: theme.cardAccent, borderRightColor: theme.cardAccent, borderBottomColor: theme.cardAccent,
   },
   statIconBox: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
-  statValue: { fontSize: 28, fontWeight: '800', color: '#f1f5f9', marginBottom: 2 },
-  statLabel: { fontSize: 12, color: '#64748b', fontWeight: '600' },
+  statValue: { fontSize: 28, fontWeight: '800', color: theme.textMain, marginBottom: 2 },
+  statLabel: { fontSize: 12, color: theme.textSub, fontWeight: '600' },
 
   // Quick actions
   quickAction: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#1e293b', borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: '#334155', marginBottom: 10,
+    backgroundColor: theme.card, borderRadius: 12, padding: 14,
+    borderWidth: 1, borderColor: theme.cardAccent, marginBottom: 10,
   },
   qaIconBox: { width: 38, height: 38, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  qaLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: '#f1f5f9' },
+  qaLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: theme.textMain },
 
   // List cards
   listCard: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#1e293b', borderRadius: 12, padding: 12,
-    borderWidth: 1, borderColor: '#334155', marginBottom: 10,
+    backgroundColor: theme.card, borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: theme.cardAccent, marginBottom: 10,
   },
   listCardLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', marginRight: 8 },
   userAvatar: {
     width: 42, height: 42, borderRadius: 21,
-    backgroundColor: 'rgba(79,70,229,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 12,
+    backgroundColor: theme.primaryAction + '22', justifyContent: 'center', alignItems: 'center', marginRight: 12,
   },
-  userInitial: { fontSize: 18, fontWeight: '800', color: '#818cf8' },
+  userInitial: { fontSize: 18, fontWeight: '800', color: theme.primaryAccent },
   nameRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 2, flexWrap: 'wrap' },
-  cardTitle: { fontSize: 14, fontWeight: '700', color: '#f1f5f9', marginRight: 6, flexShrink: 1 },
-  cardSub: { fontSize: 12, color: '#94a3b8', marginBottom: 2 },
-  cardMeta: { fontSize: 11, color: '#475569' },
-  adminBadge: { backgroundColor: 'rgba(79,70,229,0.2)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
-  adminBadgeText: { fontSize: 10, color: '#818cf8', fontWeight: '700' },
+  cardTitle: { fontSize: 14, fontWeight: '700', color: theme.textMain, marginRight: 6, flexShrink: 1 },
+  cardSub: { fontSize: 12, color: theme.textSub, marginBottom: 2 },
+  cardMeta: { fontSize: 11, color: theme.textTertiary },
+  adminBadge: { backgroundColor: theme.primaryAction + '22', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
+  adminBadgeText: { fontSize: 10, color: theme.primaryAccent, fontWeight: '700' },
   bannedBadge: { backgroundColor: 'rgba(239,68,68,0.15)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, marginLeft: 4 },
   bannedBadgeText: { fontSize: 10, color: '#f87171', fontWeight: '700' },
   actionBtns: { flexDirection: 'row' },
@@ -446,8 +444,8 @@ const styles = StyleSheet.create({
 
   // Report cards
   reportCard: {
-    backgroundColor: '#1e293b', borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: '#334155', marginBottom: 10,
+    backgroundColor: theme.card, borderRadius: 12, padding: 14,
+    borderWidth: 1, borderColor: theme.cardAccent, marginBottom: 10,
     borderLeftWidth: 3, borderLeftColor: '#ef4444',
   },
   reportHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
@@ -456,7 +454,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(239,68,68,0.15)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
   },
   reportCountText: { fontSize: 11, color: '#f87171', fontWeight: '700', marginLeft: 4 },
-  reportReason: { fontSize: 13, color: '#94a3b8', fontStyle: 'italic', marginTop: 4, marginBottom: 10 },
+  reportReason: { fontSize: 13, color: theme.textSub, fontStyle: 'italic', marginTop: 4, marginBottom: 10 },
   reportActions: { flexDirection: 'row', gap: 10, marginTop: 10 },
   dismissBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
@@ -473,26 +471,26 @@ const styles = StyleSheet.create({
 
   // Empty state
   emptyState: { alignItems: 'center', paddingTop: 60 },
-  emptyText: { fontSize: 15, color: '#475569', marginTop: 12 },
+  emptyText: { fontSize: 15, color: theme.textTertiary, marginTop: 12 },
 
   // Ban modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: '#1e293b', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: theme.card, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingTop: 12, paddingHorizontal: 20, paddingBottom: Platform.OS === 'ios' ? 32 : 20,
-    borderWidth: 1, borderColor: '#334155',
+    borderWidth: 1, borderColor: theme.cardAccent,
   },
-  modalHandle: { width: 40, height: 4, backgroundColor: '#334155', borderRadius: 2, alignSelf: 'center', marginBottom: 18 },
-  modalTitle: { fontSize: 18, fontWeight: '800', color: '#f1f5f9', marginBottom: 4 },
-  modalSub: { fontSize: 13, color: '#64748b', marginBottom: 16 },
-  modalDivider: { height: 1, backgroundColor: '#334155', marginBottom: 12 },
+  modalHandle: { width: 40, height: 4, backgroundColor: theme.cardAccent, borderRadius: 2, alignSelf: 'center', marginBottom: 18 },
+  modalTitle: { fontSize: 18, fontWeight: '800', color: theme.textMain, marginBottom: 4 },
+  modalSub: { fontSize: 13, color: theme.textSub, marginBottom: 16 },
+  modalDivider: { height: 1, backgroundColor: theme.cardAccent, marginBottom: 12 },
   banOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12 },
-  banOptionText: { fontSize: 15, fontWeight: '600', color: '#f1f5f9', marginLeft: 12 },
+  banOptionText: { fontSize: 15, fontWeight: '600', color: theme.textMain, marginLeft: 12 },
   cancelBtn: {
     marginTop: 8, paddingVertical: 14, borderRadius: 12,
-    borderWidth: 1, borderColor: '#334155', alignItems: 'center',
+    borderWidth: 1, borderColor: theme.cardAccent, alignItems: 'center',
   },
-  cancelBtnText: { color: '#94a3b8', fontSize: 15, fontWeight: '600' },
+  cancelBtnText: { color: theme.textSub, fontSize: 15, fontWeight: '600' },
 });
 
 export default AdminDashboardScreen;

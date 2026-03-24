@@ -8,9 +8,11 @@ import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import { useThemeStyles } from '../hooks/useThemeStyles'; // <-- Make sure path is correct
 
 // ── PDF.js HTML template ──────────────────────────────────────────────────────
-const buildPdfHtml = (pdfUrl) => `
+// Updated to accept the current theme's background and text colors
+const buildPdfHtml = (pdfUrl, themeColors) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -18,16 +20,16 @@ const buildPdfHtml = (pdfUrl) => `
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { background: #0f172a; width: 100%; overflow-x: hidden; }
+    html, body { background: ${themeColors.background}; width: 100%; overflow-x: hidden; }
     #container { display: flex; flex-direction: column; align-items: center; padding: 8px 4px; }
     canvas { display: block; width: 100%; margin-bottom: 6px; box-shadow: 0 2px 12px rgba(0,0,0,0.6); }
     #status {
-      color: #94a3b8;
+      color: ${themeColors.textSub};
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 14px; padding: 60px 20px; text-align: center;
     }
     #progress {
-      color: #818cf8;
+      color: ${themeColors.primaryAccent};
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 12px; padding: 8px 20px; text-align: center;
     }
@@ -81,7 +83,7 @@ const buildPdfHtml = (pdfUrl) => `
       })
       .catch((err) => {
         status.textContent = 'Failed to render PDF. Please try downloading instead.';
-        status.style.color = '#ef4444';
+        status.style.color = '#ef4444'; // Keep semantic red for error
         progress.style.display = 'none';
       });
   </script>
@@ -91,6 +93,9 @@ const buildPdfHtml = (pdfUrl) => `
 
 // ── Component ─────────────────────────────────────────────────────────────────
 const MaterialViewerScreen = ({ navigation, route }) => {
+  // 1. Initialize dynamic theme hook
+  const { styles, colors } = useThemeStyles(createStyles);
+
   const { title, fileUrl, fileType } = route.params;
 
   const [webLoading, setWebLoading]   = useState(true);
@@ -137,12 +142,12 @@ const MaterialViewerScreen = ({ navigation, route }) => {
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
+      <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.header} />
 
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
-          <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
+          <Ionicons name="arrow-back" size={22} color={colors.textMain} />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle} numberOfLines={1}>{title || 'Document'}</Text>
@@ -154,8 +159,8 @@ const MaterialViewerScreen = ({ navigation, route }) => {
           disabled={downloading}
         >
           {downloading
-            ? <ActivityIndicator size="small" color="#fff" />
-            : <Ionicons name="download-outline" size={20} color="#fff" />
+            ? <ActivityIndicator size="small" color="#ffffff" />
+            : <Ionicons name="download-outline" size={20} color="#ffffff" />
           }
         </TouchableOpacity>
       </View>
@@ -164,7 +169,7 @@ const MaterialViewerScreen = ({ navigation, route }) => {
       {fileType === 'image' ? (
         <View style={styles.imageContainer}>
           {imgLoading && (
-            <ActivityIndicator size="large" color="#818cf8" style={StyleSheet.absoluteFill} />
+            <ActivityIndicator size="large" color={colors.primaryAccent} style={StyleSheet.absoluteFill} />
           )}
           {imgError ? (
             <View style={styles.errorContainer}>
@@ -188,7 +193,7 @@ const MaterialViewerScreen = ({ navigation, route }) => {
         <View style={styles.webviewContainer}>
           {webLoading && !webError && (
             <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="large" color="#818cf8" />
+              <ActivityIndicator size="large" color={colors.primaryAccent} />
               <Text style={styles.loadingText}>Loading PDF…</Text>
             </View>
           )}
@@ -203,7 +208,8 @@ const MaterialViewerScreen = ({ navigation, route }) => {
             </View>
           ) : (
             <WebView
-              source={{ html: buildPdfHtml(fileUrl), baseUrl: 'https://res.cloudinary.com' }}
+              // Passing colors object into HTML builder to adapt webview background and text
+              source={{ html: buildPdfHtml(fileUrl, colors), baseUrl: 'https://res.cloudinary.com' }}
               style={styles.webview}
               onLoadEnd={() => setWebLoading(false)}
               onError={() => { setWebLoading(false); setWebError(true); }}
@@ -226,9 +232,9 @@ const MaterialViewerScreen = ({ navigation, route }) => {
 
 export default MaterialViewerScreen;
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0f172a' },
+// ─── Theme-Aware Style Generator ─────────────────────────────────────────────
+const createStyles = (theme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: theme.background },
 
   header: {
     flexDirection: 'row',
@@ -238,7 +244,8 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 20 : 10,
     marginTop: Platform.OS === 'ios' ? 40 : 0,
     borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
+    borderBottomColor: theme.headerDivider,
+    backgroundColor: theme.header,
   },
   iconBtn: {
     width: 40,
@@ -248,23 +255,23 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    color: '#f1f5f9',
+    color: theme.textMain,
     fontSize: 15,
     fontWeight: '600',
     marginHorizontal: 6,
   },
   downloadBtn: {
-    backgroundColor: '#818cf8',
+    backgroundColor: theme.primaryAction,
     borderRadius: 20,
   },
   downloadBtnActive: {
-    backgroundColor: '#6366f1',
+    opacity: 0.7,
   },
 
   // Image viewer
   imageContainer: {
     flex: 1,
-    backgroundColor: '#020617',
+    backgroundColor: theme.background, // Used standard theme background instead of pure black for better integration
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -272,17 +279,17 @@ const styles = StyleSheet.create({
 
   // WebView (PDF.js)
   webviewContainer: { flex: 1 },
-  webview:          { flex: 1, backgroundColor: '#0f172a' },
+  webview:          { flex: 1, backgroundColor: theme.background },
 
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#0f172a',
+    backgroundColor: theme.background,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 12,
     zIndex: 10,
   },
-  loadingText: { color: '#94a3b8', fontSize: 14 },
+  loadingText: { color: theme.textSub, fontSize: 14 },
 
   // Shared error state
   errorContainer: {
@@ -292,6 +299,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     gap: 10,
   },
-  errorTitle: { color: '#f1f5f9', fontSize: 17, fontWeight: '700', marginTop: 8 },
-  errorSub:   { color: '#64748b', fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  errorTitle: { color: theme.textMain, fontSize: 17, fontWeight: '700', marginTop: 8 },
+  errorSub:   { color: theme.textSub, fontSize: 14, textAlign: 'center', lineHeight: 20 },
 });

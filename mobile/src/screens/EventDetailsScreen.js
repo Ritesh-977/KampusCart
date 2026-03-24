@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
 import API from '../api/axios';
+import { useThemeStyles } from '../hooks/useThemeStyles'; // <-- Make sure path is correct
 
 const fmt = (iso) => {
   const d = new Date(iso);
@@ -30,13 +31,17 @@ const addToGoogleCalendar = async (event) => {
 };
 
 const EventDetailsScreen = ({ navigation, route }) => {
+  // 1. Initialize dynamic theme hook
+  const { styles, colors } = useThemeStyles(createStyles);
+
   const { event: initialEvent } = route.params;
   const { currentUser, isGuest } = useContext(AuthContext);
 
   const [event, setEvent]       = useState(initialEvent);
   const [deleting, setDeleting] = useState(false);
 
-  const color       = event.color || '#6366f1';
+  // Use event's custom color, fallback to the theme's primaryAction
+  const color       = event.color || colors.primaryAction;
   const { date, time, dateShort, month } = fmt(event.startTime);
   const isOrganizer = !isGuest && String(event.organizer?.user) === String(currentUser?._id);
   const hasPhone    = !!event.organizer?.phone;
@@ -78,7 +83,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: color + '40' }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
+          <Ionicons name="arrow-back" size={22} color={colors.textMain} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>Event Details</Text>
         {isOrganizer ? (
@@ -87,7 +92,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
               style={styles.headerIconBtn}
               onPress={() => navigation.navigate('PostEvent', { event, college: event.college })}
             >
-              <Ionicons name="create-outline" size={20} color="#818cf8" />
+              <Ionicons name="create-outline" size={20} color={colors.primaryAccent} />
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.headerIconBtn, { marginLeft: 4 }]}
@@ -215,7 +220,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
               style={styles.editBtn}
               onPress={() => navigation.navigate('PostEvent', { event, college: event.college })}
             >
-              <Ionicons name="create-outline" size={18} color="#818cf8" />
+              <Ionicons name="create-outline" size={18} color={colors.primaryAccent} />
               <Text style={styles.editBtnText}>Edit Event</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -238,8 +243,9 @@ const EventDetailsScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0f172a' },
+// ─── Theme-Aware Style Generator ─────────────────────────────────────────────
+const createStyles = (theme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: theme.background },
 
   header: {
     flexDirection: 'row', alignItems: 'center',
@@ -247,15 +253,15 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? 48 : 12,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: theme.header,
   },
   backBtn: { padding: 4, marginRight: 8 },
-  headerTitle: { flex: 1, fontSize: 18, fontWeight: '800', color: '#f1f5f9' },
+  headerTitle: { flex: 1, fontSize: 18, fontWeight: '800', color: theme.textMain },
   headerActions: { flexDirection: 'row', alignItems: 'center' },
   headerIconBtn: {
     width: 34, height: 34, borderRadius: 17,
-    backgroundColor: '#1e293b', justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.card, justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: theme.cardAccent,
   },
 
   body: { padding: 20, paddingBottom: 48 },
@@ -272,44 +278,44 @@ const styles = StyleSheet.create({
   dateDay: { fontSize: 22, fontWeight: '900', lineHeight: 26 },
   dateMon: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
   bannerText: { flex: 1 },
-  eventTitle: { fontSize: 20, fontWeight: '800', color: '#f1f5f9', lineHeight: 26, marginBottom: 6 },
+  eventTitle: { fontSize: 20, fontWeight: '800', color: theme.textMain, lineHeight: 26, marginBottom: 6 },
   metaRow: { flexDirection: 'row', alignItems: 'center' },
   metaTxt: { fontSize: 13, fontWeight: '600', marginLeft: 4 },
-  durationTxt: { fontSize: 13, color: '#64748b' },
+  durationTxt: { fontSize: 13, color: theme.textTertiary },
 
   infoCard: {
-    backgroundColor: '#1e293b', borderRadius: 16,
-    borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.card, borderRadius: 16,
+    borderWidth: 1, borderColor: theme.cardAccent,
     paddingVertical: 4, marginBottom: 20,
   },
   infoRow: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
   infoIcon: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   infoTextBlock: { flex: 1 },
-  infoLabel: { fontSize: 11, color: '#64748b', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
-  infoValue: { fontSize: 15, color: '#f1f5f9', fontWeight: '500' },
-  divider: { height: 1, backgroundColor: '#273549', marginHorizontal: 14 },
+  infoLabel: { fontSize: 11, color: theme.textSub, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
+  infoValue: { fontSize: 15, color: theme.textMain, fontWeight: '500' },
+  divider: { height: 1, backgroundColor: theme.cardAccent, marginHorizontal: 14 },
 
-  sectionTitle: { fontSize: 14, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
+  sectionTitle: { fontSize: 14, fontWeight: '800', color: theme.textTertiary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
 
   descCard: {
-    backgroundColor: '#1e293b', borderRadius: 14,
-    borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.card, borderRadius: 14,
+    borderWidth: 1, borderColor: theme.cardAccent,
     padding: 16, marginBottom: 20,
   },
-  descText: { fontSize: 15, color: '#94a3b8', lineHeight: 24 },
+  descText: { fontSize: 15, color: theme.textSub, lineHeight: 24 },
 
   calBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     borderWidth: 1, borderRadius: 14,
     paddingVertical: 14, marginBottom: 28,
-    backgroundColor: 'rgba(99,102,241,0.06)',
+    backgroundColor: theme.primaryAction + '0F', // Adds a very light tint based on the primary action
   },
   calBtnText: { fontSize: 15, fontWeight: '700' },
 
   organizerCard: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#1e293b', borderRadius: 16,
-    borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.card, borderRadius: 16,
+    borderWidth: 1, borderColor: theme.cardAccent,
     padding: 16, marginBottom: 24, gap: 14,
   },
   orgAvatar: {
@@ -317,23 +323,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   orgInfo: { flex: 1 },
-  orgName: { fontSize: 16, fontWeight: '700', color: '#f1f5f9', marginBottom: 2 },
-  orgPhone: { fontSize: 13, color: '#64748b' },
-  orgNoPhone: { fontSize: 13, color: '#334155', fontStyle: 'italic' },
+  orgName: { fontSize: 16, fontWeight: '700', color: theme.textMain, marginBottom: 2 },
+  orgPhone: { fontSize: 13, color: theme.textSub },
+  orgNoPhone: { fontSize: 13, color: theme.textTertiary, fontStyle: 'italic' },
   contactBtns: { alignItems: 'center' },
   contactBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: '#273549', justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.inputBg, justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: theme.inputBorder,
   },
 
   ownerActions: { flexDirection: 'row', gap: 12 },
   editBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: 'rgba(129,140,248,0.1)', borderRadius: 14,
-    paddingVertical: 14, borderWidth: 1, borderColor: '#818cf840',
+    backgroundColor: theme.primaryAction + '15', borderRadius: 14,
+    paddingVertical: 14, borderWidth: 1, borderColor: theme.primaryAction + '40',
   },
-  editBtnText: { color: '#818cf8', fontWeight: '700', fontSize: 15 },
+  editBtnText: { color: theme.primaryAccent, fontWeight: '700', fontSize: 15 },
   deleteBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     backgroundColor: 'rgba(239,68,68,0.08)', borderRadius: 14,

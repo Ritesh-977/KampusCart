@@ -9,11 +9,13 @@ import ChatStackNavigator from './ChatStackNavigator';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import AdminDashboardScreen from '../screens/AdminDashboardScreen';
 import { AuthContext } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 
 const MainTabNavigator = () => {
   const { isGuest, currentUser } = useContext(AuthContext);
+  const { theme } = useTheme();
   const isAdmin = currentUser?.isAdmin === true;
 
   return (
@@ -45,10 +47,22 @@ const MainTabNavigator = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#818cf8',
-        tabBarInactiveTintColor: '#475569',
+        tabBarActiveTintColor: theme.primaryAccent,
+        tabBarInactiveTintColor: theme.textTertiary,
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: {
+          paddingBottom: 8,
+          paddingTop: 6,
+          height: 64,
+          borderTopWidth: 1,
+          borderTopColor: theme.inputBorder,
+          backgroundColor: theme.background,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.4,
+          shadowRadius: 8,
+        },
         tabBarLabelStyle: styles.tabBarLabel,
       })}
     >
@@ -94,22 +108,7 @@ const MainTabNavigator = () => {
   );
 };
 
-export const TAB_BAR_STYLE = {
-  paddingBottom: 8,
-  paddingTop: 6,
-  height: 64,
-  borderTopWidth: 1,
-  borderTopColor: '#1e293b',
-  backgroundColor: '#0f172a',
-  elevation: 8,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: -2 },
-  shadowOpacity: 0.4,
-  shadowRadius: 8,
-};
-
 const styles = StyleSheet.create({
-  tabBar: TAB_BAR_STYLE,
   tabBarLabel: {
     fontSize: 11,
     fontWeight: '600',

@@ -8,7 +8,9 @@ import { useFocusEffect } from '@react-navigation/native';
 import * as Calendar from 'expo-calendar';
 import API from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
+import { useThemeStyles } from '../hooks/useThemeStyles'; // <-- Update path as needed
 
+// Retained colorful fallbacks for events without custom colors
 const ACCENT_COLORS = ['#6366f1', '#818cf8', '#34d399', '#f472b6', '#fbbf24', '#38bdf8', '#fb923c'];
 
 const formatDateTime = (iso) => {
@@ -20,13 +22,16 @@ const formatDateTime = (iso) => {
 };
 
 const EventsScreen = ({ navigation, route }) => {
+  // 1. Initialize dynamic theme hook
+  const { styles, colors } = useThemeStyles(createStyles);
+
   const { currentUser, isGuest } = useContext(AuthContext);
   const college = route.params?.college || currentUser?.college || '';
 
   const [events, setEvents]       = useState([]);
   const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [calLoading, setCalLoading] = useState(null); // holds event._id while adding
+  const [calLoading, setCalLoading] = useState(null);
 
   const fetchEvents = async () => {
     try {
@@ -134,14 +139,14 @@ const EventsScreen = ({ navigation, route }) => {
             <View style={styles.titleBlock}>
               <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
               <View style={styles.metaRow}>
-                <Ionicons name="time-outline" size={13} color="#64748b" />
+                <Ionicons name="time-outline" size={13} color={colors.textTertiary} />
                 <Text style={styles.metaText}>{time}</Text>
                 {item.duration > 0 && (
                   <Text style={styles.metaDuration}> · {item.duration} min</Text>
                 )}
               </View>
               <View style={styles.metaRow}>
-                <Ionicons name="location-outline" size={13} color="#64748b" />
+                <Ionicons name="location-outline" size={13} color={colors.textTertiary} />
                 <Text style={styles.metaText} numberOfLines={1}>{item.location}</Text>
               </View>
             </View>
@@ -151,7 +156,7 @@ const EventsScreen = ({ navigation, route }) => {
                   onPress={(e) => { e.stopPropagation?.(); navigation.navigate('PostEvent', { event: item, college: item.college }); }}
                   style={styles.iconBtn}
                 >
-                  <Ionicons name="create-outline" size={16} color="#818cf8" />
+                  <Ionicons name="create-outline" size={16} color={colors.primaryAccent} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={(e) => { e.stopPropagation?.(); handleDelete(item._id); }}
@@ -216,7 +221,7 @@ const EventsScreen = ({ navigation, route }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#f1f5f9" />
+          <Ionicons name="arrow-back" size={22} color={colors.textMain} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Campus Events</Text>
         {!isGuest && (
@@ -224,14 +229,14 @@ const EventsScreen = ({ navigation, route }) => {
             style={styles.addBtn}
             onPress={() => navigation.navigate('PostEvent', { college })}
           >
-            <Ionicons name="add" size={22} color="#fff" />
+            <Ionicons name="add" size={22} color="#ffffff" />
           </TouchableOpacity>
         )}
       </View>
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <ActivityIndicator size="large" color={colors.primaryAction} />
         </View>
       ) : (
         <FlatList
@@ -241,11 +246,11 @@ const EventsScreen = ({ navigation, route }) => {
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366f1']} tintColor="#6366f1" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryAction]} tintColor={colors.primaryAction} />
           }
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons name="calendar-outline" size={64} color="#334155" />
+              <Ionicons name="calendar-outline" size={64} color={colors.textTertiary} />
               <Text style={styles.emptyTitle}>No upcoming events</Text>
               <Text style={styles.emptySub}>
                 {isGuest ? 'Login to post campus events.' : 'Be the first to post an event on your campus!'}
@@ -266,8 +271,9 @@ const EventsScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: '#0f172a' },
+// ─── Theme-Aware Style Generator ─────────────────────────────────────────────
+const createStyles = (theme) => StyleSheet.create({
+  safe:   { flex: 1, backgroundColor: theme.background },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
   header: {
@@ -275,14 +281,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'android' ? 48 : 12,
     paddingBottom: 14,
-    borderBottomWidth: 1, borderBottomColor: '#1e293b',
-    backgroundColor: '#0f172a',
+    borderBottomWidth: 1, borderBottomColor: theme.headerDivider,
+    backgroundColor: theme.header,
   },
   backBtn: { padding: 4, marginRight: 10 },
-  headerTitle: { flex: 1, fontSize: 22, fontWeight: '800', color: '#f1f5f9' },
+  headerTitle: { flex: 1, fontSize: 22, fontWeight: '800', color: theme.textMain },
   addBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: '#4f46e5',
+    backgroundColor: theme.primaryAction,
     justifyContent: 'center', alignItems: 'center',
   },
 
@@ -291,7 +297,7 @@ const styles = StyleSheet.create({
   // Event card
   card: {
     flexDirection: 'row',
-    backgroundColor: '#1e293b',
+    backgroundColor: theme.card,
     borderRadius: 16, borderWidth: 1,
     marginBottom: 16, overflow: 'hidden',
   },
@@ -307,48 +313,48 @@ const styles = StyleSheet.create({
   dateMon: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
 
   titleBlock: { flex: 1 },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: '#f1f5f9', marginBottom: 4, lineHeight: 22 },
+  cardTitle: { fontSize: 16, fontWeight: '700', color: theme.textMain, marginBottom: 4, lineHeight: 22 },
   metaRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
-  metaText: { fontSize: 12, color: '#64748b', marginLeft: 4 },
-  metaDuration: { fontSize: 12, color: '#475569' },
+  metaText: { fontSize: 12, color: theme.textTertiary, marginLeft: 4 },
+  metaDuration: { fontSize: 12, color: theme.textTertiary },
 
   ownerBtns: { alignItems: 'center' },
   iconBtn: {
     width: 30, height: 30, borderRadius: 8,
-    backgroundColor: '#273549', justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: '#334155',
+    backgroundColor: theme.inputBg, justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: theme.inputBorder,
   },
 
-  description: { fontSize: 14, color: '#94a3b8', lineHeight: 20, marginBottom: 12 },
+  description: { fontSize: 14, color: theme.textSub, lineHeight: 20, marginBottom: 12 },
 
   actionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   calBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: 8, paddingHorizontal: 14,
     borderRadius: 10, borderWidth: 1,
-    backgroundColor: 'rgba(99,102,241,0.08)',
+    backgroundColor: theme.primaryAction + '0F', // Adds a light tint of primary color behind calendar btn
   },
   calBtnText: { fontSize: 13, fontWeight: '600' },
 
   contactRow: { flexDirection: 'row', gap: 8 },
   contactBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: '#273549',
+    backgroundColor: theme.inputBg,
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: '#334155',
+    borderWidth: 1, borderColor: theme.inputBorder,
   },
 
-  organizer: { fontSize: 12, color: '#475569', fontStyle: 'italic' },
+  organizer: { fontSize: 12, color: theme.textTertiary, fontStyle: 'italic' },
 
   // Empty state
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80, paddingHorizontal: 32 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#f1f5f9', marginTop: 16, marginBottom: 6 },
-  emptySub: { fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20 },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: theme.textMain, marginTop: 16, marginBottom: 6 },
+  emptySub: { fontSize: 14, color: theme.textSub, textAlign: 'center', lineHeight: 20 },
   emptyPostBtn: {
-    marginTop: 20, backgroundColor: '#4f46e5',
+    marginTop: 20, backgroundColor: theme.primaryAction,
     paddingVertical: 12, paddingHorizontal: 28, borderRadius: 12,
   },
-  emptyPostTxt: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  emptyPostTxt: { color: '#ffffff', fontWeight: '700', fontSize: 15 },
 });
 
 export default EventsScreen;
