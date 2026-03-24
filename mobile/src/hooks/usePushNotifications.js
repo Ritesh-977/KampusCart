@@ -100,10 +100,15 @@ export function usePushNotifications(navigationRef) {
     );
 
     return () => {
-      if (notificationListener.current)
-        Notifications.removeNotificationSubscription(notificationListener.current);
-      if (responseListener.current)
-        Notifications.removeNotificationSubscription(responseListener.current);
+      // ── THIS IS THE FIX ──
+      // Modern Expo approach: call .remove() directly on the subscription object
+      if (notificationListener.current) {
+        notificationListener.current.remove();
+      }
+      if (responseListener.current) {
+        responseListener.current.remove();
+      }
+      // ─────────────────────
     };
   }, []);
 }
