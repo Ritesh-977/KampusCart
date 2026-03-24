@@ -1,9 +1,10 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   StatusBar, ScrollView, Alert, Image, Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
 import API from '../api/axios';
 
@@ -31,12 +32,33 @@ const InfoRow = ({ icon, label, value, actionNode }) => (
 
 const SportDetailsScreen = ({ navigation, route }) => {
   const { sport: init } = route.params;
-  const [sport] = useState(init);
+  const [sport, setSport] = useState(init);
   const { currentUser, isGuest } = useContext(AuthContext);
 
-  // Support both `id` (auth response) and `_id` (profile response)
-  const userId      = currentUser?._id || currentUser?.id;
-  const isOrganizer = !isGuest && !!userId && String(sport.organizer?.user) === String(userId);
+  // 1. Declare userId BEFORE the fetch effect so it can be used in the URL
+  const userId = currentUser?._id || currentUser?.id;
+
+  // ── Fetch fresh data when screen comes into focus ──
+  useFocusEffect(
+    useCallback(() => {
+      const fetchFreshSportData = async () => {
+        try {
+          // Send userId in query to bypass public route middleware stripping!
+          const res = await API.get(`/sports/${init._id}?userId=${userId || ''}`);
+          if (res.data?.data) {
+            setSport(res.data.data); 
+          }
+        } catch (error) {
+          console.log("Could not refresh sport details");
+        }
+      };
+      fetchFreshSportData();
+    }, [init._id, userId])
+  );
+
+  // Bulletproof Organizer Check
+  const orgId = sport.organizer?.user?._id || sport.organizer?.user || sport.organizer?._id || sport.organizer;
+  const isOrganizer = !isGuest && !!userId && !!orgId && String(orgId) === String(userId);
 
   const deadlinePassed = new Date(sport.lastRegistrationDate) < new Date();
   const canRegister    = !isGuest && sport.isOpen && !deadlinePassed;
@@ -135,11 +157,11 @@ const SportDetailsScreen = ({ navigation, route }) => {
             label="Registration Fee"
             value={sport.registrationFee > 0 ? `₹${sport.registrationFee}` : 'Free'}
           />
-          {sport.registrationCount !== undefined && (
+          {(sport.registrationCount !== undefined || isOrganizer) && (
             <InfoRow
               icon="checkmark-circle-outline"
               label="Teams Registered"
-              value={`${sport.registrationCount} team${sport.registrationCount !== 1 ? 's' : ''}`}
+              value={`${sport.registrationCount || 0} team${sport.registrationCount !== 1 ? 's' : ''}`}
               actionNode={
                 isOrganizer ? (
                   <TouchableOpacity style={s.viewTeamsBtn} onPress={goToRegistrations}>
@@ -224,23 +246,39 @@ const SportDetailsScreen = ({ navigation, route }) => {
         {/* ── Register button (non-organizer) ── */}
         {!isOrganizer && (
           <TouchableOpacity
-            style={[s.registerBtn, !canRegister && s.registerBtnOff]}
+            style={[
+              s.registerBtn, 
+              (!canRegister || sport.hasRegistered) && s.registerBtnOff // Grays out if closed OR already registered
+            ]}
             onPress={() => {
               if (isGuest) {
                 Alert.alert('Login Required', 'Please log in to register for sports.');
                 return;
               }
+              if (sport.hasRegistered) return; // Prevent clicking if already registered
               if (!canRegister) return;
+              
               navigation.navigate('SportRegistration', { sport });
             }}
+            disabled={sport.hasRegistered} // Native lock
           >
             <Ionicons
-              name={canRegister ? 'trophy-outline' : 'lock-closed-outline'}
+              name={
+                sport.hasRegistered ? 'checkmark-circle' : // Checkmark if registered
+                canRegister ? 'trophy-outline' :           // Trophy if open
+                'lock-closed-outline'                      // Lock if closed
+              }
               size={18}
               color="#fff"
             />
             <Text style={s.registerBtnTxt}>
-              {isGuest ? 'Login to Register' : canRegister ? 'Register Now' : 'Registration Closed'}
+              {isGuest
+                ? 'Login to Register'
+                : sport.hasRegistered
+                  ? 'Registered'           // <-- Shows "Registered" text!
+                  : canRegister
+                    ? 'Register Now'
+                    : 'Registration Closed'}
             </Text>
           </TouchableOpacity>
         )}

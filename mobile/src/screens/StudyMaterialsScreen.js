@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext, useRef } from 'react';
+import React, { useState, useCallback, useContext, useRef, useEffect } from 'react';
 import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
   SafeAreaView, ActivityIndicator, Alert,
@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
 
@@ -44,6 +45,47 @@ const StudyMaterialsScreen = ({ navigation }) => {
   // Pagination
   const pageRef     = useRef(1);
   const hasMoreRef  = useRef(true);
+
+  // ── Load and Save User Preferences (Semester & Tab) ─────────────────────────
+  useEffect(() => {
+    const loadSavedPreferences = async () => {
+      try {
+        // Load Semester
+        const savedSem = await AsyncStorage.getItem('@kampuscart_semester');
+        if (savedSem !== null) {
+          setSemester(savedSem);
+        }
+        
+        // Load Active Tab
+        const savedTab = await AsyncStorage.getItem('@kampuscart_activeTab');
+        if (savedTab !== null) {
+          setActiveTab(savedTab);
+        }
+      } catch (error) {
+        console.log('Could not load user preferences');
+      }
+    };
+    loadSavedPreferences();
+  }, []);
+
+  const handleSemesterSelect = async (selectedSem) => {
+    setSemester(selectedSem);
+    setShowSemPicker(false);
+    try {
+      await AsyncStorage.setItem('@kampuscart_semester', selectedSem);
+    } catch (error) {
+      console.log('Could not save semester preference');
+    }
+  };
+
+  const handleTabSelect = async (selectedTab) => {
+    setActiveTab(selectedTab);
+    try {
+      await AsyncStorage.setItem('@kampuscart_activeTab', selectedTab);
+    } catch (error) {
+      console.log('Could not save tab preference');
+    }
+  };
 
   // ── Fetch ────────────────────────────────────────────────────────────────────
 
@@ -120,8 +162,12 @@ const StudyMaterialsScreen = ({ navigation }) => {
   // ── Render item ──────────────────────────────────────────────────────────────
 
   const renderItem = ({ item }) => {
-    const meta       = CATEGORY_META[item.category] || CATEGORY_META['Note'];
-    const isUploader = !isGuest && String(item.uploadedBy?._id || item.uploadedBy) === String(currentUser?._id);
+    const meta = CATEGORY_META[item.category] || CATEGORY_META['Note'];
+    
+    // Bulletproof Uploader Check
+    const uploaderId = item.uploadedBy?._id || item.uploadedBy?.id || item.uploadedBy;
+    const currentUserId = currentUser?._id || currentUser?.id;
+    const isUploader = !isGuest && currentUserId && uploaderId && String(uploaderId) === String(currentUserId);
 
     return (
       <View style={styles.card}>
@@ -202,7 +248,7 @@ const StudyMaterialsScreen = ({ navigation }) => {
             <TouchableOpacity
               key={tab.key}
               style={[styles.tab, active && { borderBottomColor: tab.color, borderBottomWidth: 2.5 }]}
-              onPress={() => setActiveTab(tab.key)}
+              onPress={() => handleTabSelect(tab.key)} // <-- NOW USES THE SAVE FUNCTION
             >
               <Ionicons name={tab.icon} size={14} color={active ? tab.color : '#475569'} />
               <Text style={[styles.tabText, active && { color: tab.color }]}>{tab.label}</Text>
@@ -299,7 +345,7 @@ const StudyMaterialsScreen = ({ navigation }) => {
               <TouchableOpacity
                 key={s}
                 style={[styles.pickerRow, semester === s && styles.pickerRowActive]}
-                onPress={() => { setSemester(s); setShowSemPicker(false); }}
+                onPress={() => handleSemesterSelect(s)}
               >
                 <Text style={[styles.pickerRowText, semester === s && styles.pickerRowTextActive]}>
                   {s === 'All' ? 'All Semesters' : `Semester ${s}`}
@@ -398,7 +444,12 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   semText: { fontSize: 11, fontWeight: '700', color: '#94a3b8' },
-  delBtn: { padding: 4 },
+  delBtn: { 
+    padding: 6, 
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderRadius: 8,
+    marginLeft: 8,
+  },
 
   cardTitle:    { fontSize: 15, fontWeight: '700', color: '#f1f5f9', lineHeight: 21, marginBottom: 8 },
   cardUploader: { fontSize: 11, color: '#334155', fontStyle: 'italic', marginBottom: 10 },

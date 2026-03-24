@@ -7,20 +7,37 @@ const err = (res, message, status = 500) => res.status(status).json({ success: f
 // ── GET /api/sports ───────────────────────────────────────────────────────────
 export const getSports = async (req, res) => {
   try {
-    const { college } = req.query;
+    const { college, userId } = req.query; // <-- Extract userId from query
     const filter = {};
     if (college) filter.college = college;
 
     const sports = await Sport.find(filter).sort({ eventDate: 1 }).lean();
 
-    // Attach registration count to each sport
     const ids = sports.map(s => s._id);
     const counts = await SportRegistration.aggregate([
       { $match: { sport: { $in: ids } } },
       { $group: { _id: '$sport', count: { $sum: 1 } } },
     ]);
     const countMap = Object.fromEntries(counts.map(c => [String(c._id), c.count]));
-    const enriched = sports.map(s => ({ ...s, registrationCount: countMap[String(s._id)] || 0 }));
+
+    // ── BULLETPROOF USER CHECK ──
+    const currentUserId = (req.user && (req.user._id || req.user.id)) || userId;
+    let userRegisteredSportIds = [];
+    
+    if (currentUserId) {
+      const userRegs = await SportRegistration.find({ 
+        registeredBy: currentUserId, 
+        sport: { $in: ids } 
+      }).lean();
+      userRegisteredSportIds = userRegs.map(r => String(r.sport));
+    }
+    // ────────────────────────────
+
+    const enriched = sports.map(s => ({ 
+      ...s, 
+      registrationCount: countMap[String(s._id)] || 0,
+      hasRegistered: userRegisteredSportIds.includes(String(s._id))
+    }));
 
     return ok(res, { data: enriched });
   } catch (error) {
@@ -32,11 +49,24 @@ export const getSports = async (req, res) => {
 // ── GET /api/sports/:id ───────────────────────────────────────────────────────
 export const getSport = async (req, res) => {
   try {
+    const { userId } = req.query; // <-- Extract userId from query
+    
     const sport = await Sport.findById(req.params.id).lean();
     if (!sport) return err(res, 'Sport not found.', 404);
 
     const registrationCount = await SportRegistration.countDocuments({ sport: sport._id });
-    return ok(res, { data: { ...sport, registrationCount } });
+
+    // ── BULLETPROOF USER CHECK ──
+    const currentUserId = (req.user && (req.user._id || req.user.id)) || userId;
+    let hasRegistered = false;
+    
+    if (currentUserId) {
+      const reg = await SportRegistration.findOne({ sport: sport._id, registeredBy: currentUserId }).lean();
+      if (reg) hasRegistered = true;
+    }
+    // ────────────────────────────
+
+    return ok(res, { data: { ...sport, registrationCount, hasRegistered } });
   } catch {
     return err(res, 'Server error.');
   }
@@ -71,7 +101,7 @@ export const createSport = async (req, res) => {
       qrCodeUrl:           req.file?.path || '',
       rules:               rules?.trim() || '',
       organizer: {
-        user:  req.user._id,
+        user:  req.user._id || req.user.id,
         name:  req.user.name,
         phone: organizerPhone?.trim() || '',
       },
@@ -95,7 +125,8 @@ export const updateSport = async (req, res) => {
     const sport = await Sport.findById(req.params.id);
     if (!sport) return err(res, 'Sport not found.', 404);
 
-    const isOrganizer = String(sport.organizer.user) === String(req.user._id);
+    const userId = req.user._id || req.user.id;
+    const isOrganizer = String(sport.organizer.user) === String(userId);
     if (!isOrganizer && !req.user.isAdmin) return err(res, 'Not authorized.', 403);
 
     const editable = [
@@ -121,7 +152,8 @@ export const deleteSport = async (req, res) => {
     const sport = await Sport.findById(req.params.id);
     if (!sport) return err(res, 'Sport not found.', 404);
 
-    const isOrganizer = String(sport.organizer.user) === String(req.user._id);
+    const userId = req.user._id || req.user.id;
+    const isOrganizer = String(sport.organizer.user) === String(userId);
     if (!isOrganizer && !req.user.isAdmin) return err(res, 'Not authorized.', 403);
 
     await SportRegistration.deleteMany({ sport: sport._id });
@@ -141,8 +173,10 @@ export const registerForSport = async (req, res) => {
     if (new Date(sport.lastRegistrationDate) < new Date())
       return err(res, 'Registration deadline has passed.', 400);
 
+    const userId = req.user._id || req.user.id;
+
     // Duplicate check
-    const existing = await SportRegistration.findOne({ sport: sport._id, registeredBy: req.user._id });
+    const existing = await SportRegistration.findOne({ sport: sport._id, registeredBy: userId });
     if (existing) return err(res, 'You have already registered for this sport.', 400);
 
     // Max teams cap
@@ -176,7 +210,7 @@ export const registerForSport = async (req, res) => {
       year,
       paymentProofUrl,
       paymentProofType,
-      registeredBy:   req.user._id,
+      registeredBy:   userId,
       college:        req.user.college,
     });
 
@@ -189,13 +223,13 @@ export const registerForSport = async (req, res) => {
 };
 
 // ── GET /api/sports/:id/registrations ────────────────────────────────────────
-// Organizer / admin only
 export const getRegistrations = async (req, res) => {
   try {
     const sport = await Sport.findById(req.params.id);
     if (!sport) return err(res, 'Sport not found.', 404);
 
-    const isOrganizer = String(sport.organizer.user) === String(req.user._id);
+    const userId = req.user._id || req.user.id;
+    const isOrganizer = String(sport.organizer.user) === String(userId);
     if (!isOrganizer && !req.user.isAdmin) return err(res, 'Not authorized.', 403);
 
     const regs = await SportRegistration
@@ -216,7 +250,8 @@ export const updateRegistrationStatus = async (req, res) => {
     const sport = await Sport.findById(req.params.id);
     if (!sport) return err(res, 'Sport not found.', 404);
 
-    const isOrganizer = String(sport.organizer.user) === String(req.user._id);
+    const userId = req.user._id || req.user.id;
+    const isOrganizer = String(sport.organizer.user) === String(userId);
     if (!isOrganizer && !req.user.isAdmin) return err(res, 'Not authorized.', 403);
 
     const { status } = req.body;
