@@ -1,7 +1,8 @@
 import React, { useState, useContext } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert
+  KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
+  ScrollView, SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import API from '../api/axios';
@@ -37,98 +38,104 @@ const LoginScreen = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-<View style={styles.formContainer}>
-
-        {/* Header */}
-        <View style={styles.headerContainer}>
-          <View style={styles.logoCircle}>
-            <Text style={styles.logoIcon}>🛒</Text>
-          </View>
-          <Text style={styles.logoText}>KampusCart</Text>
-          <Text style={styles.subtitle}>Your Campus, Your Marketplace</Text>
-        </View>
-
-        {/* Email */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>College Email</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="mail-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. f2022xxxx@bits-pilani.ac.in"
-              placeholderTextColor="#9ca3af"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
-          </View>
-        </View>
-
-        {/* Password */}
-        <View style={styles.inputGroup}>
-          <View style={styles.labelRow}>
-            <Text style={styles.label}>Password</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="lock-closed-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              placeholderTextColor="#9ca3af"
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-              <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#9ca3af" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Login Button */}
-        <TouchableOpacity
-          style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-          onPress={handleLogin}
-          disabled={loading}
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined} // undefined works better on Android with ScrollView
+      >
+        <ScrollView 
+          contentContainerStyle={styles.formContainer}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          {loading ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.loginButtonText}>Sign In</Text>
-          )}
-        </TouchableOpacity>
+          {/* Header */}
+          <View style={styles.headerContainer}>
+            <View style={styles.logoCircle}>
+              <Text style={styles.logoIcon}>🛒</Text>
+            </View>
+            <Text style={styles.logoText}>KampusCart</Text>
+            <Text style={styles.subtitle}>Your Campus, Your Marketplace</Text>
+          </View>
 
-        {/* Divider */}
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or</Text>
-          <View style={styles.dividerLine} />
-        </View>
+          {/* Email */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>College Email</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="mail-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. f2022xxxx@bits-pilani.ac.in"
+                placeholderTextColor="#9ca3af"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+              />
+            </View>
+          </View>
 
-        {/* Guest Mode */}
-        <TouchableOpacity style={styles.guestButton} onPress={skipLogin}>
-          <Ionicons name="eye-outline" size={18} color="#6b7280" style={{ marginRight: 8 }} />
-          <Text style={styles.guestButtonText}>Browse as Guest</Text>
-        </TouchableOpacity>
+          {/* Password */}
+          <View style={styles.inputGroup}>
+            <View style={styles.labelRow}>
+              <Text style={styles.label}>Password</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+                <Text style={styles.forgotText}>Forgot Password?</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="lock-closed-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                placeholderTextColor="#9ca3af"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#9ca3af" />
+              </TouchableOpacity>
+            </View>
+          </View>
 
-        {/* Register Link */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>New to KampusCart? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.linkText}>Create Account</Text>
+          {/* Login Button */}
+          <TouchableOpacity
+            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.loginButtonText}>Sign In</Text>
+            )}
           </TouchableOpacity>
-        </View>
 
-      </View>
-    </KeyboardAvoidingView>
+          {/* Divider */}
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Guest Mode */}
+          <TouchableOpacity style={styles.guestButton} onPress={skipLogin}>
+            <Ionicons name="eye-outline" size={18} color="#6b7280" style={{ marginRight: 8 }} />
+            <Text style={styles.guestButtonText}>Browse as Guest</Text>
+          </TouchableOpacity>
+
+          {/* Register Link */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>New to KampusCart? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.linkText}>Create Account</Text>
+            </TouchableOpacity>
+          </View>
+
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -138,10 +145,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#0f172a',
   },
   formContainer: {
-    flex: 1,
+    flexGrow: 1, // Crucial fix: uses flexGrow instead of flex so it can expand
     justifyContent: 'center',
     paddingHorizontal: 24,
-    paddingBottom: 20,
+    paddingVertical: 40, // Adds breathing room at top/bottom when scrolling
   },
   headerContainer: {
     marginBottom: 36,

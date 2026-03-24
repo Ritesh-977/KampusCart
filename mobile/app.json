@@ -4,14 +4,17 @@
     "slug": "kampuscart",
     "version": "1.0.0",
     "orientation": "portrait",
+    "backgroundColor": "#0f172a", 
+    "userInterfaceStyle": "dark",
     "icon": "./assets/images/icon.png",
     "scheme": "kampuscart",
-    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "backgroundColor": "#0f172a"
     },
     "android": {
+      "backgroundColor": "#0f172a",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -25,7 +28,8 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "backgroundColor": "#0f172a"
     },
     "plugins": [
       "expo-secure-store",

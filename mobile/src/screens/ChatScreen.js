@@ -70,7 +70,6 @@ export default function ChatScreen({ route, navigation }) {
     return () => { onShow.remove(); onHide.remove(); };
   }, []);
 
-
   const myId = useMemo(
     () => String(currentUser?._id || currentUser?.id || ''),
     [currentUser]
@@ -85,7 +84,7 @@ export default function ChatScreen({ route, navigation }) {
     [myId]
   );
 
-  // Derive online status directly from the shared context — updates in real time
+  // Derive online status directly from the shared context
   const isOnline = useMemo(
     () => (otherUser?._id ? onlineUsers.has(String(otherUser._id)) : false),
     [onlineUsers, otherUser]
@@ -112,6 +111,12 @@ export default function ChatScreen({ route, navigation }) {
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
+      
+      // ── THE FIX FOR THE WHITE FLASH ──
+      contentStyle: { backgroundColor: '#0f172a' }, // Fixes NativeStack transitions
+      cardStyle: { backgroundColor: '#0f172a' },    // Fixes standard Stack transitions
+      // ─────────────────────────────────
+
       headerStyle: {
         backgroundColor: '#1e293b',
         elevation: 4,
@@ -170,13 +175,14 @@ export default function ChatScreen({ route, navigation }) {
     });
   }, [isOnline, isTyping, searchVisible]);
 
+  // ... (The rest of your ChatScreen code stays exactly the same)
+
   // ── fetch messages ──────────────────────────────────────────────────────────
   useEffect(() => {
     fetchMessages();
   }, []);
 
   // ── socket room + listeners ─────────────────────────────────────────────────
-  // Re-runs whenever the socket connects (or reconnects)
   useEffect(() => {
     const socket = socketRef.current;
     if (!socket || !connected) return;
@@ -186,7 +192,6 @@ export default function ChatScreen({ route, navigation }) {
 
     const handleMessage = (msg) => {
       console.log('[ChatScreen] message received:', msg?._id);
-      // Only handle messages for this chat
       const msgChatId = normalizeId(msg?.chat?._id) || normalizeId(msg?.chat);
       if (msgChatId && msgChatId !== chat._id) return;
       const senderId = normalizeId(msg?.sender?._id) || normalizeId(msg?.sender);
@@ -405,7 +410,7 @@ export default function ChatScreen({ route, navigation }) {
       const isHighlighted = searchQuery && matchIndices.includes(index);
       const isCurrentMatch = isHighlighted && matchIndices[currentMatch] === index;
 
-      // Read receipt: true if the other user's ID is in readBy
+      // Read receipt
       const isRead = mine && !item._pending && !item._failed && otherUserId
         && (item.readBy || []).some((id) => String(id) === otherUserId);
 
@@ -458,7 +463,7 @@ export default function ChatScreen({ route, navigation }) {
 
   // ── main render ────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safe} edges={['left', 'right']}>
+    <SafeAreaView style={styles.safe} edges={['left', 'right', 'bottom']}>
       <StatusBar backgroundColor="#1e293b" barStyle="light-content" />
       <Animated.View style={[styles.flex, { paddingBottom: kbOffset }]}>
         {searchVisible && (
