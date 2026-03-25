@@ -159,8 +159,8 @@ const MaterialViewerScreen = ({ navigation, route }) => {
           disabled={downloading}
         >
           {downloading
-            ? <ActivityIndicator size="small" color="#ffffff" />
-            : <Ionicons name="download-outline" size={20} color="#ffffff" />
+            ? <ActivityIndicator size="small" color={colors.textOnPrimary || '#ffffff'} />
+            : <Ionicons name="download-outline" size={20} color={colors.textOnPrimary || '#ffffff'} />
           }
         </TouchableOpacity>
       </View>

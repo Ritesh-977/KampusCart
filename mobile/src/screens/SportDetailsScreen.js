@@ -274,7 +274,7 @@ const SportDetailsScreen = ({ navigation, route }) => {
                 'lock-closed-outline'                      // Lock if closed
               }
               size={18}
-              color="#ffffff"
+              color={styles.registerBtnTxt.color}
             />
             <Text style={styles.registerBtnTxt}>
               {isGuest
@@ -359,5 +359,5 @@ const createStyles = (theme) => StyleSheet.create({
   // Register button
   registerBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: theme.primaryAction, paddingVertical: 16, borderRadius: 14 },
   registerBtnOff: { backgroundColor: theme.cardAccent }, // Grey out when closed/registered
-  registerBtnTxt: { color: '#ffffff', fontWeight: '800', fontSize: 16 },
+  registerBtnTxt: { color: theme.textOnPrimary || '#ffffff', fontWeight: '800', fontSize: 16 },
 });

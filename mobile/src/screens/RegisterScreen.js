@@ -52,7 +52,7 @@ const RegisterScreen = ({ navigation }) => {
       shadowColor: theme.primaryAction, shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.4, shadowRadius: 8, elevation: 4,
     },
-    loginButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
+    loginButtonText: { color: theme.textOnPrimary || '#ffffff', fontSize: 16, fontWeight: 'bold' },
     footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 28 },
     footerText: { color: theme.textTertiary, fontSize: 14 },
     linkText: { color: theme.primaryAccent, fontSize: 14, fontWeight: 'bold' },

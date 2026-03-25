@@ -243,7 +243,7 @@ const StudyMaterialsScreen = ({ navigation }) => {
             style={styles.uploadBtn}
             onPress={() => navigation.navigate('UploadMaterial')}
           >
-            <Ionicons name="cloud-upload-outline" size={18} color="#ffffff" />
+            <Ionicons name="cloud-upload-outline" size={18} color={colors.textOnPrimary || '#ffffff'} />
           </TouchableOpacity>
         )}
       </View>
@@ -473,7 +473,7 @@ const createStyles = (theme) => StyleSheet.create({
   emptyTitle:      { fontSize: 18, fontWeight: '700', color: theme.textMain, marginTop: 14, marginBottom: 6 },
   emptySub:        { fontSize: 14, color: theme.textSub, textAlign: 'center', lineHeight: 20 },
   emptyUploadBtn:  { marginTop: 20, paddingVertical: 12, paddingHorizontal: 28, borderRadius: 12 },
-  emptyUploadText: { color: '#ffffff', fontWeight: '700', fontSize: 15 }, // Keep white for contrast on colored background
+  emptyUploadText: { color: theme.textOnPrimary || '#ffffff', fontWeight: '700', fontSize: 15 }, // Keep white for contrast on colored background
 
   // Semester modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },

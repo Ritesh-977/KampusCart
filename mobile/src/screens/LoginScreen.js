@@ -110,7 +110,7 @@ const LoginScreen = ({ navigation }) => {
             {loading ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: 'bold', letterSpacing: 0.3 }}>Sign In</Text>
+              <Text style={{ color: theme.textOnPrimary || '#ffffff',  fontSize: 16, fontWeight: 'bold', letterSpacing: 0.3 }}>Sign In</Text>
             )}
           </TouchableOpacity>
 

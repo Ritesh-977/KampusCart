@@ -229,7 +229,7 @@ const EventsScreen = ({ navigation, route }) => {
             style={styles.addBtn}
             onPress={() => navigation.navigate('PostEvent', { college })}
           >
-            <Ionicons name="add" size={22} color="#ffffff" />
+            <Ionicons name="add" size={22} color={colors.textOnPrimary || '#ffffff'} />
           </TouchableOpacity>
         )}
       </View>

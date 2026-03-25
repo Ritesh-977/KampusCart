@@ -51,7 +51,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
       shadowOpacity: 0.4, shadowRadius: 8, elevation: 4,
       marginBottom: 16,
     },
-    primaryButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
+    primaryButtonText: { color: theme.textOnPrimary || '#ffffff', fontSize: 16, fontWeight: 'bold' },
     backToLoginBtn: {
       flexDirection: 'row', justifyContent: 'center',
       alignItems: 'center', paddingVertical: 12,

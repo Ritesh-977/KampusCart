@@ -328,7 +328,7 @@ const createStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.primaryAction, borderRadius: 14,
     paddingVertical: 16, marginTop: 28,
   },
-  submitText: { color: '#ffffff', fontWeight: '800', fontSize: 16 }, // Contrast lock for buttons
+  submitText: { color: theme.textOnPrimary || '#ffffff', fontWeight: '800', fontSize: 16 }, // Contrast lock for buttons
 });
 
 export default PostEventScreen;

@@ -135,7 +135,7 @@ const EditProfileScreen = ({ route, navigation }) => {
           </View>
 
           <TouchableOpacity style={{ backgroundColor: theme.primaryAction, padding: 18, borderRadius: 12, alignItems: 'center', marginTop: 10, marginBottom: 40, shadowColor: theme.primaryAction, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 5 }} onPress={handleUpdateProfile} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#ffffff', fontSize: 18, fontWeight: 'bold' }}>Save Profile</Text>}
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={{ color: theme.textOnPrimary || '#ffffff', fontSize: 18, fontWeight: 'bold' }}>Save Profile</Text>}
           </TouchableOpacity>
         </View>
 

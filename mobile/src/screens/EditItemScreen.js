@@ -347,7 +347,7 @@ const createStyles = (theme) => StyleSheet.create({
     shadowOpacity: 0.4, shadowRadius: 8, elevation: 5,
   },
   saveBtnDisabled: { opacity: 0.65 },
-  saveBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 }, // Kept explicit white for contrast on action buttons
+  saveBtnText: { color: theme.textOnPrimary || '#ffffff', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 }, // Kept explicit white for contrast on action buttons
 });
 
 export default EditItemScreen;

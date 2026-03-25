@@ -7,27 +7,31 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const originalIndigo = {
   id: 'originalIndigo',
   statusBarStyle: 'light-content',
-  background: '#0f172a', // safe area/void void background
-  formBackground: '#0a0f1a', // inner container for forms
-  card: '#1e293b',       // major card containers
-  cardAccent: '#273549', // subtle dividers within cards/lists
-  inputBg: '#1e293b',    // input fields background
-  inputBorder: '#334155', // input field borders
+  background: '#000000',      // Pitch black (perfect for OLED screens)
+  formBackground: '#0A0A0A',  // Just barely lifted off-black for subtle depth
+  card: '#0A0A0A',            // Card containers
+  cardAccent: '#262626',      // Dark charcoal dividers for separation
+  inputBg: '#000000',         // Pitch black input fields
+  inputBorder: '#333333',     // Crisp, visible gray borders for inputs
   
-  header: '#0f172a',     
-  headerDivider: '#1e293b',
+  header: '#000000',
+  headerDivider: '#262626',
   
-  primaryAction: '#4f46e5', // Main blue (e.g., Sign In button)
-  secondaryAction: '#818cf8', // Lighter accent blue
-  primaryAccent: '#818cf8',    // E.g., Tab indicator color for Exam Papers
-  secondaryAccent: '#34d399',  // E.g., Notes color accent
-  tertiaryAccent: '#f472b6',   // E.g., Books color accent
+  // Pure White & Grayscale palette
+  primaryAction: '#FFFFFF',   // Pure white (e.g., High impact Sign In button)
+  secondaryAction: '#A3A3A3', // Medium-light gray (e.g., Highlights)
+  primaryAccent: '#FFFFFF',   // Pure white accent (Exam Papers/Tabs)
+  secondaryAccent: '#A3A3A3', // Secondary accent (Notes)
+  tertiaryAccent: '#525252',  // Darker steel gray for subtle UI elements
 
-  textMain: '#f1f5f9',    // Main title text
-  textBody: '#f1f5f9',    // Body content text
-  textSub: '#94a3b8',     // Subtitle gray text
-  textTertiary: '#64748b', // Even lighter tertiary text
-  textIndigo: '#818cf8',  // Text that is indigo accent color
+  textMain: '#FFFFFF',        // Pure white for major titles
+  textBody: '#E5E5E5',        // Very light gray for comfortable paragraph reading
+  textSub: '#A3A3A3',         // Medium gray for subtitles
+  textTertiary: '#737373',    // Muted dark gray for lesser text
+  textGold: '#FFFFFF',
+
+  textOnPrimary: '#000000',   // Pitch black text for your white buttons/sent chat bubbles
+  textOnCard: '#FFFFFF',
 };
 
 // 2. The NEW PREMIUM GOLD theme from provided image

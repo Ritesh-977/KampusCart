@@ -438,7 +438,7 @@ const createStyles = (theme) => StyleSheet.create({
   // Submit
   submitBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: theme.primaryAction, paddingVertical: 16, borderRadius: 14, marginTop: 8 },
   submitBtnOff: { opacity: 0.6 },
-  submitTxt:    { color: '#ffffff', fontWeight: '800', fontSize: 16 }, // Contrast lock
+  submitTxt:    {color: theme.textOnPrimary || '#ffffff', fontWeight: '800', fontSize: 16 }, // Contrast lock
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },

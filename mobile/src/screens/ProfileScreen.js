@@ -77,7 +77,7 @@ const ProfileScreen = ({ navigation }) => {
           Sign in to view your profile, manage listings, and save items to your wishlist.
         </Text>
         <TouchableOpacity style={{ backgroundColor: theme.primaryAction, paddingVertical: 14, borderRadius: 12, width: '100%', alignItems: 'center' }} onPress={logout}>
-          <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>Sign In / Register</Text>
+          <Text style={{ color: theme.textOnPrimary || '#ffffff', fontWeight: 'bold', fontSize: 16 }}>Sign In / Register</Text>
         </TouchableOpacity>
       </View>
     );
@@ -280,7 +280,7 @@ const ProfileScreen = ({ navigation }) => {
               <Text style={{ fontSize: 18, fontWeight: '700', color: theme.textMain, marginTop: 14, marginBottom: 6 }}>No listings yet</Text>
               <Text style={{ fontSize: 14, color: theme.textSub, textAlign: 'center', lineHeight: 20, marginBottom: 20 }}>Start selling items from your room, hostel, or campus!</Text>
               <TouchableOpacity style={{ backgroundColor: theme.primaryAction, paddingVertical: 12, paddingHorizontal: 28, borderRadius: 10 }} onPress={() => navigation.navigate('Sell')}>
-                <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 15 }}>Start Selling</Text>
+                <Text style={{ color: theme.textOnPrimary || '#ffffff', fontWeight: 'bold', fontSize: 15 }}>Start Selling</Text>
               </TouchableOpacity>
             </View>
           }
