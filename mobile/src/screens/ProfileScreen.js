@@ -23,6 +23,7 @@ const ProfileScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [aboutVisible, setAboutVisible] = useState(false);
 
   const fetchProfileData = async () => {
     if (isGuest) { setLoading(false); return; }
@@ -183,6 +184,21 @@ const ProfileScreen = ({ navigation }) => {
       color: theme.secondaryAction, bg: `${theme.secondaryAction}20`,
       onPress: () => { setMenuVisible(false); toggleTheme(); },
     },
+    {
+      icon: 'chatbox-ellipses-outline', label: 'Feedback',
+      color: '#f472b6', bg: 'rgba(244,114,182,0.15)',
+      onPress: () => { setMenuVisible(false); navigation.navigate('Feedback'); },
+    },
+    {
+      icon: 'call-outline', label: 'Contact Us',
+      color: '#fb923c', bg: 'rgba(251,146,60,0.15)',
+      onPress: () => { setMenuVisible(false); navigation.navigate('ContactUs'); },
+    },
+    {
+      icon: 'information-circle-outline', label: 'About',
+      color: '#60a5fa', bg: 'rgba(96,165,250,0.15)',
+      onPress: () => { setMenuVisible(false); setTimeout(() => setAboutVisible(true), 300); },
+    },
   ];
 
   return (
@@ -252,6 +268,53 @@ const ProfileScreen = ({ navigation }) => {
             </View>
             <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: '#ef4444' }}>Log Out</Text>
           </TouchableOpacity>
+
+          <View style={{ height: Platform.OS === 'ios' ? 24 : 12 }} />
+        </View>
+      </Modal>
+
+      {/* ── About sub-menu ────────────────────────────────── */}
+      <Modal
+        visible={aboutVisible}
+        transparent
+        animationType="slide"
+        statusBarTranslucent
+        onRequestClose={() => setAboutVisible(false)}
+      >
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' }} onPress={() => setAboutVisible(false)} />
+        <View style={{ backgroundColor: theme.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 12, paddingHorizontal: 20, shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 20 }}>
+          {/* Handle */}
+          <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: theme.inputBorder, alignSelf: 'center', marginBottom: 18 }} />
+
+          {/* Header */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 18 }}>
+            <TouchableOpacity onPress={() => setAboutVisible(false)} style={{ marginRight: 12 }}>
+              <Ionicons name="arrow-back" size={22} color={theme.textMain} />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 17, fontWeight: '700', color: theme.textMain }}>About</Text>
+          </View>
+
+          <View style={{ height: 1, backgroundColor: theme.inputBorder, marginBottom: 8 }} />
+
+          {[
+            { icon: 'apps-outline',             label: 'About App',      color: '#60a5fa', bg: 'rgba(96,165,250,0.15)',  route: 'AboutApp' },
+            { icon: 'shield-checkmark-outline', label: 'Privacy Policy', color: '#34d399', bg: 'rgba(52,211,153,0.15)', route: 'PrivacyPolicy' },
+            { icon: 'document-text-outline',    label: 'Terms of Use',   color: '#fbbf24', bg: 'rgba(251,191,36,0.15)', route: 'TermsOfUse' },
+            { icon: 'cloud-download-outline',   label: 'App Updates',    color: '#a78bfa', bg: 'rgba(167,139,250,0.15)',route: 'AppUpdates' },
+          ].map((item) => (
+            <TouchableOpacity
+              key={item.label}
+              style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 13 }}
+              activeOpacity={0.7}
+              onPress={() => { setAboutVisible(false); navigation.navigate(item.route); }}
+            >
+              <View style={{ width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 14, backgroundColor: item.bg }}>
+                <Ionicons name={item.icon} size={20} color={item.color} />
+              </View>
+              <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: theme.textMain }}>{item.label}</Text>
+              <Ionicons name="chevron-forward" size={16} color={theme.textTertiary} />
+            </TouchableOpacity>
+          ))}
 
           <View style={{ height: Platform.OS === 'ios' ? 24 : 12 }} />
         </View>
