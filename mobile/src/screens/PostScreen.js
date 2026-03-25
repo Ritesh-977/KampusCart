@@ -1,7 +1,7 @@
 import React, { useState, useContext, useRef, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  Image, ScrollView, KeyboardAvoidingView, Platform, Alert,
+  Image, Platform, Alert, ScrollView,
   ActivityIndicator, Modal, FlatList, SafeAreaView, Animated,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -9,6 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 import API from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+
+// 1. IMPORT THE LIBRARY
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const CATEGORIES = [
   { id: '1', name: 'Cycles', icon: 'bicycle' },
@@ -196,7 +199,6 @@ const PostScreen = ({ navigation }) => {
     );
   };
 
-  // Ask user if they want to crop (returns true/false via Alert)
   const askCrop = () =>
     new Promise((resolve) => {
       Alert.alert(
@@ -237,7 +239,6 @@ const PostScreen = ({ navigation }) => {
     }
 
     if (remaining === 1) {
-      // Single pick — offer optional crop
       const wantCrop = await askCrop();
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -249,7 +250,6 @@ const PostScreen = ({ navigation }) => {
         setImages(prev => [...prev, result.assets[0].uri]);
       }
     } else {
-      // Multi-select (crop not available for multi)
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsMultipleSelection: true,
@@ -326,7 +326,6 @@ const PostScreen = ({ navigation }) => {
     }
   };
 
-  // Guest block
   if (isGuest) {
     return (
       <View style={memoStyles.guestContainer}>
@@ -346,180 +345,182 @@ const PostScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : null}>
-        <ScrollView
-          style={memoStyles.container}
-          contentContainerStyle={{ paddingBottom: 50 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={memoStyles.pageHeader}>
-            <Text style={memoStyles.pageTitle}>Create Listing</Text>
-            <Text style={memoStyles.pageSubtitle}>Fill in the details to list your item.</Text>
+      {/* 2. REPLACED KEYBOARD AVOIDING VIEW & SCROLLVIEW */}
+      <KeyboardAwareScrollView
+        style={memoStyles.container}
+        contentContainerStyle={{ paddingBottom: 50 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid={true}
+        extraScrollHeight={Platform.OS === 'android' ? 30 : 20}
+      >
+        <View style={memoStyles.pageHeader}>
+          <Text style={memoStyles.pageTitle}>Create Listing</Text>
+          <Text style={memoStyles.pageSubtitle}>Fill in the details to list your item.</Text>
+        </View>
+
+        {/* ---- PHOTO UPLOAD SECTION ---- */}
+        <View style={memoStyles.sectionCard}>
+          <View style={memoStyles.sectionHeader}>
+            <View>
+              <Text style={memoStyles.sectionTitle}>Photos</Text>
+              <Text style={memoStyles.sectionHint}>
+                {images.length}/{MAX_IMAGES} added · First photo is the cover
+              </Text>
+            </View>
+            {images.length < MAX_IMAGES && (
+              <TouchableOpacity style={memoStyles.addMoreBtn} onPress={openSourceSheet}>
+                <Ionicons name="add" size={16} color={theme.primaryAccent} />
+                <Text style={memoStyles.addMoreText}>Add</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
-          {/* ---- PHOTO UPLOAD SECTION ---- */}
-          <View style={memoStyles.sectionCard}>
-            <View style={memoStyles.sectionHeader}>
-              <View>
-                <Text style={memoStyles.sectionTitle}>Photos</Text>
-                <Text style={memoStyles.sectionHint}>
-                  {images.length}/{MAX_IMAGES} added · First photo is the cover
-                </Text>
-              </View>
-              {images.length < MAX_IMAGES && (
-                <TouchableOpacity style={memoStyles.addMoreBtn} onPress={openSourceSheet}>
-                  <Ionicons name="add" size={16} color={theme.primaryAccent} />
-                  <Text style={memoStyles.addMoreText}>Add</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 4 }}>
-              {images.map((uri, index) => (
-                <View key={index} style={memoStyles.imageThumbnailWrapper}>
-                  <Image source={{ uri }} style={memoStyles.imageThumbnail} />
-                  {/* Clearly visible remove button */}
-                  <TouchableOpacity
-                    style={memoStyles.removeImageBtn}
-                    onPress={() => removeImage(index)}
-                    hitSlop={{ top: 6, right: 6, bottom: 6, left: 6 }}
-                  >
-                    <View style={memoStyles.removeImageBtnInner}>
-                      <Ionicons name="close" size={13} color="#fff" />
-                    </View>
-                  </TouchableOpacity>
-                  {index === 0 && (
-                    <View style={memoStyles.coverBadge}>
-                      <Text style={memoStyles.coverBadgeText}>Cover</Text>
-                    </View>
-                  )}
-                </View>
-              ))}
-
-              {images.length < MAX_IMAGES && (
-                <TouchableOpacity style={memoStyles.addImageBtn} onPress={openSourceSheet}>
-                  <View style={memoStyles.addImageIcon}>
-                    <Ionicons name="camera" size={26} color={theme.primaryAccent} />
+          {/* Note: Kept standard ScrollView here because this scrolls horizontally, not vertically with the keyboard! */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingRight: 4 }}>
+            {images.map((uri, index) => (
+              <View key={index} style={memoStyles.imageThumbnailWrapper}>
+                <Image source={{ uri }} style={memoStyles.imageThumbnail} />
+                <TouchableOpacity
+                  style={memoStyles.removeImageBtn}
+                  onPress={() => removeImage(index)}
+                  hitSlop={{ top: 6, right: 6, bottom: 6, left: 6 }}
+                >
+                  <View style={memoStyles.removeImageBtnInner}>
+                    <Ionicons name="close" size={13} color="#fff" />
                   </View>
-                  <Text style={memoStyles.addImageText}>Add Photo</Text>
-                  <Text style={memoStyles.addImageSub}>{remaining} left</Text>
                 </TouchableOpacity>
-              )}
-            </ScrollView>
+                {index === 0 && (
+                  <View style={memoStyles.coverBadge}>
+                    <Text style={memoStyles.coverBadgeText}>Cover</Text>
+                  </View>
+                )}
+              </View>
+            ))}
+
+            {images.length < MAX_IMAGES && (
+              <TouchableOpacity style={memoStyles.addImageBtn} onPress={openSourceSheet}>
+                <View style={memoStyles.addImageIcon}>
+                  <Ionicons name="camera" size={26} color={theme.primaryAccent} />
+                </View>
+                <Text style={memoStyles.addImageText}>Add Photo</Text>
+                <Text style={memoStyles.addImageSub}>{remaining} left</Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+        </View>
+
+        {/* ---- ITEM DETAILS SECTION ---- */}
+        <View style={memoStyles.sectionCard}>
+          <Text style={memoStyles.sectionTitle}>Item Details</Text>
+
+          <View style={memoStyles.inputGroup}>
+            <Text style={memoStyles.label}>Item Title <Text style={memoStyles.required}>*</Text></Text>
+            <TextInput
+              style={memoStyles.input}
+              placeholder="e.g. Hero Sprint Cycle 21-speed"
+              placeholderTextColor={theme.textTertiary + '80'}
+              value={title}
+              onChangeText={setTitle}
+              maxLength={80}
+            />
           </View>
 
-          {/* ---- ITEM DETAILS SECTION ---- */}
-          <View style={memoStyles.sectionCard}>
-            <Text style={memoStyles.sectionTitle}>Item Details</Text>
-
-            <View style={memoStyles.inputGroup}>
-              <Text style={memoStyles.label}>Item Title <Text style={memoStyles.required}>*</Text></Text>
+          <View style={memoStyles.row}>
+            <View style={[memoStyles.inputGroup, { flex: 1, marginRight: 10 }]}>
+              <Text style={memoStyles.label}>Price (₹) <Text style={memoStyles.required}>*</Text></Text>
               <TextInput
                 style={memoStyles.input}
-                placeholder="e.g. Hero Sprint Cycle 21-speed"
+                placeholder="0"
                 placeholderTextColor={theme.textTertiary + '80'}
-                value={title}
-                onChangeText={setTitle}
-                maxLength={80}
+                keyboardType="numeric"
+                value={price}
+                onChangeText={setPrice}
               />
             </View>
 
-            <View style={memoStyles.row}>
-              <View style={[memoStyles.inputGroup, { flex: 1, marginRight: 10 }]}>
-                <Text style={memoStyles.label}>Price (₹) <Text style={memoStyles.required}>*</Text></Text>
-                <TextInput
-                  style={memoStyles.input}
-                  placeholder="0"
-                  placeholderTextColor={theme.textTertiary + '80'}
-                  keyboardType="numeric"
-                  value={price}
-                  onChangeText={setPrice}
-                />
-              </View>
-
-              <View style={[memoStyles.inputGroup, { flex: 1 }]}>
-                <Text style={memoStyles.label}>Category <Text style={memoStyles.required}>*</Text></Text>
-                <TouchableOpacity style={memoStyles.dropdownBtn} onPress={() => setModalVisible(true)}>
-                  <Text style={{ color: selectedCategory ? theme.textMain : theme.textTertiary, fontSize: 15, flex: 1 }} numberOfLines={1}>
-                    {selectedCategory ? selectedCategory.name : 'Select...'}
-                  </Text>
-                  <Ionicons name="chevron-down" size={18} color={theme.textTertiary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {selectedCategory?.name === 'Other' && (
-              <View style={memoStyles.inputGroup}>
-                <Text style={memoStyles.label}>Specify Category <Text style={memoStyles.required}>*</Text></Text>
-                <TextInput
-                  style={memoStyles.input}
-                  placeholder="e.g. Drafting Instruments"
-                  placeholderTextColor={theme.textTertiary + '80'}
-                  value={customCategory}
-                  onChangeText={setCustomCategory}
-                />
-              </View>
-            )}
-
-            <View style={memoStyles.inputGroup}>
-              <Text style={memoStyles.label}>WhatsApp / Phone <Text style={memoStyles.required}>*</Text></Text>
-              <TextInput
-                style={memoStyles.input}
-                placeholder="10-digit number"
-                placeholderTextColor={theme.textTertiary + '80'}
-                keyboardType="phone-pad"
-                value={contact}
-                onChangeText={setContact}
-                maxLength={10}
-              />
-            </View>
-
-            <View style={memoStyles.inputGroup}>
-              <Text style={memoStyles.label}>Pickup Location</Text>
-              <TextInput
-                style={memoStyles.input}
-                placeholder="e.g. Hostel 5, Room 203 or Library Gate"
-                placeholderTextColor={theme.textTertiary + '80'}
-                value={location}
-                onChangeText={setLocation}
-                maxLength={80}
-              />
-            </View>
-
-            <View style={memoStyles.inputGroup}>
-              <Text style={memoStyles.label}>Description <Text style={memoStyles.required}>*</Text></Text>
-              <TextInput
-                style={[memoStyles.input, memoStyles.textArea]}
-                placeholder="Describe the condition, age, reason for selling..."
-                placeholderTextColor={theme.textTertiary + '80'}
-                multiline
-                numberOfLines={4}
-                value={description}
-                onChangeText={setDescription}
-                maxLength={500}
-              />
-              <Text style={memoStyles.charCount}>{description.length}/500</Text>
+            <View style={[memoStyles.inputGroup, { flex: 1 }]}>
+              <Text style={memoStyles.label}>Category <Text style={memoStyles.required}>*</Text></Text>
+              <TouchableOpacity style={memoStyles.dropdownBtn} onPress={() => setModalVisible(true)}>
+                <Text style={{ color: selectedCategory ? theme.textMain : theme.textTertiary, fontSize: 15, flex: 1 }} numberOfLines={1}>
+                  {selectedCategory ? selectedCategory.name : 'Select...'}
+                </Text>
+                <Ionicons name="chevron-down" size={18} color={theme.textTertiary} />
+              </TouchableOpacity>
             </View>
           </View>
 
-          {/* Submit */}
-          <TouchableOpacity
-            style={[memoStyles.submitBtn, loading && { opacity: 0.7 }]}
-            onPress={handlePostItem}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Ionicons name="checkmark-circle-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={memoStyles.submitBtnText}>Post Listing</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          {selectedCategory?.name === 'Other' && (
+            <View style={memoStyles.inputGroup}>
+              <Text style={memoStyles.label}>Specify Category <Text style={memoStyles.required}>*</Text></Text>
+              <TextInput
+                style={memoStyles.input}
+                placeholder="e.g. Drafting Instruments"
+                placeholderTextColor={theme.textTertiary + '80'}
+                value={customCategory}
+                onChangeText={setCustomCategory}
+              />
+            </View>
+          )}
 
-        </ScrollView>
-      </KeyboardAvoidingView>
+          <View style={memoStyles.inputGroup}>
+            <Text style={memoStyles.label}>WhatsApp / Phone <Text style={memoStyles.required}>*</Text></Text>
+            <TextInput
+              style={memoStyles.input}
+              placeholder="10-digit number"
+              placeholderTextColor={theme.textTertiary + '80'}
+              keyboardType="phone-pad"
+              value={contact}
+              onChangeText={setContact}
+              maxLength={10}
+            />
+          </View>
+
+          <View style={memoStyles.inputGroup}>
+            <Text style={memoStyles.label}>Pickup Location</Text>
+            <TextInput
+              style={memoStyles.input}
+              placeholder="e.g. Hostel 5, Room 203 or Library Gate"
+              placeholderTextColor={theme.textTertiary + '80'}
+              value={location}
+              onChangeText={setLocation}
+              maxLength={80}
+            />
+          </View>
+
+          <View style={memoStyles.inputGroup}>
+            <Text style={memoStyles.label}>Description <Text style={memoStyles.required}>*</Text></Text>
+            <TextInput
+              style={[memoStyles.input, memoStyles.textArea]}
+              placeholder="Describe the condition, age, reason for selling..."
+              placeholderTextColor={theme.textTertiary + '80'}
+              multiline
+              numberOfLines={4}
+              value={description}
+              onChangeText={setDescription}
+              maxLength={500}
+            />
+            <Text style={memoStyles.charCount}>{description.length}/500</Text>
+          </View>
+        </View>
+
+        {/* Submit */}
+        <TouchableOpacity
+          style={[memoStyles.submitBtn, loading && { opacity: 0.7 }]}
+          onPress={handlePostItem}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Ionicons name="checkmark-circle-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+              <Text style={memoStyles.submitBtnText}>Post Listing</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+      </KeyboardAwareScrollView>
 
       {/* ── Image Source Picker Sheet ── */}
       <Modal visible={sourceSheetVisible} transparent animationType="none" onRequestClose={closeSourceSheet}>

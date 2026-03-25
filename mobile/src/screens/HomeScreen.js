@@ -773,7 +773,7 @@ const HomeScreen = ({ navigation }) => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryAction]} tintColor={colors.primaryAction} />
           }
           renderItem={renderItem}
-          ListHeaderComponent={<ListHeader />}
+          ListHeaderComponent={ListHeader()}
           ListFooterComponent={
             <View>
               {!loading && sortedItems.length > 8 && (
