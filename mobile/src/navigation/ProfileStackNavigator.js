@@ -7,6 +7,12 @@ import EditProfileScreen from '../screens/EditProfileScreen';
 import WishlistScreen from '../screens/WishlistScreen';
 import LostFoundScreen from '../screens/LostFoundScreen';
 import ItemDetailsScreen from '../screens/ItemDetailsScreen';
+import AboutAppScreen from '../screens/AboutAppScreen';
+import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
+import TermsOfUseScreen from '../screens/TermsOfUseScreen';
+import AppUpdatesScreen from '../screens/AppUpdatesScreen';
+import FeedbackScreen from '../screens/FeedbackScreen';
+import ContactUsScreen from '../screens/ContactUsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -50,6 +56,36 @@ const ProfileStackNavigator = () => {
         name="ItemDetails"
         component={ItemDetailsScreen}
         options={{ title: 'Item Details', headerBackTitle: 'Back' }}
+      />
+      <Stack.Screen
+        name="AboutApp"
+        component={AboutAppScreen}
+        options={{ title: 'About App', headerBackTitle: 'Back' }}
+      />
+      <Stack.Screen
+        name="PrivacyPolicy"
+        component={PrivacyPolicyScreen}
+        options={{ title: 'Privacy Policy', headerBackTitle: 'Back' }}
+      />
+      <Stack.Screen
+        name="TermsOfUse"
+        component={TermsOfUseScreen}
+        options={{ title: 'Terms of Use', headerBackTitle: 'Back' }}
+      />
+      <Stack.Screen
+        name="AppUpdates"
+        component={AppUpdatesScreen}
+        options={{ title: 'App Updates', headerBackTitle: 'Back' }}
+      />
+      <Stack.Screen
+        name="Feedback"
+        component={FeedbackScreen}
+        options={{ title: 'Feedback', headerBackTitle: 'Back' }}
+      />
+      <Stack.Screen
+        name="ContactUs"
+        component={ContactUsScreen}
+        options={{ title: 'Contact Us', headerBackTitle: 'Back' }}
       />
     </Stack.Navigator>
   );
