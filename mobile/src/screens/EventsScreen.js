@@ -354,7 +354,7 @@ const createStyles = (theme) => StyleSheet.create({
     marginTop: 20, backgroundColor: theme.primaryAction,
     paddingVertical: 12, paddingHorizontal: 28, borderRadius: 12,
   },
-  emptyPostTxt: { color: '#ffffff', fontWeight: '700', fontSize: 15 },
+  emptyPostTxt: { color: theme.textOnPrimary || '#ffffff', fontWeight: '700', fontSize: 15 },
 });
 
 export default EventsScreen;

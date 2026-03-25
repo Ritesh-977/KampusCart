@@ -1,17 +1,18 @@
 import React, { useState, useLayoutEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView,
-  Platform, Image
+  Alert, ActivityIndicator, Platform, Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import API from '../api/axios';
-import { useThemeStyles } from '../hooks/useThemeStyles'; // <-- Update path as needed
+import { useThemeStyles } from '../hooks/useThemeStyles'; 
+
+// 1. IMPORT THE LIBRARY
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const FALLBACK = 'https://cdn.pixabay.com/photo/2016/11/19/14/00/code-1839406_1280.jpg';
 
 const EditItemScreen = ({ route, navigation }) => {
-  // 1. Initialize dynamic theme hook
   const { styles, colors } = useThemeStyles(createStyles);
 
   const { item } = route.params;
@@ -24,7 +25,6 @@ const EditItemScreen = ({ route, navigation }) => {
   const [isSold, setIsSold] = useState(item.isSold);
   const [loading, setLoading] = useState(false);
 
-  // Trash icon in nav header (Added colors to dependency array)
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -33,7 +33,6 @@ const EditItemScreen = ({ route, navigation }) => {
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           style={{ marginRight: 4 }}
         >
-          {/* Kept semantic red for the destructive action */}
           <Ionicons name="trash-outline" size={22} color="#ef4444" />
         </TouchableOpacity>
       ),
@@ -106,163 +105,161 @@ const EditItemScreen = ({ route, navigation }) => {
   const coverImage = item.images?.[0] || item.image;
 
   return (
-    <KeyboardAvoidingView
+    // 2. REPLACED KEYBOARD AVOIDING VIEW & SCROLLVIEW
+    <KeyboardAwareScrollView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : null}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+      enableOnAndroid={true}
+      extraScrollHeight={Platform.OS === 'android' ? 30 : 20}
     >
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
 
-        {/* ── Item preview card ─────────────────────────────── */}
-        <View style={styles.previewCard}>
-          <Image
-            source={{ uri: coverImage || FALLBACK }}
-            style={styles.previewImage}
-            resizeMode="cover"
+      {/* ── Item preview card ─────────────────────────────── */}
+      <View style={styles.previewCard}>
+        <Image
+          source={{ uri: coverImage || FALLBACK }}
+          style={styles.previewImage}
+          resizeMode="cover"
+        />
+        <View style={styles.previewInfo}>
+          <Text style={styles.previewTitle} numberOfLines={2}>{item.title}</Text>
+          <View style={styles.previewMeta}>
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>{item.category}</Text>
+            </View>
+            <View style={[styles.statusBadge, isSold ? styles.statusSold : styles.statusAvail]}>
+              <View style={[styles.statusDot, isSold ? styles.dotSold : styles.dotAvail]} />
+              <Text style={[styles.statusLabel, isSold ? styles.labelSold : styles.labelAvail]}>
+                {isSold ? 'Sold' : 'Available'}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* ── Listing status toggle ─────────────────────────── */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Listing Status</Text>
+        <View style={styles.toggleRow}>
+          <TouchableOpacity
+            style={[styles.toggleBtn, !isSold && styles.toggleActive]}
+            onPress={() => !isSold || handleToggleSold()}
+            disabled={loading}
+          >
+            <Ionicons
+              name="checkmark-circle-outline"
+              size={18}
+              color={!isSold ? '#10b981' : colors.textTertiary}
+            />
+            <Text style={[styles.toggleLabel, !isSold && styles.toggleLabelActive]}>
+              Available
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.toggleBtn, isSold && styles.toggleSoldActive]}
+            onPress={() => isSold || handleToggleSold()}
+            disabled={loading}
+          >
+            <Ionicons
+              name="ban-outline"
+              size={18}
+              color={isSold ? '#ef4444' : colors.textTertiary}
+            />
+            <Text style={[styles.toggleLabel, isSold && styles.toggleLabelSold]}>
+              Mark as Sold
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* ── Edit fields ───────────────────────────────────── */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Listing Details</Text>
+
+        <View style={styles.field}>
+          <Text style={styles.label}>Title</Text>
+          <TextInput
+            style={styles.input}
+            value={title}
+            onChangeText={setTitle}
+            placeholder="What are you selling?"
+            placeholderTextColor={colors.textTertiary}
           />
-          <View style={styles.previewInfo}>
-            <Text style={styles.previewTitle} numberOfLines={2}>{item.title}</Text>
-            <View style={styles.previewMeta}>
-              <View style={styles.categoryBadge}>
-                <Text style={styles.categoryText}>{item.category}</Text>
-              </View>
-              <View style={[styles.statusBadge, isSold ? styles.statusSold : styles.statusAvail]}>
-                <View style={[styles.statusDot, isSold ? styles.dotSold : styles.dotAvail]} />
-                <Text style={[styles.statusLabel, isSold ? styles.labelSold : styles.labelAvail]}>
-                  {isSold ? 'Sold' : 'Available'}
-                </Text>
-              </View>
-            </View>
-          </View>
         </View>
 
-        {/* ── Listing status toggle ─────────────────────────── */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Listing Status</Text>
-          <View style={styles.toggleRow}>
-            <TouchableOpacity
-              style={[styles.toggleBtn, !isSold && styles.toggleActive]}
-              onPress={() => !isSold || handleToggleSold()}
-              disabled={loading}
-            >
-              <Ionicons
-                name="checkmark-circle-outline"
-                size={18}
-                color={!isSold ? '#10b981' : colors.textTertiary}
-              />
-              <Text style={[styles.toggleLabel, !isSold && styles.toggleLabelActive]}>
-                Available
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.toggleBtn, isSold && styles.toggleSoldActive]}
-              onPress={() => isSold || handleToggleSold()}
-              disabled={loading}
-            >
-              <Ionicons
-                name="ban-outline"
-                size={18}
-                color={isSold ? '#ef4444' : colors.textTertiary}
-              />
-              <Text style={[styles.toggleLabel, isSold && styles.toggleLabelSold]}>
-                Mark as Sold
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* ── Edit fields ───────────────────────────────────── */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Listing Details</Text>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Title</Text>
+        <View style={styles.field}>
+          <Text style={styles.label}>Price</Text>
+          <View style={styles.prefixInput}>
+            <Text style={styles.prefix}>₹</Text>
             <TextInput
-              style={styles.input}
-              value={title}
-              onChangeText={setTitle}
-              placeholder="What are you selling?"
+              style={[styles.input, styles.inputFlex]}
+              keyboardType="numeric"
+              value={price}
+              onChangeText={setPrice}
+              placeholder="0"
               placeholderTextColor={colors.textTertiary}
-            />
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Price</Text>
-            <View style={styles.prefixInput}>
-              <Text style={styles.prefix}>₹</Text>
-              <TextInput
-                style={[styles.input, styles.inputFlex]}
-                keyboardType="numeric"
-                value={price}
-                onChangeText={setPrice}
-                placeholder="0"
-                placeholderTextColor={colors.textTertiary}
-              />
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Contact Number</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="phone-pad"
-              value={contact}
-              onChangeText={setContact}
-              placeholder="Your phone number"
-              placeholderTextColor={colors.textTertiary}
-            />
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Pickup Location</Text>
-            <TextInput
-              style={styles.input}
-              value={location}
-              onChangeText={setLocation}
-              placeholder="e.g. Hostel 5, Room 203 or Library Gate"
-              placeholderTextColor={colors.textTertiary}
-              maxLength={80}
-            />
-          </View>
-
-          <View style={[styles.field, { marginBottom: 0 }]}>
-            <Text style={styles.label}>Description</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              multiline
-              numberOfLines={4}
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Describe the condition, age, brand…"
-              placeholderTextColor={colors.textTertiary}
-              textAlignVertical="top"
             />
           </View>
         </View>
 
-        {/* ── Save button ───────────────────────────────────── */}
-        <TouchableOpacity
-          style={[styles.saveBtn, loading && styles.saveBtnDisabled]}
-          onPress={handleUpdate}
-          disabled={loading}
-          activeOpacity={0.85}
-        >
-          {loading ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <>
-              <Ionicons name="checkmark" size={20} color="#ffffff" style={{ marginRight: 8 }} />
-              <Text style={styles.saveBtnText}>Save Changes</Text>
-            </>
-          )}
-        </TouchableOpacity>
+        <View style={styles.field}>
+          <Text style={styles.label}>Contact Number</Text>
+          <TextInput
+            style={styles.input}
+            keyboardType="phone-pad"
+            value={contact}
+            onChangeText={setContact}
+            placeholder="Your phone number"
+            placeholderTextColor={colors.textTertiary}
+          />
+        </View>
 
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <View style={styles.field}>
+          <Text style={styles.label}>Pickup Location</Text>
+          <TextInput
+            style={styles.input}
+            value={location}
+            onChangeText={setLocation}
+            placeholder="e.g. Hostel 5, Room 203 or Library Gate"
+            placeholderTextColor={colors.textTertiary}
+            maxLength={80}
+          />
+        </View>
+
+        <View style={[styles.field, { marginBottom: 0 }]}>
+          <Text style={styles.label}>Description</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            multiline
+            numberOfLines={4}
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Describe the condition, age, brand…"
+            placeholderTextColor={colors.textTertiary}
+            textAlignVertical="top"
+          />
+        </View>
+      </View>
+
+      {/* ── Save button ───────────────────────────────────── */}
+      <TouchableOpacity
+        style={[styles.saveBtn, loading && styles.saveBtnDisabled]}
+        onPress={handleUpdate}
+        disabled={loading}
+        activeOpacity={0.85}
+      >
+        {loading ? (
+          <ActivityIndicator color={colors.textOnPrimary || '#ffffff'} />
+        ) : (
+          <>
+            <Ionicons name="checkmark" size={20} color={colors.textOnPrimary || '#ffffff'} style={{ marginRight: 8 }} />
+            <Text style={styles.saveBtnText}>Save Changes</Text>
+          </>
+        )}
+      </TouchableOpacity>
+
+    </KeyboardAwareScrollView>
   );
 };
 
@@ -291,7 +288,7 @@ const createStyles = (theme) => StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, gap: 5,
   },
   
-  // Semantic Status Badges (Kept semantic Green/Red for universal recognition)
+  // Semantic Status Badges
   statusAvail: { backgroundColor: 'rgba(16,185,129,0.15)' },
   statusSold: { backgroundColor: 'rgba(239,68,68,0.15)' },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
@@ -347,7 +344,7 @@ const createStyles = (theme) => StyleSheet.create({
     shadowOpacity: 0.4, shadowRadius: 8, elevation: 5,
   },
   saveBtnDisabled: { opacity: 0.65 },
-  saveBtnText: { color: theme.textOnPrimary || '#ffffff', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 }, // Kept explicit white for contrast on action buttons
+  saveBtnText: { color: theme.textOnPrimary || '#ffffff', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 }, 
 });
 
 export default EditItemScreen;

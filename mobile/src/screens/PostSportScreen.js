@@ -1,15 +1,17 @@
 import React, { useState, useContext } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  StatusBar, ScrollView, TextInput, Alert, ActivityIndicator,
-  Modal, Image, Platform,
+  StatusBar, TextInput, Alert, ActivityIndicator,
+  Modal, Image, Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
 import API from '../api/axios';
-import { useThemeStyles } from '../hooks/useThemeStyles'; // <-- Update path as needed
+import { useThemeStyles } from '../hooks/useThemeStyles'; 
+// 1. IMPORT THE NEW LIBRARY
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const SPORT_TYPES = [
   { label: 'Cricket',      emoji: '🏏' },
@@ -27,8 +29,6 @@ const SPORT_TYPES = [
 const fmtDate = (d) =>
   d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
-// ── FIXED: Moved Field component OUTSIDE the main screen component ──────────
-// Added `styles` as a prop so it can access the dynamic theme safely
 const Field = ({ label, children, optional, styles }) => (
   <View style={styles.field}>
     <Text style={styles.fieldLabel}>
@@ -37,17 +37,14 @@ const Field = ({ label, children, optional, styles }) => (
     {children}
   </View>
 );
-// ─────────────────────────────────────────────────────────────────────────────
 
 const PostSportScreen = ({ navigation, route }) => {
-  // 1. Initialize dynamic theme hook
   const { styles, colors } = useThemeStyles(createStyles);
 
   const { currentUser } = useContext(AuthContext);
   const editSport = route.params?.sport;
   const isEdit    = !!editSport;
 
-  // ── Form state ──────────────────────────────────────────────────────────────
   const [title,          setTitle]          = useState(editSport?.title          || '');
   const [sportType,      setSportType]      = useState(editSport?.sportType      || '');
   const [description,    setDescription]    = useState(editSport?.description    || '');
@@ -58,21 +55,17 @@ const PostSportScreen = ({ navigation, route }) => {
   const [fee,            setFee]            = useState(String(editSport?.registrationFee || '0'));
   const [rules,          setRules]          = useState(editSport?.rules          || '');
 
-  // Dates
   const [eventDate,    setEventDate]    = useState(editSport ? new Date(editSport.eventDate) : new Date(Date.now() + 7 * 86400000));
   const [deadline,     setDeadline]     = useState(editSport ? new Date(editSport.lastRegistrationDate) : new Date(Date.now() + 5 * 86400000));
   const [showEventDP,  setShowEventDP]  = useState(false);
   const [showDeadDP,   setShowDeadDP]   = useState(false);
 
-  // QR code
-  const [qrUri,   setQrUri]   = useState(null);    // new image selected
+  const [qrUri,   setQrUri]   = useState(null);
   const [existingQr, setExistingQr] = useState(editSport?.qrCodeUrl || '');
 
-  // UI
   const [showTypePicker, setShowTypePicker] = useState(false);
   const [submitting,     setSubmitting]     = useState(false);
 
-  // ── QR code picker ──────────────────────────────────────────────────────────
   const pickQR = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
@@ -89,7 +82,6 @@ const PostSportScreen = ({ navigation, route }) => {
     }
   };
 
-  // ── Submit ──────────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!title.trim())   { Alert.alert('Missing', 'Please enter a title.');      return; }
     if (!sportType)      { Alert.alert('Missing', 'Please select a sport type.'); return; }
@@ -116,7 +108,6 @@ const PostSportScreen = ({ navigation, route }) => {
       form.append('rules',               rules.trim());
       if (maxTeams.trim()) form.append('maxTeams', maxTeams.trim());
 
-      // Attach new QR image if selected
       if (qrUri) {
         form.append('qrCode', {
           uri:  Platform.OS === 'android' ? qrUri : qrUri.replace('file://', ''),
@@ -154,7 +145,6 @@ const PostSportScreen = ({ navigation, route }) => {
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.header} />
 
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
           <Ionicons name="arrow-back" size={22} color={colors.textMain} />
@@ -163,9 +153,15 @@ const PostSportScreen = ({ navigation, route }) => {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      {/* 2. USE THE NEW COMPONENT INSTEAD OF SCROLLVIEW */}
+      <KeyboardAwareScrollView 
+        contentContainerStyle={styles.form} 
+        keyboardShouldPersistTaps="handled" 
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid={true}
+        extraScrollHeight={Platform.OS === 'android' ? 30 : 20} // Adds padding above the keyboard
+      >
 
-        {/* Sport type */}
         <Field label="Sport Type" styles={styles}>
           <TouchableOpacity style={styles.picker} onPress={() => setShowTypePicker(true)}>
             {selectedType
@@ -176,7 +172,6 @@ const PostSportScreen = ({ navigation, route }) => {
           </TouchableOpacity>
         </Field>
 
-        {/* Title */}
         <Field label="Title" styles={styles}>
           <TextInput
             style={styles.input}
@@ -187,7 +182,6 @@ const PostSportScreen = ({ navigation, route }) => {
           />
         </Field>
 
-        {/* Venue */}
         <Field label="Venue" styles={styles}>
           <TextInput
             style={styles.input}
@@ -198,7 +192,6 @@ const PostSportScreen = ({ navigation, route }) => {
           />
         </Field>
 
-        {/* Event Date */}
         <Field label="Event Date" styles={styles}>
           <TouchableOpacity style={styles.picker} onPress={() => setShowEventDP(true)}>
             <Ionicons name="calendar-outline" size={16} color={colors.textTertiary} />
@@ -209,13 +202,12 @@ const PostSportScreen = ({ navigation, route }) => {
               value={eventDate}
               mode="date"
               minimumDate={new Date()}
-              textColor={colors.textMain} // Improves visibility on iOS picker
+              textColor={colors.textMain} 
               onChange={(_, d) => { setShowEventDP(false); if (d) setEventDate(d); }}
             />
           )}
         </Field>
 
-        {/* Registration Deadline */}
         <Field label="Registration Deadline" styles={styles}>
           <TouchableOpacity style={styles.picker} onPress={() => setShowDeadDP(true)}>
             <Ionicons name="time-outline" size={16} color={colors.textTertiary} />
@@ -227,13 +219,12 @@ const PostSportScreen = ({ navigation, route }) => {
               mode="date"
               minimumDate={new Date()}
               maximumDate={eventDate}
-              textColor={colors.textMain} // Improves visibility on iOS picker
+              textColor={colors.textMain} 
               onChange={(_, d) => { setShowDeadDP(false); if (d) setDeadline(d); }}
             />
           )}
         </Field>
 
-        {/* Team size + Max teams */}
         <View style={styles.row}>
           <View style={[styles.field, { flex: 1 }]}>
             <Text style={styles.fieldLabel}>Team Size <Text style={styles.required}>*</Text></Text>
@@ -259,7 +250,6 @@ const PostSportScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Registration Fee */}
         <Field label="Registration Fee (₹)" styles={styles}>
           <TextInput
             style={styles.input}
@@ -271,7 +261,6 @@ const PostSportScreen = ({ navigation, route }) => {
           />
         </Field>
 
-        {/* Payment QR */}
         <Field label="Payment QR Code" optional styles={styles}>
           <Text style={styles.fieldHint}>
             Upload a QR code image so participants can pay the fee before registering.
@@ -293,7 +282,6 @@ const PostSportScreen = ({ navigation, route }) => {
           )}
         </Field>
 
-        {/* Organizer Phone */}
         <Field label="Your Contact Number" styles={styles}>
           <TextInput
             style={styles.input}
@@ -305,7 +293,6 @@ const PostSportScreen = ({ navigation, route }) => {
           />
         </Field>
 
-        {/* Description */}
         <Field label="Description" optional styles={styles}>
           <TextInput
             style={[styles.input, styles.multiline]}
@@ -318,7 +305,6 @@ const PostSportScreen = ({ navigation, route }) => {
           />
         </Field>
 
-        {/* Rules */}
         <Field label="Rules & Guidelines" optional styles={styles}>
           <TextInput
             style={[styles.input, styles.multiline]}
@@ -331,23 +317,22 @@ const PostSportScreen = ({ navigation, route }) => {
           />
         </Field>
 
-        {/* Submit */}
         <TouchableOpacity
           style={[styles.submitBtn, submitting && styles.submitBtnOff]}
           onPress={handleSubmit}
           disabled={submitting}
         >
           {submitting
-            ? <ActivityIndicator color="#ffffff" />
+            ? <ActivityIndicator color={colors.textOnPrimary || '#ffffff'} />
             : <>
-                <Ionicons name="trophy-outline" size={18} color="#ffffff" />
+                <Ionicons name="trophy-outline" size={18} color={colors.textOnPrimary || '#ffffff'} />
                 <Text style={styles.submitTxt}>{isEdit ? 'Save Changes' : 'Post Sport Event'}</Text>
               </>
           }
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Sport Type Picker Modal */}
       <Modal visible={showTypePicker} transparent animationType="slide">
@@ -438,7 +423,7 @@ const createStyles = (theme) => StyleSheet.create({
   // Submit
   submitBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: theme.primaryAction, paddingVertical: 16, borderRadius: 14, marginTop: 8 },
   submitBtnOff: { opacity: 0.6 },
-  submitTxt:    {color: theme.textOnPrimary || '#ffffff', fontWeight: '800', fontSize: 16 }, // Contrast lock
+  submitTxt:    { color: theme.textOnPrimary || '#ffffff', fontWeight: '800', fontSize: 16 }, // Contrast lock
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
