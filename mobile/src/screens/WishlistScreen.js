@@ -157,7 +157,7 @@ const createStyles = (theme) => StyleSheet.create({
   browseBtn: {
     backgroundColor: theme.primaryAction, paddingVertical: 14, paddingHorizontal: 32, borderRadius: 12,
   },
-  browseBtnText: { color: '#ffffff', fontWeight: 'bold', fontSize: 15 }, // Contrast lock
+  browseBtnText: { color: theme.textOnPrimary || '#ffffff', fontWeight: 'bold', fontSize: 15 }, // Contrast lock
 });
 
 export default WishlistScreen;

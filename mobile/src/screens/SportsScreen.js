@@ -122,7 +122,7 @@ const SportsScreen = ({ navigation }) => {
             style={styles.postBtn}
             onPress={() => navigation.navigate('PostSport', {})}
           >
-            <Ionicons name="add" size={18} color="#ffffff" />
+            <Ionicons name="add" size={18} color={styles.postBtnTxt.color} />
             <Text style={styles.postBtnTxt}>Post</Text>
           </TouchableOpacity>
         ) : (
@@ -185,7 +185,7 @@ const createStyles = (theme) => StyleSheet.create({
   iconBtn:      { width: 40, height: 40, justifyContent: 'center' },
   headerTitle:  { flex: 1, color: theme.textMain, fontSize: 18, fontWeight: '700' },
   postBtn:      { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: theme.primaryAction, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
-  postBtnTxt:   { color: '#ffffff', fontSize: 13, fontWeight: '700' }, // Locked to white for contrast
+  postBtnTxt:   { color: theme.textOnPrimary || '#ffffff', fontSize: 13, fontWeight: '700' }, // Locked to white for contrast
   center:       { flex: 1, justifyContent: 'center', alignItems: 'center' },
   list:         { padding: 16, gap: 12 },
   listEmpty:    { flexGrow: 1 },
@@ -229,5 +229,5 @@ const createStyles = (theme) => StyleSheet.create({
   emptyTitle:  { fontSize: 18, fontWeight: '700', color: theme.textMain },
   emptySub:    { fontSize: 14, color: theme.textSub, textAlign: 'center', lineHeight: 20 },
   emptyBtn:    { marginTop: 12, backgroundColor: theme.primaryAction, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 20 },
-  emptyBtnTxt: { color: '#ffffff', fontWeight: '700', fontSize: 14 },
+  emptyBtnTxt: { color: theme.textOnPrimary || '#ffffff', fontWeight: '700', fontSize: 14 },
 });

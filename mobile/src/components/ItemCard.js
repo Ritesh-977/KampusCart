@@ -150,14 +150,14 @@ const createStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.primaryAction, borderRadius: 8,
     paddingHorizontal: 8, paddingVertical: 3,
   },
-  priceBadgeText: { color: '#ffffff', fontWeight: '800', fontSize: 12 }, // Locked to white for contrast
+  priceBadgeText: {color: theme.textOnPrimary || '#ffffff', fontWeight: '800', fontSize: 12 }, // Locked to white for contrast
   multiImgBadge: {
     position: 'absolute', top: 8, right: 8,
     backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 6,
     paddingHorizontal: 6, paddingVertical: 2,
     flexDirection: 'row', alignItems: 'center', gap: 3,
   },
-  multiImgText: { color: '#ffffff', fontSize: 10, fontWeight: '700' }, // Locked to white for contrast
+  multiImgText: { color: theme.textOnPrimary || '#ffffff',fontSize: 10, fontWeight: '700' }, // Locked to white for contrast
   gridContent: { padding: 10 },
   gridTitle: { fontSize: 13, fontWeight: '700', color: theme.textMain, marginBottom: 6, lineHeight: 18 },
   catBadge: { alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, marginBottom: 6 },

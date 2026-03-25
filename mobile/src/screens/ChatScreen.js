@@ -620,7 +620,7 @@ const createStyles = (theme) => StyleSheet.create({
   tailTopLeft: { borderTopLeftRadius: 4 },
 
   bubbleText: { fontSize: 15, lineHeight: 21 },
-  textMe: { color: '#ffffff' }, // Always white to contrast with solid primaryAction backgrounds
+ textMe: { color: theme.textOnPrimary || '#ffffff' }, // Always white to contrast with solid primaryAction backgrounds
   textOther: { color: theme.textBody },
 
   metaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2, marginBottom: 2 },

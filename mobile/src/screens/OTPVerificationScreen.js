@@ -58,7 +58,7 @@ const OTPVerificationScreen = ({ route, navigation }) => {
       shadowColor: theme.primaryAction, shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
     },
-    verifyButtonText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
+    verifyButtonText: {color: theme.textOnPrimary || '#ffffff', fontSize: 16, fontWeight: 'bold' },
     resendContainer: {
       flexDirection: 'row', justifyContent: 'center',
       alignItems: 'center', marginTop: 24,

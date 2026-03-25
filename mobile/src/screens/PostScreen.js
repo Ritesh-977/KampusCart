@@ -146,7 +146,7 @@ const PostScreen = ({ navigation }) => {
       shadowColor: theme.primaryAction, shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.4, shadowRadius: 8, elevation: 5,
     },
-    submitBtnText: { color: '#ffffff', fontSize: 17, fontWeight: '700' },
+    submitBtnText: { color: theme.textOnPrimary || '#ffffff', fontSize: 17, fontWeight: '700' },
     guestContainer: {
       flex: 1, justifyContent: 'center', alignItems: 'center',
       paddingHorizontal: 24, backgroundColor: theme.background,
@@ -161,7 +161,7 @@ const PostScreen = ({ navigation }) => {
       backgroundColor: theme.primaryAction, paddingVertical: 14, borderRadius: 12,
       width: '100%', alignItems: 'center',
     },
-    guestBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+    guestBtnText: { color: theme.textOnPrimary || '#ffffff', fontWeight: 'bold', fontSize: 16 },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'flex-end' },
     modalContent: {
       backgroundColor: theme.card, borderTopLeftRadius: 24, borderTopRightRadius: 24,

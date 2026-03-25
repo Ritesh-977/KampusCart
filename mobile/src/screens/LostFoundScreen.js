@@ -237,7 +237,7 @@ const LostFoundScreen = ({ navigation }) => {
             <Ionicons
               name={CATEGORY_ICONS[cat]}
               size={12}
-              color={activeCategory === cat ? '#ffffff' : colors.textTertiary}
+              color={activeCategory === cat ? (colors.textOnPrimary || '#ffffff'): colors.textTertiary}
               style={{ marginRight: 3 }}
             />
             <Text style={[styles.catChipText, activeCategory === cat && styles.catChipTextActive]}>
@@ -293,7 +293,7 @@ const LostFoundScreen = ({ navigation }) => {
           setReportModalVisible(true);
         }}
       >
-        <Ionicons name="add" size={28} color="#ffffff" />
+        <Ionicons name="add" size={28} color={colors.textOnPrimary || '#ffffff'} />
       </TouchableOpacity>
 
       {/* Report Modal */}
@@ -462,7 +462,7 @@ const createStyles = (theme) => StyleSheet.create({
   },
   catChipActive: { backgroundColor: theme.primaryAction, borderColor: theme.primaryAction },
   catChipText: { fontSize: 12, fontWeight: '600', color: theme.textSub, lineHeight: 16 },
-  catChipTextActive: { color: '#ffffff' }, // Always white text on primaryAction backgrounds
+  catChipTextActive: { color: theme.textOnPrimary || '#ffffff' }, // Always white text on primaryAction backgrounds
 
   list: { padding: 16 },
   card: {
@@ -523,7 +523,7 @@ const createStyles = (theme) => StyleSheet.create({
   formTypeBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
   formTypeBtnActive: { backgroundColor: theme.primaryAction },
   formTypeBtnText: { fontSize: 14, fontWeight: '600', color: theme.textSub },
-  formTypeBtnTextActive: { color: '#ffffff' },
+  formTypeBtnTextActive: { color: theme.textOnPrimary || '#ffffff'},
 
   formGroup: { marginBottom: 16 },
   formLabel: { fontSize: 14, fontWeight: '600', color: theme.textSub, marginBottom: 8 },
@@ -542,7 +542,7 @@ const createStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.primaryAction, borderRadius: 12,
     paddingVertical: 16, alignItems: 'center', marginBottom: 20,
   },
-  submitBtnText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
+  submitBtnText: { color: theme.textOnPrimary || '#ffffff', fontSize: 16, fontWeight: 'bold' },
 });
 
 export default LostFoundScreen;

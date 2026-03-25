@@ -399,7 +399,7 @@ const createStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.primaryAction, borderRadius: 14,
     paddingVertical: 16, marginTop: 26,
   },
-  submitText: { color: '#ffffff', fontWeight: '800', fontSize: 16 },
+  submitText: { color: theme.textOnPrimary || '#ffffff', fontWeight: '800', fontSize: 16 },
 
   // Modals
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
