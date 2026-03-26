@@ -769,8 +769,14 @@ const HomeScreen = ({ navigation }) => {
           columnWrapperStyle={mainStyles.row}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryAction]} tintColor={colors.primaryAction} />
+         refreshControl={
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={onRefresh} 
+              colors={[colors.primaryAction]} 
+              tintColor={colors.primaryAction} 
+              progressBackgroundColor={colors.card} // <-- Added this!
+            />
           }
           renderItem={renderItem}
           ListHeaderComponent={ListHeader()}

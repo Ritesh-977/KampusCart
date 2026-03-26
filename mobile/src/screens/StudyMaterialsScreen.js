@@ -308,12 +308,13 @@ const StudyMaterialsScreen = ({ navigation }) => {
           renderItem={renderItem}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={[activeTabMeta?.color || colors.primaryAction]}
-              tintColor={activeTabMeta?.color || colors.primaryAction}
+           refreshControl={
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={onRefresh} 
+              colors={[colors.primaryAction]} 
+              tintColor={colors.primaryAction} 
+              progressBackgroundColor={colors.card} // <-- Added this!
             />
           }
           onEndReached={onLoadMore}
