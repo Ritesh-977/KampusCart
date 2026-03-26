@@ -111,7 +111,6 @@ const SpotlightCard = ({ item, onPress, themeColors }) => {
 };
 
 // ─── Events Calendar ──────────────────────────────────────────────────────────
-// ─── Events Calendar ──────────────────────────────────────────────────────────
 const EventsCalendar = ({ events = [], navigation, themeColors }) => {
   const featured = events[0] || null;
   const upcoming = events.slice(1, 5);
@@ -301,7 +300,7 @@ const HomeScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (items.length < 2) return;
-    const spots = items.slice(0, 6);
+    const spots = items.filter(i => i.status !== 'sold').slice(0, 6); // <-- Updated
     const t = setInterval(() => {
       spotIdx.current = (spotIdx.current + 1) % spots.length;
       spotlightRef.current?.scrollTo({ x: spotIdx.current * (SPOT_W + 14), animated: true });
@@ -388,7 +387,7 @@ const HomeScreen = ({ navigation }) => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
     return items
-      .filter(item => (item.name || item.title || '').toLowerCase().includes(q))
+      .filter(item => item.status !== 'sold' && (item.name || item.title || '').toLowerCase().includes(q)) // <-- Updated
       .slice(0, 8);
   }, [searchQuery, items]);
 
@@ -408,9 +407,16 @@ const HomeScreen = ({ navigation }) => {
   }, [searchQuery, activeCategory, items]);
 
   const sortedItems = useMemo(() => {
-    if (sortOrder === 'asc')  return [...filteredItems].sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
-    if (sortOrder === 'desc') return [...filteredItems].sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
-    return filteredItems;
+    let result = [...filteredItems];
+    if (sortOrder === 'asc')  result.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
+    if (sortOrder === 'desc') result.sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
+    return result.sort((a, b) => { // <-- Updated to handle sold items
+      const isASold = a.status === 'sold';
+      const isBSold = b.status === 'sold';
+      if (isASold && !isBSold) return 1;
+      if (!isASold && isBSold) return -1;
+      return 0;
+    });
   }, [filteredItems, sortOrder]);
 
   const displayItems = showAll ? sortedItems : sortedItems.slice(0, 8);
@@ -463,7 +469,7 @@ const HomeScreen = ({ navigation }) => {
     );
   };
 
-  const spots  = items.slice(0, 6);
+  const spots = items.filter(i => i.status !== 'sold').slice(0, 6); // <-- Updated
 
   const makeAnim = (anim, dy = 22) => ({
     opacity: anim,

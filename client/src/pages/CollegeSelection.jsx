@@ -1,7 +1,7 @@
 // src/pages/CollegeSelection.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaSearch, FaStore, FaMapMarkerAlt, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
+import { FaSearch, FaMapMarkerAlt, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
 import { useCollege } from '../context/CollegeContext';
 import { colleges } from '../data/colleges';
 
@@ -50,11 +50,17 @@ const CollegeSelection = () => {
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 py-5 border-b border-white/10">
-        <div className="flex items-center gap-2 text-2xl font-black text-indigo-400">
-          <FaStore />
+        <div className="flex items-center text-2xl font-black text-indigo-400">
+          <img 
+            src="/logo.png" 
+            alt="KampusCart Logo" 
+            className="h-8 w-8 sm:h-12 sm:w-12 mr-0.5 sm:mr-1 object-contain" 
+          />
           <span className="text-white">kampus<span className="text-gray-400">Cart</span></span>
         </div>
-        <span className="text-xs text-gray-500 font-medium tracking-widest uppercase">Multi-Campus Marketplace</span>
+        <span className="text-xs text-gray-500 font-medium tracking-widest uppercase text-right">
+          Multi-Campus Marketplace
+        </span>
       </header>
 
       {/* Main Content */}
