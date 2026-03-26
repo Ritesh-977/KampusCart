@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
+import Toast from 'react-native-toast-message';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert, SafeAreaView
+  KeyboardAvoidingView, Platform, ActivityIndicator, SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import API from '../api/axios';
@@ -67,7 +68,11 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
   const handleForgotPassword = async () => {
     if (!email.trim()) {
-      Alert.alert('Error', 'Please enter your college email address.');
+      Toast.show({
+        type: 'error',
+        text1: 'Email Required',
+        text2: 'Please enter your college email address.',
+      });
       return;
     }
 
@@ -77,7 +82,11 @@ const ForgotPasswordScreen = ({ navigation }) => {
       setEmailSent(true);
     } catch (error) {
       const message = error.response?.data?.message || 'Could not send reset email. Please try again.';
-      Alert.alert('Error', message);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: message,
+      });
     } finally {
       setLoading(false);
     }

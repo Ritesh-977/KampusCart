@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useContext } from 'react';
+import Toast from 'react-native-toast-message';
 import {
   View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView,
   ActivityIndicator, Modal, TextInput, ScrollView, Alert, Image,
@@ -90,7 +91,7 @@ const LostFoundScreen = ({ navigation }) => {
 
   const handleSubmitReport = async () => {
     if (!formTitle.trim() || !formLocation.trim() || !formContact.trim()) {
-      Alert.alert('Missing Info', 'Please fill in title, location, and contact number.');
+      Toast.show({ type: 'error', text1: 'Missing Info', text2: 'Please fill in title, location, and contact number.' });
       return;
     }
 
@@ -115,13 +116,13 @@ const LostFoundScreen = ({ navigation }) => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      Alert.alert('Reported!', `Your ${formType.toLowerCase()} item has been posted. Hope you find it!`);
+      Toast.show({ type: 'success', text1: 'Reported!', text2: `Your ${formType.toLowerCase()} item has been posted. Hope you find it!` });
       setReportModalVisible(false);
       resetForm();
       fetchItems();
     } catch (error) {
       const message = error.response?.data?.message || 'Could not submit report.';
-      Alert.alert('Error', message);
+      Toast.show({ type: 'error', text1: 'Error', text2: message });
     } finally {
       setSubmitting(false);
     }
@@ -137,7 +138,7 @@ const LostFoundScreen = ({ navigation }) => {
             await API.put(`/lost-found/${itemId}/resolve`);
             setItems(prev => prev.filter(i => i._id !== itemId));
           } catch (e) {
-            Alert.alert('Error', 'Could not resolve item.');
+            Toast.show({ type: 'error', text1: 'Error', text2: 'Could not mark as resolved. Please try again.' });
           }
         }
       }

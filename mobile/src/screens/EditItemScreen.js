@@ -1,4 +1,5 @@
 import React, { useState, useLayoutEffect } from 'react';
+import Toast from 'react-native-toast-message';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   Alert, ActivityIndicator, Platform, Image
@@ -41,7 +42,11 @@ const EditItemScreen = ({ route, navigation }) => {
 
   const handleUpdate = async () => {
     if (!title.trim() || !price.trim()) {
-      Alert.alert('Missing Fields', 'Title and price are required.');
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: 'Title and Price are required fields.',
+      });
       return;
     }
     try {
@@ -59,11 +64,18 @@ const EditItemScreen = ({ route, navigation }) => {
       await API.put(`/items/${item._id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      Alert.alert('Saved', 'Your listing has been updated.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+        Toast.show({
+          type: 'success',
+          text1: 'Updated',
+          text2: 'Your listing has been updated.',
+        });
+        navigation.goBack();
     } catch {
-      Alert.alert('Error', 'Could not update the listing. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not update item.',
+      });
     } finally {
       setLoading(false);
     }
@@ -75,13 +87,18 @@ const EditItemScreen = ({ route, navigation }) => {
       const response = await API.patch(`/items/${item._id}/status`);
       setIsSold(response.data.isSold);
     } catch {
-      Alert.alert('Error', 'Could not update status.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not update listing status.',
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = () => {
+    // 1. KEEP the Alert here. We need the user to tap "Cancel" or "Delete"!
     Alert.alert('Delete Listing', 'This will permanently remove your listing. This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -91,9 +108,22 @@ const EditItemScreen = ({ route, navigation }) => {
           try {
             setLoading(true);
             await API.delete(`/items/${item._id}`);
+            
+            // 2. ADD a success Toast so they know it worked before leaving the screen
+            Toast.show({
+              type: 'success',
+              text1: 'Deleted',
+              text2: 'Your listing has been permanently removed.',
+            });
+            
             navigation.goBack();
           } catch {
-            Alert.alert('Error', 'Could not delete item.');
+            // 3. SWAP the error Alert for an error Toast
+            Toast.show({
+              type: 'error',
+              text1: 'Error',
+              text2: 'Could not delete item. Please try again.',
+            });
           } finally {
             setLoading(false);
           }

@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect, useMemo } from 'react';
+import Toast from 'react-native-toast-message';
 import {
   View, Text, Image, ScrollView,
   TouchableOpacity, SafeAreaView, Alert, Linking,
@@ -170,11 +171,11 @@ const ItemDetailsScreen = ({ route, navigation }) => {
   // ── WhatsApp ────────────────────────────────────────────────────────────────
   const handleWhatsApp = async () => {
     if (!isLocalCampus) {
-      Alert.alert('Window Shopping', `You can only buy from your home campus. This item is at ${item.college}.`);
+      Toast.show({ type: 'error', text1: 'Window Shopping', text2: `You can only buy from your home campus. This item is at ${item.college}.` });
       return;
     }
     if (!item.contactNumber) {
-      Alert.alert('No Contact Info', "The seller didn't provide a phone number.");
+      Toast.show({ type: 'error', text1: 'No Contact Info', text2: "The seller didn't provide a phone number." });
       return;
     }
     let phone = item.contactNumber.replace(/\D/g, '');
@@ -184,18 +185,18 @@ const ItemDetailsScreen = ({ route, navigation }) => {
     try {
       await Linking.openURL(url);
     } catch {
-      Alert.alert('Error', 'Could not open WhatsApp.');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Could not open WhatsApp.' });
     }
   };
 
   // ── In-app chat ─────────────────────────────────────────────────────────────
   const handleInAppChat = async () => {
     if (!isLocalCampus) {
-      Alert.alert('Window Shopping', 'You can only message sellers from your home campus.');
+      Toast.show({ type: 'error', text1: 'Window Shopping', text2: 'You can only message sellers from your home campus.' });
       return;
     }
     const sellerId = item.seller?._id || item.seller;
-    if (!sellerId) { Alert.alert('Error', 'Cannot find seller info.'); return; }
+    if (!sellerId) { Toast.show({ type: 'error', text1: 'Error', text2: 'Cannot find seller info.' }); return; }
     try {
       setLoadingAction(true);
       const response = await API.post('/chat', { userId: sellerId });
@@ -209,7 +210,11 @@ const ItemDetailsScreen = ({ route, navigation }) => {
         },
       });
     } catch {
-      Alert.alert('Error', 'Could not open chat. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not open chat. Please try again.',
+      });
     } finally {
       setLoadingAction(false);
     }
@@ -225,7 +230,11 @@ const ItemDetailsScreen = ({ route, navigation }) => {
       await API.post('/users/wishlist', { itemId: item._id });
     } catch {
       setIsWishlisted(prev);         // revert on failure
-      Alert.alert('Error', 'Could not update wishlist.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not update wishlist.',
+      });
     } finally {
       setWishlistLoading(false);
     }
@@ -255,9 +264,18 @@ const ItemDetailsScreen = ({ route, navigation }) => {
     try {
       await API.post(`/items/${item._id}/report`, { reason });
       setReportVisible(false);
-      Alert.alert('Reported ✓', 'Thanks for helping keep the campus clean!');
+      Toast.show({
+        type: 'success',
+        text1: 'Reported ✓',
+        text2: 'Thanks for helping keep the campus clean!',
+      });
     } catch {
-      Alert.alert('Error', 'Could not submit report.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not submit report.',
+      });
+
     } finally {
       setReportSubmitting(false);
     }
@@ -273,10 +291,18 @@ const ItemDetailsScreen = ({ route, navigation }) => {
           try {
             setLoadingAction(true);
             await API.delete(`/items/${item._id}`);
-            Alert.alert('Deleted', 'Your listing has been removed.');
+            Toast.show({
+              type: 'success',
+              text1: 'Deleted',
+              text2: 'Your listing has been removed.',
+            });
             navigation.navigate('Profile');
           } catch {
-            Alert.alert('Error', 'Failed to delete item.');
+            Toast.show({
+              type: 'error',
+              text1: 'Error',
+              text2: 'Failed to delete item.',
+            });
           } finally {
             setLoadingAction(false);
           }
@@ -292,7 +318,12 @@ const ItemDetailsScreen = ({ route, navigation }) => {
       const response = await API.patch(`/items/${item._id}/status`);
       setIsSold(response.data.isSold);
     } catch {
-      Alert.alert('Error', 'Failed to update status.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to update status.',
+      });
+
     } finally {
       setLoadingAction(false);
     }
