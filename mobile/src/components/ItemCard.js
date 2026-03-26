@@ -1,28 +1,24 @@
 import React, { useRef } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeStyles } from '../hooks/useThemeStyles'; // <-- Make sure path is correct
+import { useThemeStyles } from '../hooks/useThemeStyles'; 
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1588508065123-287b28e0141c?w=400&q=80';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
 
-// Function to safely map categories to theme colors dynamically
 const getCategoryColors = (category, colors) => {
   const map = {
-    'Cycles': colors.secondaryAccent,         // Greenish by default
-    'Electronics': colors.primaryAction,      // Main action color
-    'Books & Notes': '#fbbf24',               // Hardcoded yellow/amber (looks good on light & dark)
-    'Hostel Essentials': colors.primaryAccent,// Secondary action color
-    'Other': colors.textTertiary,             // Neutral gray
+    'Cycles': colors.secondaryAccent,         
+    'Electronics': colors.primaryAction,      
+    'Books & Notes': '#fbbf24',               
+    'Hostel Essentials': colors.primaryAccent,
+    'Other': colors.textTertiary,             
   };
-  
   const baseColor = map[category] || map['Other'];
-  
-  // Return the solid text color and a 15% opacity version for the background badge
   return {
     text: baseColor,
-    bg: baseColor + '26' // '26' is 15% opacity in hex
+    bg: baseColor + '26' 
   };
 };
 
@@ -38,10 +34,11 @@ const timeAgo = (dateStr) => {
 };
 
 const ItemCard = ({ item, onPress, compact = false }) => {
-  // 1. Initialize dynamic theme hook
   const { styles, colors } = useThemeStyles(createStyles);
-  
   const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  // FIXED: Force it to lowercase to match "Sold", "SOLD", or "sold" safely
+  const isSold = item.status?.toLowerCase() === 'sold';
 
   let imageUrl = FALLBACK_IMAGE;
   if (item.images && item.images.length > 0) {
@@ -50,7 +47,6 @@ const ItemCard = ({ item, onPress, compact = false }) => {
     if (rawPath && rawPath.startsWith('http')) imageUrl = rawPath;
   }
 
-  // Generate the dynamic category color based on the current theme
   const catColors = getCategoryColors(item.category, colors);
 
   const handlePressIn = () => {
@@ -60,8 +56,15 @@ const ItemCard = ({ item, onPress, compact = false }) => {
     Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 20 }).start();
   };
 
+  const renderSoldBadge = () => (
+    <View style={styles.soldOverlay}>
+      <View style={styles.soldBadge}>
+        <Text style={styles.soldBadgeText}>SOLD</Text>
+      </View>
+    </View>
+  );
+
   if (compact) {
-    // 2-column grid card
     return (
       <Animated.View style={{ transform: [{ scale: scaleAnim }], width: CARD_WIDTH }}>
         <TouchableOpacity
@@ -72,11 +75,19 @@ const ItemCard = ({ item, onPress, compact = false }) => {
           activeOpacity={1}
         >
           <View style={styles.gridImageWrapper}>
-            <Image source={{ uri: imageUrl }} style={styles.gridImage} resizeMode="cover" />
-            <View style={styles.priceBadge}>
+            <Image 
+              source={{ uri: imageUrl }} 
+              // FIXED: Swapped tintColor for a cleaner opacity fade so it doesn't break JPEGs
+              style={[styles.gridImage, isSold && { opacity: 0.5 }]} 
+              resizeMode="cover" 
+            />
+            
+            {isSold && renderSoldBadge()}
+
+            <View style={[styles.priceBadge, isSold && { backgroundColor: colors.textTertiary }]}>
               <Text style={styles.priceBadgeText}>₹{Number(item.price).toLocaleString('en-IN')}</Text>
             </View>
-            {item.images && item.images.length > 1 && (
+            {item.images && item.images.length > 1 && !isSold && (
               <View style={styles.multiImgBadge}>
                 <Ionicons name="images-outline" size={10} color="#ffffff" />
                 <Text style={styles.multiImgText}>{item.images.length}</Text>
@@ -84,9 +95,9 @@ const ItemCard = ({ item, onPress, compact = false }) => {
             )}
           </View>
           <View style={styles.gridContent}>
-            <Text style={styles.gridTitle} numberOfLines={2}>{item.title}</Text>
-            <View style={[styles.catBadge, { backgroundColor: catColors.bg }]}>
-              <Text style={[styles.catBadgeText, { color: catColors.text }]} numberOfLines={1}>
+            <Text style={[styles.gridTitle, isSold && { color: colors.textTertiary }]} numberOfLines={2}>{item.title}</Text>
+            <View style={[styles.catBadge, { backgroundColor: isSold ? colors.cardAccent : catColors.bg }]}>
+              <Text style={[styles.catBadgeText, { color: isSold ? colors.textTertiary : catColors.text }]} numberOfLines={1}>
                 {item.category || 'General'}
               </Text>
             </View>
@@ -100,7 +111,6 @@ const ItemCard = ({ item, onPress, compact = false }) => {
     );
   }
 
-  // Full-width card (fallback)
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
       <TouchableOpacity
@@ -110,11 +120,18 @@ const ItemCard = ({ item, onPress, compact = false }) => {
         onPressOut={handlePressOut}
         activeOpacity={1}
       >
-        <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
+        <View style={styles.gridImageWrapper}>
+          <Image 
+            source={{ uri: imageUrl }} 
+            style={[styles.image, isSold && { opacity: 0.5 }]} 
+            resizeMode="cover" 
+          />
+          {isSold && renderSoldBadge()}
+        </View>
         <View style={styles.detailsContainer}>
           <View style={styles.titleRow}>
-            <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
-            <Text style={styles.price}>₹{Number(item.price).toLocaleString('en-IN')}</Text>
+            <Text style={[styles.title, isSold && { color: colors.textTertiary }]} numberOfLines={1}>{item.title}</Text>
+            <Text style={[styles.price, isSold && { color: colors.textTertiary }]}>₹{Number(item.price).toLocaleString('en-IN')}</Text>
           </View>
           <Text style={styles.category}>{item.category || 'General'}</Text>
           <View style={styles.footer}>
@@ -127,9 +144,7 @@ const ItemCard = ({ item, onPress, compact = false }) => {
   );
 };
 
-// ─── Theme-Aware Style Generator ─────────────────────────────────────────────
 const createStyles = (theme) => StyleSheet.create({
-  // Grid card
   gridCard: {
     backgroundColor: theme.card,
     borderRadius: 16,
@@ -137,7 +152,7 @@ const createStyles = (theme) => StyleSheet.create({
     elevation: 3,
     shadowColor: theme.textMain,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1, // Reduced shadow opacity to look cleaner in light modes
+    shadowOpacity: 0.1, 
     shadowRadius: 8,
     marginBottom: 16,
     borderWidth: 1,
@@ -145,19 +160,46 @@ const createStyles = (theme) => StyleSheet.create({
   },
   gridImageWrapper: { position: 'relative' },
   gridImage: { width: '100%', height: CARD_WIDTH * 0.85, backgroundColor: theme.cardAccent },
+  
+  soldOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.2)', 
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    elevation: 5, // FIXED: Added elevation so Android renders it above the image
+  },
+  soldBadge: {
+    borderWidth: 3,
+    borderColor: '#ef4444', 
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 6,
+    transform: [{ rotate: '-12deg' }],
+    backgroundColor: 'rgba(0,0,0,0.5)', 
+  },
+  soldBadgeText: {
+    color: '#ef4444',
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 2,
+  },
+
   priceBadge: {
     position: 'absolute', bottom: 8, left: 8,
     backgroundColor: theme.primaryAction, borderRadius: 8,
     paddingHorizontal: 8, paddingVertical: 3,
+    zIndex: 11,
   },
-  priceBadgeText: {color: theme.textOnPrimary || '#ffffff', fontWeight: '800', fontSize: 12 }, // Locked to white for contrast
+  priceBadgeText: {color: theme.textOnPrimary || '#ffffff', fontWeight: '800', fontSize: 12 }, 
   multiImgBadge: {
     position: 'absolute', top: 8, right: 8,
     backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 6,
     paddingHorizontal: 6, paddingVertical: 2,
     flexDirection: 'row', alignItems: 'center', gap: 3,
+    zIndex: 11,
   },
-  multiImgText: { color: theme.textOnPrimary || '#ffffff',fontSize: 10, fontWeight: '700' }, // Locked to white for contrast
+  multiImgText: { color: theme.textOnPrimary || '#ffffff',fontSize: 10, fontWeight: '700' }, 
   gridContent: { padding: 10 },
   gridTitle: { fontSize: 13, fontWeight: '700', color: theme.textMain, marginBottom: 6, lineHeight: 18 },
   catBadge: { alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, marginBottom: 6 },
@@ -165,7 +207,6 @@ const createStyles = (theme) => StyleSheet.create({
   gridFooter: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   gridTime: { fontSize: 11, color: theme.textSub },
 
-  // Full-width card
   card: {
     backgroundColor: theme.card, borderRadius: 16, marginBottom: 16,
     overflow: 'hidden', elevation: 3,

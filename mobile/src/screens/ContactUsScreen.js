@@ -16,11 +16,11 @@ const CONTACTS = [
   {
     icon: 'mail-outline',
     label: 'Email Us',
-    value: 'support@kampuscart.in',
+    value: 'support@kampuscart.site',
     sub: 'We reply within 24 hours',
     color: '#60a5fa',
     bg: 'rgba(96,165,250,0.15)',
-    url: 'mailto:support@kampuscart.in',
+    url: 'mailto:support@kampuscart.site',
   },
   {
     icon: 'logo-instagram',
@@ -30,15 +30,6 @@ const CONTACTS = [
     color: '#f472b6',
     bg: 'rgba(244,114,182,0.15)',
     url: 'https://instagram.com/kampuscart',
-  },
-  {
-    icon: 'logo-twitter',
-    label: 'Twitter / X',
-    value: '@kampuscart',
-    sub: 'Updates and announcements',
-    color: '#60a5fa',
-    bg: 'rgba(96,165,250,0.12)',
-    url: 'https://twitter.com/kampuscart',
   },
   {
     icon: 'logo-linkedin',
@@ -54,7 +45,7 @@ const CONTACTS = [
 const FAQ = [
   {
     q: 'How do I report a suspicious listing?',
-    a: 'Tap the three-dot menu on any listing and select "Report". Our team reviews it within 24 hours.',
+    a: 'You will find a "Report" option on any listing and select it. Our team reviews it within 24 hours.',
   },
   {
     q: 'My payment didn\'t go through. What do I do?',
@@ -62,7 +53,7 @@ const FAQ = [
   },
   {
     q: 'How do I delete my account?',
-    a: 'Email us at support@kampuscart.in with subject "Account Deletion" from your registered email and we will process it within 3 business days.',
+    a: 'Email us at support@kampuscart.site with subject "Account Deletion" from your registered email and we will process it within 3 business days.',
   },
   {
     q: 'Can I list items from outside my college?',
@@ -115,22 +106,21 @@ const ContactUsScreen = () => {
 
         {/* Business hours */}
         <View style={{ backgroundColor: theme.card, borderRadius: 14, padding: 16, marginTop: 8, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(251,146,60,0.15)', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
-              <Ionicons name="time-outline" size={18} color="#fb923c" />
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {/* Swapped to a green headset icon for an "Always Online" feel */}
+            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(16, 185, 129, 0.15)', justifyContent: 'center', alignItems: 'center', marginRight: 14 }}>
+              <Ionicons name="headset-outline" size={22} color="#10b981" />
             </View>
-            <Text style={{ fontSize: 14, fontWeight: '800', color: theme.textMain }}>Support Hours</Text>
+            
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 16, fontWeight: '800', color: theme.textMain, marginBottom: 2 }}>
+                Available 24/7
+              </Text>
+              <Text style={{ fontSize: 13, color: theme.textTertiary, lineHeight: 18 }}>
+                Campus never sleeps, and neither do we. Reach out anytime you need help!
+              </Text>
+            </View>
           </View>
-          {[
-            { day: 'Monday – Friday', hours: '9:00 AM – 7:00 PM' },
-            { day: 'Saturday',        hours: '10:00 AM – 4:00 PM' },
-            { day: 'Sunday',          hours: 'Closed' },
-          ].map(({ day, hours }) => (
-            <View key={day} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: theme.inputBorder }}>
-              <Text style={{ fontSize: 13, color: theme.textTertiary }}>{day}</Text>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: hours === 'Closed' ? '#f87171' : theme.textMain }}>{hours}</Text>
-            </View>
-          ))}
         </View>
 
         {/* FAQ */}
