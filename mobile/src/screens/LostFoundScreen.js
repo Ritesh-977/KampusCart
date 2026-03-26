@@ -259,7 +259,15 @@ const LostFoundScreen = ({ navigation }) => {
           keyExtractor={(item) => item._id}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primaryAction} colors={[colors.primaryAction]} />}
+          refreshControl={
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={onRefresh} 
+              colors={[colors.primaryAction]} 
+              tintColor={colors.primaryAction} 
+              progressBackgroundColor={colors.card} // <-- Added this!
+            />
+          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={{ fontSize: 40, marginBottom: 12 }}>

@@ -86,7 +86,7 @@ const WishlistScreen = ({ navigation }) => {
               onRefresh={onRefresh} 
               colors={[colors.primaryAction]} 
               tintColor={colors.primaryAction} 
-              progressBackgroundColor={colors.card} 
+              progressBackgroundColor={colors.card} // <-- Added this!
             />
           }
           renderItem={({ item }) => (
@@ -115,7 +115,7 @@ const WishlistScreen = ({ navigation }) => {
                 Save items you're interested in by tapping the heart icon on any listing.
               </Text>
               <TouchableOpacity
-                style={styles.browseBtn}
+            refreshC    style={styles.browseBtn}
                 onPress={() => navigation.getParent()?.navigate('Home')}
               >
                 <Text style={styles.browseBtnText}>Browse Items</Text>

@@ -330,7 +330,15 @@ const ProfileScreen = ({ navigation }) => {
           keyExtractor={(item) => item._id}
           ListHeaderComponent={renderHeader}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primaryAction]} />}
+          refreshControl={
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={onRefresh} 
+              colors={[theme.primaryAction]} 
+              tintColor={theme.primaryAction} 
+              progressBackgroundColor={theme.card} // <-- Added this!
+            />
+          }
           renderItem={({ item }) => (
             <ItemCard
               item={item}

@@ -246,7 +246,14 @@ const EventsScreen = ({ navigation, route }) => {
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryAction]} tintColor={colors.primaryAction} />
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={onRefresh} 
+              colors={[colors.primaryAction]} 
+              tintColor={colors.primaryAction} 
+              progressBackgroundColor={colors.card} // <-- Added this!
+            />
+
           }
           ListEmptyComponent={
             <View style={styles.empty}>

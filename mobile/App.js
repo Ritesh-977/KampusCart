@@ -1,4 +1,4 @@
-import React, { useRef, useContext } from 'react';
+import React, { useRef, useContext, useState } from 'react'; // <-- Added useState here!
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
@@ -7,6 +7,9 @@ import { SocketProvider } from './src/context/SocketContext';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { usePushNotifications } from './src/hooks/usePushNotifications';
 import AppNavigator from './src/navigation/AppNavigator';
+
+// Your Animated Splash Screen component
+import AnimatedSplashScreen from './src/screens/AnimatedSplashScreen';
 
 // 1. IMPORT TOAST AND ITS BASE COMPONENTS
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
@@ -60,8 +63,10 @@ function AppWithTheme({ navigationRef }) {
   const { theme } = useTheme();
   const navigationTheme = createNavigationTheme(theme);
 
-  // 2. CREATE DYNAMIC TOAST CONFIG
-  // Because this is inside AppWithTheme, it listens to your ThemeContext!
+  // 2. ADD STATE TO TRACK IF SPLASH SCREEN IS DONE
+  const [isAppReady, setIsAppReady] = useState(false);
+
+  // 3. CREATE DYNAMIC TOAST CONFIG
   const toastConfig = {
     success: (props) => (
       <BaseToast
@@ -110,6 +115,18 @@ function AppWithTheme({ navigationRef }) {
     )
   };
 
+  // 4. SHOW THE ANIMATED SPLASH SCREEN FIRST
+  if (!isAppReady) {
+    return (
+      <>
+        <StatusBar backgroundColor={theme.background} barStyle={theme.statusBarStyle} />
+        {/* When Lottie finishes, this flips to true to reveal the app */}
+        <AnimatedSplashScreen onAnimationFinish={() => setIsAppReady(true)} />
+      </>
+    );
+  }
+
+  // 5. ONCE READY, SHOW THE ACTUAL APP
   return (
     <>
       <StatusBar backgroundColor={theme.background} barStyle={theme.statusBarStyle} />
@@ -117,7 +134,7 @@ function AppWithTheme({ navigationRef }) {
         <AppWithNotifications navigationRef={navigationRef} />
       </NavigationContainer>
       
-      {/* 3. PLACE TOAST OUTSIDE NAVIGATION SO IT FLOATS OVER EVERYTHING */}
+      {/* PLACE TOAST OUTSIDE NAVIGATION SO IT FLOATS OVER EVERYTHING */}
       <Toast config={toastConfig} />
     </>
   );
