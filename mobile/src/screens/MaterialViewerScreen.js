@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Toast from 'react-native-toast-message';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   ActivityIndicator, SafeAreaView, Image, StatusBar, Alert,
@@ -129,11 +130,11 @@ const MaterialViewerScreen = ({ navigation, route }) => {
           UTI: fileType === 'pdf' ? 'com.adobe.pdf' : 'public.jpeg',
         });
       } else {
-        Alert.alert('Saved', `File saved to: ${localUri}`);
+        Toast.show({ type: 'success', text1: 'Saved', text2: `File saved to: ${localUri}` });
       }
     } catch (e) {
       const detail = e?.message || String(e);
-      Alert.alert('Download Failed', `Could not download the file.\n\n${detail}`);
+      Toast.show({ type: 'error', text1: 'Download Failed', text2: `Could not download the file.\n\n${detail}` });
     } finally {
       setDownloading(false);
     }

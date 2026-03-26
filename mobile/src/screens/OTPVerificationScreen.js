@@ -1,4 +1,5 @@
 import React, { useState, useRef, useContext, useMemo } from 'react';
+import Toast from 'react-native-toast-message';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ActivityIndicator, Alert, SafeAreaView
@@ -90,7 +91,7 @@ const OTPVerificationScreen = ({ route, navigation }) => {
   const handleVerify = async () => {
     const code = otp.join('');
     if (code.length !== 6) {
-      Alert.alert('Incomplete', 'Please enter the full 6-digit code.');
+      Toast.show({ type: 'error', text1: 'Incomplete', text2: 'Please enter the full 6-digit code.' });
       return;
     }
 
@@ -101,13 +102,12 @@ const OTPVerificationScreen = ({ route, navigation }) => {
       if (response.data.token) {
         await login(response.data.token, response.data.user);
       } else {
-        Alert.alert('Verified!', 'Email verified. Please log in.', [
-          { text: 'OK', onPress: () => navigation.navigate('Login') }
-        ]);
+        Toast.show({ type: 'error', text1: 'Verification Failed', text2: 'Unexpected response from server.' });
+        navigation.goBack();
       }
     } catch (error) {
       const message = error.response?.data?.message || 'Invalid or expired OTP.';
-      Alert.alert('Verification Failed', message);
+      Toast.show({ type: 'error', text1: 'Verification Failed', text2: message });
       // Clear OTP on failure
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
@@ -122,7 +122,7 @@ const OTPVerificationScreen = ({ route, navigation }) => {
     try {
       setResendLoading(true);
       await API.post('/auth/resend-otp', { email });
-      Alert.alert('OTP Sent', `A new code was sent to ${email}`);
+        Toast.show({ type: 'success', text1: 'OTP Sent', text2: `A new code was sent to ${email}` });
 
       // 60-second cooldown
       let countdown = 60;
@@ -133,7 +133,7 @@ const OTPVerificationScreen = ({ route, navigation }) => {
         if (countdown === 0) clearInterval(interval);
       }, 1000);
     } catch (error) {
-      Alert.alert('Error', 'Could not resend OTP. Please try again.');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Could not resend OTP. Please try again.' });
     } finally {
       setResendLoading(false);
     }

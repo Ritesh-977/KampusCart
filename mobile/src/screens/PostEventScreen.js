@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import Toast from 'react-native-toast-message';
 import {
   View, Text, TextInput, StyleSheet, TouchableOpacity,
   ScrollView, Alert, ActivityIndicator, Platform,
@@ -76,9 +77,9 @@ const PostEventScreen = ({ navigation, route }) => {
   };
 
   const handleSubmit = async () => {
-    if (!title.trim())    { Alert.alert('Missing', 'Please enter a title.'); return; }
-    if (!location.trim()) { Alert.alert('Missing', 'Please enter a location.'); return; }
-    if (!isEdit && date < new Date()) { Alert.alert('Invalid Date', 'Event date must be in the future.'); return; }
+    if (!title.trim())    { Toast.show({ type: 'error', text1: 'Missing', text2: 'Please enter a title.' }); return; }
+    if (!location.trim()) { Toast.show({ type: 'error', text1: 'Missing', text2: 'Please enter a location.' }); return; }
+    if (!isEdit && date < new Date()) { Toast.show({ type: 'error', text1: 'Invalid Date', text2: 'Event date must be in the future.' }); return; }
 
     const payload = {
       title:       title.trim(),
@@ -93,17 +94,15 @@ const PostEventScreen = ({ navigation, route }) => {
       setSubmitting(true);
       if (isEdit) {
         await API.put(`/events/${existing._id}`, payload);
-        Alert.alert('Updated!', 'Your event has been updated.', [
-          { text: 'OK', onPress: () => navigation.goBack() },
-        ]);
+        Toast.show({ type: 'success', text1: 'Saved', text2: 'Your changes have been saved.' });
+        navigation.goBack();
       } else {
         await API.post('/events', payload);
-        Alert.alert('Posted!', 'Your event has been published to the campus feed.', [
-          { text: 'OK', onPress: () => navigation.goBack() },
-        ]);
+        Toast.show({ type: 'success', text1: 'Posted', text2: 'Your event has been published to the campus feed.' });
+        navigation.goBack();
       }
     } catch (err) {
-      Alert.alert('Error', err?.response?.data?.message || 'Could not save event.');
+      Toast.show({ type: 'error', text1: 'Error', text2: err?.response?.data?.message || 'Could not save event.' });
     } finally {
       setSubmitting(false);
     }

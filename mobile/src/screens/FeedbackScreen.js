@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import Toast from 'react-native-toast-message';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  ActivityIndicator, KeyboardAvoidingView, Platform, Alert,
+  ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -23,21 +24,36 @@ const FeedbackScreen = ({ navigation }) => {
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      Alert.alert('Rating required', 'Please select a star rating before submitting.');
+      Toast.show({
+        type: 'error',
+        text1: 'Rating required',
+        text2: 'Please select a star rating before submitting.',
+      });
       return;
     }
     if (message.trim().length < 10) {
-      Alert.alert('Too short', 'Please write at least 10 characters of feedback.');
+      Toast.show({
+        type: 'error',
+        text1: 'Too short',
+        text2: 'Please write at least 10 characters of feedback.',
+      });
       return;
     }
     setSubmitting(true);
     try {
       await API.post('/feedback', { rating, category, message: message.trim() });
-      Alert.alert('Thank you!', 'Your feedback has been submitted. We really appreciate it! 🙏', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      Toast.show({
+        type: 'success',
+        text1: 'Thank you!',
+        text2: 'Your feedback has been submitted.',
+      });
+      navigation.goBack();
     } catch (err) {
-      Alert.alert('Submission failed', err.response?.data?.message || 'Please try again later.');
+      Toast.show({
+        type: 'error',
+        text1: 'Submission failed',
+        text2: err.response?.data?.message || 'Please try again later.',
+      });
     } finally {
       setSubmitting(false);
     }

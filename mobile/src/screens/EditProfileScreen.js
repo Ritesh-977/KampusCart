@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import Toast from 'react-native-toast-message';
 import { 
   View, Text, TextInput, TouchableOpacity, StyleSheet, 
-  Image, Alert, ActivityIndicator, Platform
+  Image, ActivityIndicator, Platform
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,7 +31,11 @@ const EditProfileScreen = ({ route, navigation }) => {
   const pickImage = async (isCoverPhoto = false) => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permission.granted === false) {
-      Alert.alert("Permission Required", "Allow access to photos to change your pictures.");
+       Toast.show({
+      type: 'error',
+      text1: 'Permission Required',
+      text2: 'Allow access to photos to change your pictures.',
+    });
       return;
     }
 
@@ -77,12 +82,20 @@ const EditProfileScreen = ({ route, navigation }) => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      Alert.alert("Success", "Profile updated successfully!");
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Profile updated successfully!',
+      });
       navigation.goBack(); // Return to the beautifully updated Profile Screen
 
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "Could not update profile.");
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not update profile.',
+      });
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,8 @@
 import React, { useState, useContext } from 'react';
+import Toast from 'react-native-toast-message';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
+  KeyboardAvoidingView, Platform, ActivityIndicator,
   ScrollView, SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,7 +21,7 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
-      Alert.alert('Error', 'Please fill in all fields.');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Please fill in all fields.' });
       return;
     }
 
@@ -33,7 +34,7 @@ const LoginScreen = ({ navigation }) => {
       }
     } catch (error) {
       const message = error.response?.data?.message || 'Login failed. Please try again.';
-      Alert.alert('Login Failed', message);
+      Toast.show({ type: 'error', text1: 'Login Failed', text2: message });
     } finally {
       setLoading(false);
     }
