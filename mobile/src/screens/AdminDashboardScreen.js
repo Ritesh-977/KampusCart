@@ -31,18 +31,18 @@ const AdminDashboardScreen = () => {
 
   const fetchAll = async () => {
     try {
-      const [sRes, uRes, iRes, rRes, fRes] = await Promise.all([
+      const [sRes, uRes, iRes, rRes, fRes] = await Promise.allSettled([
         API.get('/admin/stats'),
         API.get('/admin/users'),
         API.get('/admin/items'),
         API.get('/admin/reports'),
         API.get('/admin/feedback'),
       ]);
-      setStats(sRes.data);
-      setUsers((uRes.data || []).filter(u => u.isVerified));
-      setItems(iRes.data);
-      setReports(rRes.data);
-      setFeedbacks(fRes.data || []);
+      if (sRes.status === 'fulfilled') setStats(sRes.value.data);
+      if (uRes.status === 'fulfilled') setUsers((uRes.value.data || []).filter(u => u.isVerified));
+      if (iRes.status === 'fulfilled') setItems(iRes.value.data);
+      if (rRes.status === 'fulfilled') setReports(rRes.value.data);
+      if (fRes.status === 'fulfilled') setFeedbacks(fRes.value.data || []);
     } catch (e) {
       Alert.alert('Error', 'Failed to load admin data.');
     } finally {
