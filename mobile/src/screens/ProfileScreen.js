@@ -1,8 +1,8 @@
-import React, { useState, useContext, useCallback } from 'react';
+import React, { useState, useContext, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
   FlatList, ActivityIndicator, RefreshControl, Alert, Image, Dimensions, Platform,
-  Modal, Pressable, Animated
+  Modal, Pressable, Animated, PanResponder
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -24,6 +24,47 @@ const ProfileScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [aboutVisible, setAboutVisible] = useState(false);
+  const returnToMenuRef = useRef(false);
+
+  // ── Gesture-driven bottom sheet ──────────────────────────────────────────
+  const sheetY = useRef(new Animated.Value(600)).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (menuVisible) {
+      sheetY.setValue(600);
+      Animated.parallel([
+        Animated.spring(sheetY, { toValue: 0, useNativeDriver: true, bounciness: 3, speed: 16 }),
+        Animated.timing(backdropOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [menuVisible]);
+
+  const closeMenu = (then, reopenOnBack = false) => {
+    Animated.parallel([
+      Animated.timing(sheetY, { toValue: 600, duration: 260, useNativeDriver: true }),
+      Animated.timing(backdropOpacity, { toValue: 0, duration: 220, useNativeDriver: true }),
+    ]).start(() => {
+      setMenuVisible(false);
+      sheetY.setValue(600);
+      if (reopenOnBack) returnToMenuRef.current = true;
+      then?.();
+    });
+  };
+
+  const menuPan = useRef(PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gs) => gs.dy > 6 && Math.abs(gs.dy) > Math.abs(gs.dx),
+    onPanResponderMove: (_, gs) => {
+      sheetY.setValue(Math.max(0, gs.dy));
+    },
+    onPanResponderRelease: (_, gs) => {
+      if (gs.dy > 120 || gs.vy > 0.8) {
+        closeMenu();
+      } else {
+        Animated.spring(sheetY, { toValue: 0, useNativeDriver: true, bounciness: 5 }).start();
+      }
+    },
+  })).current;
 
   const fetchProfileData = async () => {
     if (isGuest) { setLoading(false); return; }
@@ -50,6 +91,10 @@ const ProfileScreen = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
+      if (returnToMenuRef.current) {
+        returnToMenuRef.current = false;
+        setTimeout(() => setMenuVisible(true), 150);
+      }
       fetchProfileData();
     }, [isGuest])
   );
@@ -167,42 +212,42 @@ const ProfileScreen = ({ navigation }) => {
     {
       icon: 'heart-outline', label: 'Wishlist',
       color: '#f87171', bg: 'rgba(239,68,68,0.15)',
-      onPress: () => { setMenuVisible(false); navigation.navigate('Wishlist'); },
+      onPress: () => closeMenu(() => navigation.navigate('Wishlist')),
     },
     {
       icon: 'pricetag-outline', label: 'Sell an Item',
       color: theme.primaryAccent, bg: `${theme.primaryAccent}20`,
-      onPress: () => { setMenuVisible(false); navigation.navigate('Sell'); },
+      onPress: () => closeMenu(() => navigation.navigate('Sell')),
     },
     {
       icon: 'search-circle-outline', label: 'Lost & Found',
       color: '#fbbf24', bg: 'rgba(245,158,11,0.15)',
-      onPress: () => { setMenuVisible(false); navigation.navigate('LostFound'); },
+      onPress: () => closeMenu(() => navigation.navigate('LostFound')),
     },
     {
       icon: 'moon-outline', label: 'Theme',
       color: theme.secondaryAction, bg: `${theme.secondaryAction}20`,
-      onPress: () => { setMenuVisible(false); toggleTheme(); },
+      onPress: () => closeMenu(toggleTheme),
     },
     {
       icon: 'notifications-outline', label: 'Notifications',
       color: '#34d399', bg: 'rgba(52,211,153,0.15)',
-      onPress: () => { setMenuVisible(false); navigation.navigate('NotificationSettings'); },
+      onPress: () => closeMenu(() => navigation.navigate('NotificationSettings'), true),
     },
     {
       icon: 'chatbox-ellipses-outline', label: 'Feedback',
       color: '#f472b6', bg: 'rgba(244,114,182,0.15)',
-      onPress: () => { setMenuVisible(false); navigation.navigate('Feedback'); },
+      onPress: () => closeMenu(() => navigation.navigate('Feedback'), true),
     },
     {
       icon: 'call-outline', label: 'Contact Us',
       color: '#fb923c', bg: 'rgba(251,146,60,0.15)',
-      onPress: () => { setMenuVisible(false); navigation.navigate('ContactUs'); },
+      onPress: () => closeMenu(() => navigation.navigate('ContactUs'), true),
     },
     {
       icon: 'information-circle-outline', label: 'About',
       color: '#60a5fa', bg: 'rgba(96,165,250,0.15)',
-      onPress: () => { setMenuVisible(false); setTimeout(() => setAboutVisible(true), 300); },
+      onPress: () => closeMenu(() => setAboutVisible(true)),
     },
   ];
 
@@ -213,12 +258,19 @@ const ProfileScreen = ({ navigation }) => {
       <Modal
         visible={menuVisible}
         transparent
-        animationType="slide"
+        animationType="none"
         statusBarTranslucent
-        onRequestClose={() => setMenuVisible(false)}
+        onRequestClose={() => closeMenu()}
       >
-        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' }} onPress={() => setMenuVisible(false)} />
-        <View style={{ backgroundColor: theme.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 12, paddingHorizontal: 20, shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 20 }}>
+        <View style={{ flex: 1 }}>
+          <Animated.View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', opacity: backdropOpacity }}>
+            <Pressable style={{ flex: 1 }} onPress={() => closeMenu()} />
+          </Animated.View>
+        </View>
+        <Animated.View
+          style={{ backgroundColor: theme.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 12, paddingHorizontal: 20, shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 20, transform: [{ translateY: sheetY }], position: 'absolute', left: 0, right: 0, bottom: 0 }}
+          {...menuPan.panHandlers}
+        >
           {/* Handle */}
           <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: theme.inputBorder, alignSelf: 'center', marginBottom: 18 }} />
 
@@ -238,7 +290,7 @@ const ProfileScreen = ({ navigation }) => {
             </View>
             <TouchableOpacity
               style={{ borderWidth: 1, borderColor: theme.inputBorder, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 16 }}
-              onPress={() => { setMenuVisible(false); navigation.navigate('EditProfile', { userProfile }); }}
+              onPress={() => closeMenu(() => navigation.navigate('EditProfile', { userProfile }))}
             >
               <Text style={{ fontSize: 13, fontWeight: '600', color: theme.textSub }}>Edit Profile</Text>
             </TouchableOpacity>
@@ -262,10 +314,7 @@ const ProfileScreen = ({ navigation }) => {
           {/* Log out */}
           <TouchableOpacity
             style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 13 }}
-            onPress={() => {
-              setMenuVisible(false);
-              setTimeout(handleLogout, 300);
-            }}
+            onPress={() => closeMenu(handleLogout)}
             activeOpacity={0.7}
           >
             <View style={{ width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 14, backgroundColor: 'rgba(239,68,68,0.15)' }}>
@@ -275,7 +324,7 @@ const ProfileScreen = ({ navigation }) => {
           </TouchableOpacity>
 
           <View style={{ height: Platform.OS === 'ios' ? 24 : 12 }} />
-        </View>
+        </Animated.View>
       </Modal>
 
       {/* ── About sub-menu ────────────────────────────────── */}
