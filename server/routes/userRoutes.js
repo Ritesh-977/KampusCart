@@ -80,6 +80,27 @@ router.get('/counts', async (req, res) => {
     }
 });
 
+// Notification preferences
+router.get('/notification-prefs', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id, 'notificationPrefs');
+    const defaults = { all: true, items: true, lostFound: true, events: true, sports: true, messages: true };
+    res.json({ ...defaults, ...(user?.notificationPrefs?.toObject?.() || user?.notificationPrefs || {}) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.put('/notification-prefs', protect, async (req, res) => {
+  try {
+    const { prefs } = req.body;
+    await User.findByIdAndUpdate(req.user._id, { notificationPrefs: prefs });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.get('/:id', getUserById);
 
 

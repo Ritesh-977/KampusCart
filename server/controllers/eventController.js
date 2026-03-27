@@ -1,4 +1,5 @@
 import Event from '../models/Event.js';
+import { sendPushToCollege } from '../utils/expoPush.js';
 
 // GET /api/events?college=...
 // Returns upcoming events (events that ended less than 1 hour ago are still shown)
@@ -38,6 +39,15 @@ export const createEvent = async (req, res) => {
       college: req.user.college,
       color:   color || '#6366f1',
     });
+    sendPushToCollege({
+      college: req.user.college,
+      excludeUserId: req.user._id,
+      prefKey: 'events',
+      title: 'New campus event 🎉',
+      body: `${title} · ${location}`,
+      data: { type: 'event', eventId: String(event._id) },
+    });
+
     res.status(201).json(event);
   } catch (err) {
     res.status(400).json({ message: err.message });

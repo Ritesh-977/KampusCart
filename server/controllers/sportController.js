@@ -1,5 +1,6 @@
 import Sport from '../models/Sport.js';
 import SportRegistration from '../models/SportRegistration.js';
+import { sendPushToCollege, sendPushToUser } from '../utils/expoPush.js';
 
 const ok  = (res, data, status = 200) => res.status(status).json({ success: true, ...data });
 const err = (res, message, status = 500) => res.status(status).json({ success: false, message });
@@ -108,6 +109,15 @@ export const createSport = async (req, res) => {
       college: req.user.college,
     });
 
+    sendPushToCollege({
+      college: req.user.college,
+      excludeUserId: req.user._id || req.user.id,
+      prefKey: 'sports',
+      title: 'New sports event on campus 🏆',
+      body: `${sport.title} · Register before ${new Date(sport.lastRegistrationDate).toLocaleDateString('en-IN')}`,
+      data: { type: 'sport', sportId: String(sport._id) },
+    });
+
     return ok(res, { message: 'Sport event created.', data: sport }, 201);
   } catch (error) {
     if (error.name === 'ValidationError') {
@@ -213,6 +223,17 @@ export const registerForSport = async (req, res) => {
       registeredBy:   userId,
       college:        req.user.college,
     });
+
+    // Notify sport organizer about the new registration
+    if (sport.organizer?.user) {
+      sendPushToUser({
+        userId: sport.organizer.user,
+        prefKey: 'sports',
+        title: 'New registration 🏅',
+        body: `${teamName} registered for ${sport.title}`,
+        data: { type: 'sport', sportId: String(sport._id) },
+      });
+    }
 
     return ok(res, { message: 'Registered successfully!', data: registration }, 201);
   } catch (error) {

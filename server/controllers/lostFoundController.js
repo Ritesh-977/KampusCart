@@ -1,4 +1,5 @@
 import LostItem from '../models/LostItem.js';
+import { sendPushToCollege } from '../utils/expoPush.js';
 
 //Report a Lost or Found item
 // @route   POST /api/lost-found
@@ -16,6 +17,15 @@ export const reportItem = async (req, res) => {
             image: req.file ? req.file.path : null, // Handle image if uploaded
             reporter: req.user.id,
             campus: req.user.college
+        });
+
+        sendPushToCollege({
+            college: req.user.college,
+            excludeUserId: req.user.id,
+            prefKey: 'lostFound',
+            title: `${type === 'found' ? 'Found' : 'Lost'} item reported 📢`,
+            body: `${title} · ${location}`,
+            data: { type: 'lostFound' },
         });
 
         res.status(201).json(newItem);

@@ -13,6 +13,7 @@ import TermsOfUseScreen from '../screens/TermsOfUseScreen';
 import AppUpdatesScreen from '../screens/AppUpdatesScreen';
 import FeedbackScreen from '../screens/FeedbackScreen';
 import ContactUsScreen from '../screens/ContactUsScreen';
+import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -86,6 +87,11 @@ const ProfileStackNavigator = () => {
         name="ContactUs"
         component={ContactUsScreen}
         options={{ title: 'Contact Us', headerBackTitle: 'Back' }}
+      />
+      <Stack.Screen
+        name="NotificationSettings"
+        component={NotificationSettingsScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
