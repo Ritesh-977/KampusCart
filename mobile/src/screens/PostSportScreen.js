@@ -45,8 +45,12 @@ const PostSportScreen = ({ navigation, route }) => {
   const editSport = route.params?.sport;
   const isEdit    = !!editSport;
 
-  const [title,          setTitle]          = useState(editSport?.title          || '');
-  const [sportType,      setSportType]      = useState(editSport?.sportType      || '');
+  const knownSportLabels = SPORT_TYPES.map(t => t.label);
+  const isCustomType = editSport?.sportType && !knownSportLabels.includes(editSport.sportType);
+
+  const [title,           setTitle]           = useState(editSport?.title || '');
+  const [sportType,       setSportType]       = useState(isCustomType ? 'Other' : (editSport?.sportType || ''));
+  const [customSportType, setCustomSportType] = useState(isCustomType ? editSport.sportType : '');
   const [description,    setDescription]    = useState(editSport?.description    || '');
   const [venue,          setVenue]          = useState(editSport?.venue          || '');
   const [organizerPhone, setOrganizerPhone] = useState(editSport?.organizer?.phone || '');
@@ -83,9 +87,11 @@ const PostSportScreen = ({ navigation, route }) => {
   };
 
   const handleSubmit = async () => {
-    if (!title.trim())   { Alert.alert('Missing', 'Please enter a title.');      return; }
-    if (!sportType)      { Alert.alert('Missing', 'Please select a sport type.'); return; }
-    if (!venue.trim())   { Alert.alert('Missing', 'Please enter the venue.');    return; }
+    const finalSportType = sportType === 'Other' ? customSportType.trim() : sportType;
+    if (!title.trim())        { Alert.alert('Missing', 'Please enter a title.');           return; }
+    if (!sportType)           { Alert.alert('Missing', 'Please select a sport type.');     return; }
+    if (!finalSportType)      { Alert.alert('Missing', 'Please enter the sport name.');    return; }
+    if (!venue.trim())        { Alert.alert('Missing', 'Please enter the venue.');         return; }
     if (eventDate <= new Date() && !isEdit) {
       Alert.alert('Invalid', 'Event date must be in the future.'); return;
     }
@@ -97,7 +103,7 @@ const PostSportScreen = ({ navigation, route }) => {
       setSubmitting(true);
       const form = new FormData();
       form.append('title',               title.trim());
-      form.append('sportType',           sportType);
+      form.append('sportType',           finalSportType);
       form.append('description',         description.trim());
       form.append('venue',               venue.trim());
       form.append('eventDate',           eventDate.toISOString());
@@ -171,6 +177,18 @@ const PostSportScreen = ({ navigation, route }) => {
             <Ionicons name="chevron-down" size={16} color={colors.textTertiary} />
           </TouchableOpacity>
         </Field>
+
+        {sportType === 'Other' && (
+          <Field label="Sport Name" styles={styles}>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. Swimming, Kho Kho, Archery…"
+              placeholderTextColor={colors.textTertiary}
+              value={customSportType}
+              onChangeText={setCustomSportType}
+            />
+          </Field>
+        )}
 
         <Field label="Title" styles={styles}>
           <TextInput

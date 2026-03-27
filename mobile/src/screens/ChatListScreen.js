@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  SafeAreaView, ActivityIndicator, Image, Platform
+  SafeAreaView, ActivityIndicator, Image, Platform, TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -25,6 +25,7 @@ const ChatListScreen = ({ navigation, route }) => {
   const { theme } = useTheme();
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const myId = String(currentUser?._id || currentUser?.id || '');
 
@@ -91,6 +92,13 @@ const ChatListScreen = ({ navigation, route }) => {
       borderRadius: 12, width: '100%', alignItems: 'center',
     },
     guestBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+    searchBar: {
+      flexDirection: 'row', alignItems: 'center',
+      backgroundColor: theme.inputBg, borderRadius: 12,
+      borderWidth: 1, borderColor: theme.inputBorder,
+      marginHorizontal: 20, marginBottom: 8, paddingHorizontal: 12, paddingVertical: 8,
+    },
+    searchInput: { flex: 1, fontSize: 14, color: theme.textMain, marginLeft: 8 },
   }), [theme]);
 
   // Navigate straight to ChatRoom when arriving from ItemDetailsScreen
@@ -165,6 +173,15 @@ const ChatListScreen = ({ navigation, route }) => {
     if (!chat.users || !currentUser) return null;
     return chat.users.find((u) => String(u._id || u.id) !== myId) || chat.users[0];
   };
+
+  const filteredChats = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return chats;
+    return chats.filter(chat => {
+      const other = getOtherUser(chat);
+      return (other?.name || '').toLowerCase().includes(q);
+    });
+  }, [chats, searchQuery]);
 
   const formatTime = (dateStr) => {
     if (!dateStr) return '';
@@ -241,22 +258,39 @@ const ChatListScreen = ({ navigation, route }) => {
         <Ionicons name="chatbubbles" size={24} color={theme.primaryAccent} />
       </View>
 
+      <View style={memoStyles.searchBar}>
+        <Ionicons name="search-outline" size={16} color={theme.textTertiary} />
+        <TextInput
+          style={memoStyles.searchInput}
+          placeholder="Search conversations..."
+          placeholderTextColor={theme.textTertiary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+        />
+      </View>
+
       {loading ? (
         <View style={memoStyles.center}>
           <ActivityIndicator size="large" color={theme.primaryAccent} />
         </View>
       ) : (
         <FlatList
-          data={chats}
+          data={filteredChats}
           keyExtractor={(item) => item._id}
           renderItem={renderChatItem}
-          contentContainerStyle={chats.length === 0 ? memoStyles.emptyContent : null}
+          contentContainerStyle={filteredChats.length === 0 ? memoStyles.emptyContent : null}
           ListEmptyComponent={
             <View style={memoStyles.emptyContainer}>
               <Ionicons name="chatbubble-ellipses-outline" size={70} color={theme.cardAccent} />
-              <Text style={memoStyles.emptyTitle}>No messages yet</Text>
+              <Text style={memoStyles.emptyTitle}>
+                {searchQuery.trim() ? 'No results found' : 'No messages yet'}
+              </Text>
               <Text style={memoStyles.emptySubtitle}>
-                Browse items and tap "Chat with Seller" to start a conversation.
+                {searchQuery.trim()
+                  ? `No conversations match "${searchQuery.trim()}"`
+                  : 'Browse items and tap "Chat with Seller" to start a conversation.'}
               </Text>
             </View>
           }

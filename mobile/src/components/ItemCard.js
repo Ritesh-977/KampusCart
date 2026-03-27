@@ -37,8 +37,7 @@ const ItemCard = ({ item, onPress, compact = false }) => {
   const { styles, colors } = useThemeStyles(createStyles);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  // FIXED: Force it to lowercase to match "Sold", "SOLD", or "sold" safely
-  const isSold = item.status?.toLowerCase() === 'sold';
+  const isSold = !!item.isSold;
 
   let imageUrl = FALLBACK_IMAGE;
   if (item.images && item.images.length > 0) {
