@@ -124,7 +124,7 @@ export const verifyEmail = async (req, res) => {
     }
 
     if (user.isVerified) {
-      return res.status(200).json({ message: "User already verified" });
+      return sendToken(user, 200, res);
     }
 
     if (!user.otp || user.otp.toString().trim() !== otp.toString().trim()) {
@@ -135,7 +135,7 @@ export const verifyEmail = async (req, res) => {
     user.otp = undefined;
     await user.save();
 
-    res.status(200).json({ message: "Email verified successfully! You can now login." });
+    sendToken(user, 200, res);
 
   } catch (error) {
     console.error("Verify Error:", error);

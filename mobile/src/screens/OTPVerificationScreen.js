@@ -95,24 +95,25 @@ const OTPVerificationScreen = ({ route, navigation }) => {
       return;
     }
 
+    let token = null;
+    let user = null;
+
     try {
       setLoading(true);
       const response = await API.post('/auth/verify-otp', { email, otp: code });
-
-      if (response.data.token) {
-        await login(response.data.token, response.data.user);
-      } else {
-        Toast.show({ type: 'error', text1: 'Verification Failed', text2: 'Unexpected response from server.' });
-        navigation.goBack();
-      }
+      token = response.data.token;
+      user = response.data.user;
     } catch (error) {
       const message = error.response?.data?.message || 'Invalid or expired OTP.';
       Toast.show({ type: 'error', text1: 'Verification Failed', text2: message });
-      // Clear OTP on failure
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
     } finally {
       setLoading(false);
+    }
+
+    if (token) {
+      await login(token, user);
     }
   };
 
@@ -124,8 +125,8 @@ const OTPVerificationScreen = ({ route, navigation }) => {
       await API.post('/auth/resend-otp', { email });
         Toast.show({ type: 'success', text1: 'OTP Sent', text2: `A new code was sent to ${email}` });
 
-      // 60-second cooldown
-      let countdown = 60;
+      // 30-second cooldown
+      let countdown = 30;
       setResendCooldown(countdown);
       const interval = setInterval(() => {
         countdown -= 1;

@@ -9,12 +9,22 @@
     "icon": "./assets/images/icon.png",
     "scheme": "kampuscart",
     "newArchEnabled": true,
+
+    "splash": {
+      "image": "./assets/images/icon.png", 
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+
     "ios": {
       "supportsTablet": true,
       "backgroundColor": "#0f172a"
     },
     "android": {
       "backgroundColor": "#0f172a",
+      "splash": {
+        "backgroundColor": "#0f172a"
+      },
        "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#0B0C10"

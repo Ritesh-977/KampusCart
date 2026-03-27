@@ -1,4 +1,4 @@
-import React, { useRef, useContext, useState } from 'react'; // <-- Added useState here!
+import React, { useRef, useContext, useState, useEffect } from 'react'; // <-- Added useEffect here
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
@@ -8,11 +8,17 @@ import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { usePushNotifications } from './src/hooks/usePushNotifications';
 import AppNavigator from './src/navigation/AppNavigator';
 
-// Your Animated Splash Screen component
-import AnimatedSplashScreen from './src/screens/AnimatedSplashScreen';
+// ❌ REMOVED: We no longer need the custom React Native splash screen
+// import SplashScreen from './src/screens/SplashScreen';
+
+// ✅ ADDED: Import the Expo Splash Screen library
+import * as SplashScreen from 'expo-splash-screen';
 
 // 1. IMPORT TOAST AND ITS BASE COMPONENTS
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
+
+// ✅ ADDED: Tell the native splash screen to stay visible until we tell it to hide
+SplashScreen.preventAutoHideAsync();
 
 // ─── Global Dark Theme ───────────────────────────────────────────────────────
 const createNavigationTheme = (themeColors) => ({
@@ -66,6 +72,25 @@ function AppWithTheme({ navigationRef }) {
   // 2. ADD STATE TO TRACK IF SPLASH SCREEN IS DONE
   const [isAppReady, setIsAppReady] = useState(false);
 
+  // ✅ ADDED: The timer logic to control the native splash screen
+  useEffect(() => {
+    async function prepareApp() {
+      try {
+        // Keep the native splash screen up for 1 second (1000ms)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        // Tell React to render the app components behind the scenes
+        setIsAppReady(true);
+        // Smoothly fade out the native splash screen
+        await SplashScreen.hideAsync();
+      }
+    }
+    
+    prepareApp();
+  }, []);
+
   // 3. CREATE DYNAMIC TOAST CONFIG
   const toastConfig = {
     success: (props) => (
@@ -115,15 +140,10 @@ function AppWithTheme({ navigationRef }) {
     )
   };
 
-  // 4. SHOW THE ANIMATED SPLASH SCREEN FIRST
+  // 4. ✅ UPDATED: RETURN NULL WHILE WAITING
+  // The native splash screen is covering the app, so we don't need to render anything yet
   if (!isAppReady) {
-    return (
-      <>
-        <StatusBar backgroundColor={theme.background} barStyle={theme.statusBarStyle} />
-        {/* When Lottie finishes, this flips to true to reveal the app */}
-        <AnimatedSplashScreen onAnimationFinish={() => setIsAppReady(true)} />
-      </>
-    );
+    return null; 
   }
 
   // 5. ONCE READY, SHOW THE ACTUAL APP
