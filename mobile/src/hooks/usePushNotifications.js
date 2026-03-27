@@ -21,13 +21,20 @@ async function registerForPushNotificationsAsync() {
   }
 
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('messages', {
-      name: 'Messages',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#4f46e5',
-      sound: 'default',
-    });
+    const channels = [
+      { id: 'messages',  name: 'Messages',       color: '#6366f1' },
+      { id: 'items',     name: 'New Listings',    color: '#34d399' },
+      { id: 'campus',    name: 'Campus Updates',  color: '#f472b6' },
+    ];
+    for (const ch of channels) {
+      await Notifications.setNotificationChannelAsync(ch.id, {
+        name: ch.name,
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: ch.color,
+        sound: 'default',
+      });
+    }
   }
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -82,20 +89,29 @@ export function usePushNotifications(navigationRef) {
     responseListener.current = Notifications.addNotificationResponseReceivedListener(
       (response) => {
         const data = response.notification.request.content.data;
-        if (!data?.chatId || !navigationRef?.current) return;
+        if (!navigationRef?.current) return;
 
-        // Navigate to the chat screen
-        navigationRef.current.navigate('ChatTab', {
-          screen: 'ChatRoom',
-          params: {
-            chat: { _id: data.chatId, users: [] },
-            otherUser: {
-              _id: data.senderId,
-              name: data.senderName,
-              profilePic: data.senderPic || '',
+        if (data?.chatId) {
+          navigationRef.current.navigate('ChatTab', {
+            screen: 'ChatRoom',
+            params: {
+              chat: { _id: data.chatId, users: [] },
+              otherUser: {
+                _id: data.senderId,
+                name: data.senderName,
+                profilePic: data.senderPic || '',
+              },
             },
-          },
-        });
+          });
+        } else if (data?.type === 'item') {
+          navigationRef.current.navigate('Home');
+        } else if (data?.type === 'lostFound') {
+          navigationRef.current.navigate('Home', { screen: 'LostFound' });
+        } else if (data?.type === 'event') {
+          navigationRef.current.navigate('Home', { screen: 'Events' });
+        } else if (data?.type === 'sport') {
+          navigationRef.current.navigate('Home', { screen: 'Sports' });
+        }
       }
     );
 

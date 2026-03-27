@@ -4,6 +4,7 @@ import getOrSetCache from '../utils/cacheResponse.js';
 import redis from '../config/redis.js';
 import webpush from '../utils/webPush.js';
 import User from '../models/User.js';
+import { sendPushToCollege } from '../utils/expoPush.js';
 
 // --- HELPER TO CLEAR CACHE (Updated for Multi-College) ---
 const clearItemCache = async (college) => {
@@ -96,7 +97,16 @@ export const createItem = async (req, res) => {
         };
 
         sendPushNotifications();
-        // 👆 ----------------------------------------- 👆
+
+        // Mobile Expo push
+        sendPushToCollege({
+            college: req.user.college,
+            excludeUserId: req.user._id || req.user.id,
+            prefKey: 'items',
+            title: 'New listing on campus 🛒',
+            body: `${title} listed for ₹${price} · ${category}`,
+            data: { type: 'item', itemId: String(newItem._id) },
+        });
 
         res.status(201).json(newItem);
     } catch (error) {

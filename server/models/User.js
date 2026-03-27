@@ -45,6 +45,15 @@ const userSchema = new mongoose.Schema({
         default: []
     },
 
+    notificationPrefs: {
+        all:       { type: Boolean, default: true },
+        items:     { type: Boolean, default: true },
+        lostFound: { type: Boolean, default: true },
+        events:    { type: Boolean, default: true },
+        sports:    { type: Boolean, default: true },
+        messages:  { type: Boolean, default: true },
+    },
+
     college: {
         type: String,
         default: "MNNIT Allahabad"

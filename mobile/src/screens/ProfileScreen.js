@@ -185,6 +185,11 @@ const ProfileScreen = ({ navigation }) => {
       onPress: () => { setMenuVisible(false); toggleTheme(); },
     },
     {
+      icon: 'notifications-outline', label: 'Notifications',
+      color: '#34d399', bg: 'rgba(52,211,153,0.15)',
+      onPress: () => { setMenuVisible(false); navigation.navigate('NotificationSettings'); },
+    },
+    {
       icon: 'chatbox-ellipses-outline', label: 'Feedback',
       color: '#f472b6', bg: 'rgba(244,114,182,0.15)',
       onPress: () => { setMenuVisible(false); navigation.navigate('Feedback'); },
