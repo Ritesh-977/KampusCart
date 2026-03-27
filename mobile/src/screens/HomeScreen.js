@@ -126,13 +126,12 @@ const EventsCalendar = ({ events = [], navigation, themeColors }) => {
     emptyTitle: { fontSize: 15, fontWeight: '700', color: themeColors.textTertiary },
     emptySub: { fontSize: 12, color: themeColors.inputBorder, textAlign: 'center' },
     
-    // FIXED: Pure, single solid gray background (mapped to cardAccent)
-    featured: { 
-      height: 180, borderRadius: 20, overflow: 'hidden', 
-      backgroundColor: themeColors.cardAccent, // Solid color, no opacity added
-      marginBottom: 16, padding: 18, justifyContent: 'flex-end', 
+    featured: {
+      height: 180, borderRadius: 20, overflow: 'hidden',
+      backgroundColor: themeColors.card,
+      marginBottom: 16, padding: 18, justifyContent: 'flex-end',
       borderWidth: 1, borderColor: themeColors.inputBorder,
-      shadowColor: themeColors.textMain, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 6 
+      shadowColor: themeColors.textMain, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 6
     },
     
     featuredBadge: { position: 'absolute', top: 16, left: 18, backgroundColor: themeColors.primaryAction, borderRadius: 6,
@@ -175,26 +174,34 @@ const EventsCalendar = ({ events = [], navigation, themeColors }) => {
         </TouchableOpacity>
       ) : (
         <>
-          {featured && featFmt && (
-            <TouchableOpacity activeOpacity={0.85} onPress={() => navigation.navigate('EventDetails', { event: featured })} style={evStyles.featured}>
-              {/* Removed featuredOverlay completely */}
-              
-              <View style={evStyles.featuredBadge}>
+          {featured && featFmt && (() => {
+            const featColor = featured.color || themeColors.primaryAccent;
+            return (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('EventDetails', { event: featured })}
+              style={[evStyles.featured, { borderColor: featColor + '55' }]}
+            >
+              {/* light color tint overlay */}
+              <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: featColor + '18', borderRadius: 20 }} />
+
+              <View style={[evStyles.featuredBadge, { backgroundColor: featColor }]}>
                 <Text style={evStyles.featuredBadgeTxt}>UPCOMING EVENT</Text>
               </View>
               <Text style={evStyles.featuredTitle}>{featured.title}</Text>
               <View style={evStyles.featuredMeta}>
-                <Ionicons name="time-outline" size={12} color={themeColors.primaryAccent} />
+                <Ionicons name="time-outline" size={12} color={featColor} />
                 <Text style={evStyles.featuredMetaTxt}>{featFmt.time}</Text>
-                <Ionicons name="location-outline" size={12} color={themeColors.primaryAccent} style={{ marginLeft: 8 }} />
+                <Ionicons name="location-outline" size={12} color={featColor} style={{ marginLeft: 8 }} />
                 <Text style={evStyles.featuredMetaTxt}>{featured.location}</Text>
               </View>
-              <View style={evStyles.dateBadge}>
+              <View style={[evStyles.dateBadge, { backgroundColor: featColor + '18', borderColor: featColor + '50' }]}>
                 <Text style={evStyles.dateBadgeDay}>{featFmt.date}</Text>
-                <Text style={evStyles.dateBadgeMon}>{featFmt.month}</Text>
+                <Text style={[evStyles.dateBadgeMon, { color: featColor }]}>{featFmt.month}</Text>
               </View>
             </TouchableOpacity>
-          )}
+            );
+          })()}
 
           {upcoming.length > 0 && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 20 }}>
@@ -660,8 +667,6 @@ const HomeScreen = ({ navigation }) => {
       <StatusBar backgroundColor={colors.background} barStyle={colors.statusBarStyle} />
 
       <Animated.View style={[mainStyles.topBar, makeAnim(heroAnim, 18)]}>
-        <View style={mainStyles.orb1} />
-        <View style={mainStyles.orb2} />
 
         <View style={mainStyles.heroTop}>
           <View style={{ flex: 1 }}>
