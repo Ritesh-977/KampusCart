@@ -43,7 +43,7 @@ const EventDetailsScreen = ({ navigation, route }) => {
   // Use event's custom color, fallback to the theme's primaryAction
   const color       = event.color || colors.primaryAction;
   const { date, time, dateShort, month } = fmt(event.startTime);
-  const isOrganizer = !isGuest && String(event.organizer?.user) === String(currentUser?._id);
+  const isOrganizer = !isGuest && String(event.organizer?.user) === String(currentUser?.id || currentUser?._id);
   const hasPhone    = !!event.organizer?.phone;
 
   const handleDelete = () => {

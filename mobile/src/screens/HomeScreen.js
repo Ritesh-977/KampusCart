@@ -300,7 +300,7 @@ const HomeScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (items.length < 2) return;
-    const spots = items.filter(i => i.status !== 'sold').slice(0, 6); // <-- Updated
+    const spots = items.filter(i => !i.isSold).slice(0, 6);
     const t = setInterval(() => {
       spotIdx.current = (spotIdx.current + 1) % spots.length;
       spotlightRef.current?.scrollTo({ x: spotIdx.current * (SPOT_W + 14), animated: true });
@@ -387,7 +387,7 @@ const HomeScreen = ({ navigation }) => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
     return items
-      .filter(item => item.status !== 'sold' && (item.name || item.title || '').toLowerCase().includes(q)) // <-- Updated
+      .filter(item => !item.isSold && (item.name || item.title || '').toLowerCase().includes(q))
       .slice(0, 8);
   }, [searchQuery, items]);
 
@@ -410,9 +410,9 @@ const HomeScreen = ({ navigation }) => {
     let result = [...filteredItems];
     if (sortOrder === 'asc')  result.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
     if (sortOrder === 'desc') result.sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
-    return result.sort((a, b) => { // <-- Updated to handle sold items
-      const isASold = a.status === 'sold';
-      const isBSold = b.status === 'sold';
+    return result.sort((a, b) => {
+      const isASold = !!a.isSold;
+      const isBSold = !!b.isSold;
       if (isASold && !isBSold) return 1;
       if (!isASold && isBSold) return -1;
       return 0;

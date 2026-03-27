@@ -93,13 +93,13 @@ const premiumGold = {
 // ─── The Context Logic ────────────────────────────────────────────────────────
 
 export const ThemeContext = createContext({
-  theme: originalIndigo, // Default value
+  theme: premiumGold, // Default value
   toggleTheme: () => {},
-  themeId: 'originalIndigo',
+  themeId: 'premiumGold',
 });
 
 export const ThemeProvider = ({ children }) => {
-  const [themeId, setThemeId] = useState('originalIndigo'); // State to track which ID is active
+  const [themeId, setThemeId] = useState('premiumGold'); // State to track which ID is active
 
   // Derived state: get the full theme object based on active ID
   const activeTheme = themeId === 'premiumGold' ? premiumGold : originalIndigo;

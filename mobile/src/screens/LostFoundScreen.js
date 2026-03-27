@@ -44,6 +44,7 @@ const LostFoundScreen = ({ navigation }) => {
   const [formContact, setFormContact] = useState('');
   const [formImage, setFormImage] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
 
   const fetchItems = async () => {
     try {
@@ -76,8 +77,7 @@ const LostFoundScreen = ({ navigation }) => {
     if (!permission.granted) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
+      allowsEditing: false,
       quality: 0.7,
     });
     if (!result.canceled) setFormImage(result.assets[0].uri);
@@ -155,7 +155,9 @@ const LostFoundScreen = ({ navigation }) => {
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       {item.image && (
-        <Image source={{ uri: item.image }} style={styles.cardImage} />
+        <TouchableOpacity activeOpacity={0.9} onPress={() => setPreviewImage(item.image)}>
+          <Image source={{ uri: item.image }} style={styles.cardImage} />
+        </TouchableOpacity>
       )}
       <View style={styles.cardContent}>
         <View style={styles.cardTopRow}>
@@ -305,6 +307,20 @@ const LostFoundScreen = ({ navigation }) => {
         <Ionicons name="add" size={28} color={colors.textOnPrimary || '#ffffff'} />
       </TouchableOpacity>
 
+      {/* Full-screen Image Preview Modal */}
+      <Modal visible={!!previewImage} transparent animationType="fade" onRequestClose={() => setPreviewImage(null)}>
+        <TouchableOpacity
+          style={styles.imagePreviewOverlay}
+          activeOpacity={1}
+          onPress={() => setPreviewImage(null)}
+        >
+          <Image source={{ uri: previewImage }} style={styles.imagePreviewFull} resizeMode="contain" />
+          <TouchableOpacity style={styles.imagePreviewClose} onPress={() => setPreviewImage(null)}>
+            <Ionicons name="close-circle" size={34} color="#fff" />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
       {/* Report Modal */}
       <Modal visible={reportModalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
@@ -375,7 +391,7 @@ const LostFoundScreen = ({ navigation }) => {
                 </View>
 
                 <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Description</Text>
+                  <Text style={styles.formLabel}>Description <Text style={styles.optionalLabel}>(optional)</Text></Text>
                   <TextInput
                     style={[styles.formInput, { height: 80, textAlignVertical: 'top' }]}
                     placeholder="Any identifying features..."
@@ -552,6 +568,13 @@ const createStyles = (theme) => StyleSheet.create({
     paddingVertical: 16, alignItems: 'center', marginBottom: 20,
   },
   submitBtnText: { color: theme.textOnPrimary || '#ffffff', fontSize: 16, fontWeight: 'bold' },
+  optionalLabel: { fontSize: 12, fontWeight: '400', color: theme.textTertiary },
+  imagePreviewOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.92)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  imagePreviewFull: { width: '100%', height: '80%' },
+  imagePreviewClose: { position: 'absolute', top: 48, right: 20 },
 });
 
 export default LostFoundScreen;

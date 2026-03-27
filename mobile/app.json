@@ -11,7 +11,7 @@
     "newArchEnabled": true,
 
     "splash": {
-      "image": "./assets/images/icon.png", 
+      "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0f172a"
     },
@@ -23,6 +23,8 @@
     "android": {
       "backgroundColor": "#0f172a",
       "splash": {
+        "image": "./assets/images/splash-icon.png",
+        "resizeMode": "contain",
         "backgroundColor": "#0f172a"
       },
        "adaptiveIcon": {

@@ -117,7 +117,7 @@ const EventsScreen = ({ navigation, route }) => {
   const renderEvent = ({ item, index }) => {
     const color       = item.color || ACCENT_COLORS[index % ACCENT_COLORS.length];
     const { date, month, time } = formatDateTime(item.startTime);
-    const isOrganizer = !isGuest && String(item.organizer?.user) === String(currentUser?._id);
+    const isOrganizer = !isGuest && String(item.organizer?.user) === String(currentUser?.id || currentUser?._id);
     const hasPhone    = !!item.organizer?.phone;
 
     return (

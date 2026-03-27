@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const lostItemSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    description: { type: String, required: true },
+    description: { type: String },
     category: { 
         type: String, 
         enum: ['ID Card', 'Keys', 'Electronics', 'Books', 'Other'], 
