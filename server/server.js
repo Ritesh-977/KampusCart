@@ -20,6 +20,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
 import studyMaterialRoutes from './routes/studyMaterialRoutes.js';
 import sportRoutes from './routes/sportRoutes.js';
+import feedbackRoutes from './routes/feedbackRoutes.js';
 import { startCronJobs } from './utils/cronJobs.js';
 
 // Connect to Database
@@ -62,6 +63,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/materials', studyMaterialRoutes);
 app.use('/api/sports', sportRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 app.get("/health", (req, res) => {
   res.status(200).json({

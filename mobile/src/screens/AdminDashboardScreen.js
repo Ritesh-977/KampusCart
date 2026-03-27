@@ -9,7 +9,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import API from '../api/axios';
 import { useThemeStyles } from '../hooks/useThemeStyles'; // Update the path as needed
 
-const TABS = ['Stats', 'Users', 'Items', 'Reports'];
+const TABS = ['Stats', 'Users', 'Items', 'Reports', 'Feedback'];
 
 const AdminDashboardScreen = () => {
   // 1. Initialize dynamic theme hook
@@ -23,6 +23,7 @@ const AdminDashboardScreen = () => {
   const [users, setUsers] = useState([]);
   const [items, setItems] = useState([]);
   const [reports, setReports] = useState([]);
+  const [feedbacks, setFeedbacks] = useState([]);
 
   // Ban modal
   const [banModal, setBanModal] = useState(false);
@@ -30,16 +31,18 @@ const AdminDashboardScreen = () => {
 
   const fetchAll = async () => {
     try {
-      const [sRes, uRes, iRes, rRes] = await Promise.all([
+      const [sRes, uRes, iRes, rRes, fRes] = await Promise.all([
         API.get('/admin/stats'),
         API.get('/admin/users'),
         API.get('/admin/items'),
         API.get('/admin/reports'),
+        API.get('/admin/feedback'),
       ]);
       setStats(sRes.data);
       setUsers((uRes.data || []).filter(u => u.isVerified));
       setItems(iRes.data);
       setReports(rRes.data);
+      setFeedbacks(fRes.data || []);
     } catch (e) {
       Alert.alert('Error', 'Failed to load admin data.');
     } finally {
@@ -274,6 +277,65 @@ const AdminDashboardScreen = () => {
     />
   );
 
+  const RATING_LABELS = ['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'];
+  const CATEGORY_COLORS = {
+    General: '#60a5fa',
+    'Bug Report': '#f87171',
+    Feature: '#34d399',
+    Other: '#a78bfa',
+  };
+
+  const renderFeedback = () => (
+    <FlatList
+      data={feedbacks}
+      keyExtractor={f => f._id}
+      contentContainerStyle={styles.tabContent}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primaryAccent} colors={[colors.primaryAction]} progressBackgroundColor={colors.card} />}
+      ListHeaderComponent={
+        <View style={{ marginBottom: 14 }}>
+          <Text style={styles.sectionHeading}>{feedbacks.length} Submissions</Text>
+          {feedbacks.length > 0 && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: colors.cardAccent, marginBottom: 4 }}>
+              <Ionicons name="star" size={18} color="#fbbf24" style={{ marginRight: 8 }} />
+              <Text style={{ fontSize: 14, color: colors.textMain, fontWeight: '700' }}>
+                Avg Rating: {(feedbacks.reduce((s, f) => s + f.rating, 0) / feedbacks.length).toFixed(1)} / 5
+              </Text>
+            </View>
+          )}
+        </View>
+      }
+      renderItem={({ item: f }) => (
+        <View style={[styles.listCard, { flexDirection: 'column', alignItems: 'flex-start' }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, width: '100%' }}>
+            <View style={[styles.userAvatar, { marginRight: 10 }]}>
+              <Text style={styles.userInitial}>{f.user?.name?.[0]?.toUpperCase() || '?'}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardTitle} numberOfLines={1}>{f.user?.name || 'Unknown'}</Text>
+              <Text style={styles.cardMeta}>{f.user?.college}</Text>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <View style={{ flexDirection: 'row' }}>
+                {[1,2,3,4,5].map(s => (
+                  <Ionicons key={s} name={s <= f.rating ? 'star' : 'star-outline'} size={13} color="#fbbf24" />
+                ))}
+              </View>
+              <Text style={{ fontSize: 11, color: colors.textTertiary, marginTop: 2 }}>{RATING_LABELS[f.rating]}</Text>
+            </View>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+            <View style={{ backgroundColor: (CATEGORY_COLORS[f.category] || '#a78bfa') + '22', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 8, marginRight: 8 }}>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: CATEGORY_COLORS[f.category] || '#a78bfa' }}>{f.category}</Text>
+            </View>
+            <Text style={styles.cardMeta}>{new Date(f.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
+          </View>
+          <Text style={{ fontSize: 13, color: colors.textBody, lineHeight: 19 }}>{f.message}</Text>
+        </View>
+      )}
+      ListEmptyComponent={<EmptyState icon="chatbox-ellipses-outline" text="No feedback yet" />}
+    />
+  );
+
   const tabContent = () => {
     if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.primaryAction} /></View>;
     switch (activeTab) {
@@ -281,6 +343,7 @@ const AdminDashboardScreen = () => {
       case 'Users': return renderUsers();
       case 'Items': return renderItems();
       case 'Reports': return renderReports();
+      case 'Feedback': return renderFeedback();
     }
   };
 

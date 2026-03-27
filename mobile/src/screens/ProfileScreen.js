@@ -281,14 +281,14 @@ const ProfileScreen = ({ navigation }) => {
         statusBarTranslucent
         onRequestClose={() => setAboutVisible(false)}
       >
-        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' }} onPress={() => setAboutVisible(false)} />
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' }} onPress={() => { setAboutVisible(false); setTimeout(() => setMenuVisible(true), 300); }} />
         <View style={{ backgroundColor: theme.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 12, paddingHorizontal: 20, shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 20 }}>
           {/* Handle */}
           <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: theme.inputBorder, alignSelf: 'center', marginBottom: 18 }} />
 
           {/* Header */}
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 18 }}>
-            <TouchableOpacity onPress={() => setAboutVisible(false)} style={{ marginRight: 12 }}>
+            <TouchableOpacity onPress={() => { setAboutVisible(false); setTimeout(() => setMenuVisible(true), 300); }} style={{ marginRight: 12 }}>
               <Ionicons name="arrow-back" size={22} color={theme.textMain} />
             </TouchableOpacity>
             <Text style={{ fontSize: 17, fontWeight: '700', color: theme.textMain }}>About</Text>

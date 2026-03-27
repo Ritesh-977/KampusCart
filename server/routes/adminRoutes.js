@@ -1,16 +1,17 @@
 import express from 'express';
 import { protect } from '../middleware/authMiddleware.js';
 import { admin } from '../middleware/adminMiddleware.js';
-import { 
-    getAdminStats, 
-    getAllUsers, 
-    deleteUser, 
-    banUser,        // <--- Added banUser
-    getAllItems, 
-    deleteItemAdmin, 
+import {
+    getAdminStats,
+    getAllUsers,
+    deleteUser,
+    banUser,
+    getAllItems,
+    deleteItemAdmin,
     getReportedItems,
     dismissReport
 } from '../controllers/adminController.js';
+import { getAllFeedback } from '../controllers/feedbackController.js';
 
 const router = express.Router();
 
@@ -31,5 +32,8 @@ router.get('/reports', protect, admin, getReportedItems);
 
 // Add Dismiss Route
 router.put('/items/:id/dismiss-report', protect, admin, dismissReport);
+
+// Feedback
+router.get('/feedback', protect, admin, getAllFeedback);
 
 export default router;
