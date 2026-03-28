@@ -1,31 +1,7 @@
 import Message from '../models/Message.js';
 import User from '../models/User.js';
 import Chat from '../models/Chat.js';
-
-async function sendPushNotifications(tokens, title, body, data) {
-  if (!tokens.length) return;
-  const messages = tokens.map((token) => ({
-    to: token,
-    sound: 'default',
-    title,
-    body,
-    data,
-    android: { channelId: 'messages', priority: 'high' },
-  }));
-  try {
-    await fetch('https://exp.host/--/api/v2/push/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Accept-Encoding': 'gzip, deflate',
-      },
-      body: JSON.stringify(messages),
-    });
-  } catch (e) {
-    console.warn('[Push] Failed to send notifications:', e.message);
-  }
-}
+import { sendPushToUser } from '../utils/expoPush.js';
 
 export const sendMessage = async (req, res) => {
     const { content, chatId } = req.body;
@@ -52,31 +28,31 @@ export const sendMessage = async (req, res) => {
         // Update latest message in Chat
         await Chat.findByIdAndUpdate(req.body.chatId, { latestMessage: message });
 
-        // Send push notifications to all other users in the chat
+        // Send push notifications to all other users in the chat (respects notification prefs)
         const recipientIds = message.chat.users
           .map((u) => u._id || u)
           .filter((id) => String(id) !== String(req.user._id));
 
         if (recipientIds.length) {
-          const recipients = await User.find(
-            { _id: { $in: recipientIds } },
-            'pushSubscription'
-          );
-          const tokens = recipients
-            .flatMap((u) => u.pushSubscription || [])
-            .filter((t) => typeof t === 'string' && t.startsWith('ExponentPushToken'));
-
           const senderName = message.sender?.name || 'Someone';
           const preview = message.content?.length > 100
             ? message.content.slice(0, 100) + '…'
             : message.content;
 
-          await sendPushNotifications(tokens, senderName, preview, {
-            chatId: String(message.chat._id),
-            senderId: String(req.user._id),
-            senderName,
-            senderPic: message.sender?.pic || '',
-          });
+          for (const recipientId of recipientIds) {
+            sendPushToUser({
+              userId: recipientId,
+              prefKey: 'messages',
+              title: senderName,
+              body: preview,
+              data: {
+                chatId: String(message.chat._id),
+                senderId: String(req.user._id),
+                senderName,
+                senderPic: message.sender?.pic || '',
+              },
+            });
+          }
         }
 
         res.json(message);

@@ -11,7 +11,7 @@ import { useTheme } from '../context/ThemeContext';
 import API from '../api/axios';
 import ItemCard from '../components/ItemCard';
 
-const { width } = Dimensions.get('window');
+const { width, height: SCREEN_H } = Dimensions.get('window');
 
 const ProfileScreen = ({ navigation }) => {
   const { logout, isGuest, currentUser } = useContext(AuthContext);
@@ -40,15 +40,25 @@ const ProfileScreen = ({ navigation }) => {
     }
   }, [menuVisible]);
 
-  const closeMenu = (then, reopenOnBack = false) => {
+  const closeMenu = (then, reopenOnBack = false, gestureVelocity = 0) => {
+    sheetY.stopAnimation();
+    const currentPos = (sheetY._value || 0);
+    const target = SCREEN_H + 200;
+    const remaining = Math.max(10, target - currentPos);
+    const duration = Math.min(220, Math.max(130, remaining / (gestureVelocity > 0 ? gestureVelocity * 2 : 2.5)));
     Animated.parallel([
-      Animated.timing(sheetY, { toValue: 600, duration: 260, useNativeDriver: true }),
-      Animated.timing(backdropOpacity, { toValue: 0, duration: 220, useNativeDriver: true }),
+      Animated.timing(sheetY, {
+        toValue: target,
+        duration,
+        easing: t => t * t,  // ease-in: accelerates downward like gravity
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropOpacity, { toValue: 0, duration: Math.min(duration, 180), useNativeDriver: true }),
     ]).start(() => {
       setMenuVisible(false);
       sheetY.setValue(600);
       if (reopenOnBack) returnToMenuRef.current = true;
-      then?.();
+      if (then) setTimeout(then, 50);
     });
   };
 
@@ -59,7 +69,7 @@ const ProfileScreen = ({ navigation }) => {
     },
     onPanResponderRelease: (_, gs) => {
       if (gs.dy > 120 || gs.vy > 0.8) {
-        closeMenu();
+        closeMenu(undefined, false, gs.vy);
       } else {
         Animated.spring(sheetY, { toValue: 0, useNativeDriver: true, bounciness: 5 }).start();
       }

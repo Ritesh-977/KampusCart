@@ -94,7 +94,13 @@ router.get('/notification-prefs', protect, async (req, res) => {
 router.put('/notification-prefs', protect, async (req, res) => {
   try {
     const { prefs } = req.body;
-    await User.findByIdAndUpdate(req.user._id, { notificationPrefs: prefs });
+    if (!prefs || typeof prefs !== 'object') return res.status(400).json({ error: 'Invalid prefs' });
+    const allowed = ['all', 'items', 'lostFound', 'events', 'sports', 'messages'];
+    const update = {};
+    for (const key of allowed) {
+      if (key in prefs) update[`notificationPrefs.${key}`] = Boolean(prefs[key]);
+    }
+    await User.findByIdAndUpdate(req.user._id, { $set: update });
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

@@ -31,27 +31,21 @@ const NotificationSettingsScreen = ({ navigation }) => {
       .finally(() => setLoading(false));
   }, []);
 
-  const save = async (newPrefs) => {
+  const toggle = async (key) => {
+    const prevPrefs = prefs;
+    const newPrefs = key === 'all'
+      ? { ...prefs, all: !prefs.all }
+      : { ...prefs, [key]: !prefs[key] };
+    setPrefs(newPrefs);           // optimistic update
     setSaving(true);
     try {
       await API.put('/users/notification-prefs', { prefs: newPrefs });
     } catch {
+      setPrefs(prevPrefs);        // revert on failure
       Toast.show({ type: 'error', text1: 'Failed to save', text2: 'Please try again.' });
     } finally {
       setSaving(false);
     }
-  };
-
-  const toggle = (key) => {
-    let newPrefs;
-    if (key === 'all') {
-      const newAll = !prefs.all;
-      newPrefs = { ...prefs, all: newAll };
-    } else {
-      newPrefs = { ...prefs, [key]: !prefs[key] };
-    }
-    setPrefs(newPrefs);
-    save(newPrefs);
   };
 
   const s = StyleSheet.create({
