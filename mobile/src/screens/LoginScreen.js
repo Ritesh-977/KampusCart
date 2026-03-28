@@ -3,12 +3,27 @@ import Toast from 'react-native-toast-message';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ActivityIndicator,
-  ScrollView, SafeAreaView
+  ScrollView, SafeAreaView, Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import API from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+
+const GRAD_CHARS = 'KampusCart'.split('');
+const GRAD_START = [139, 92, 246];  // #8b5cf6 purple
+const GRAD_END   = [59,  130, 246]; // #3b82f6 blue
+const GradientBrand = ({ fontSize = 32, fontWeight = '800', letterSpacing = -1 }) => (
+  <Text>
+    {GRAD_CHARS.map((char, i) => {
+      const t = i / (GRAD_CHARS.length - 1);
+      const r = Math.round(GRAD_START[0] + t * (GRAD_END[0] - GRAD_START[0]));
+      const g = Math.round(GRAD_START[1] + t * (GRAD_END[1] - GRAD_START[1]));
+      const b = Math.round(GRAD_START[2] + t * (GRAD_END[2] - GRAD_START[2]));
+      return <Text key={i} style={{ fontSize, fontWeight, letterSpacing, color: `rgb(${r},${g},${b})` }}>{char}</Text>;
+    })}
+  </Text>
+);
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -54,10 +69,11 @@ const LoginScreen = ({ navigation }) => {
         >
           {/* Header */}
           <View style={{ marginBottom: 36, alignItems: 'center' }}>
-            <View style={{ width: 70, height: 70, borderRadius: 35, backgroundColor: `${theme.primaryAccent}30`, justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
-              <Text style={{ fontSize: 34 }}>🛒</Text>
-            </View>
-            <Text style={{ fontSize: 32, fontWeight: '800', color: theme.primaryAccent, letterSpacing: -1 }}>KampusCart</Text>
+            <Image
+              source={require('../../assets/images/splash-icon.png')}
+              style={{ width: 80, height: 80, resizeMode: 'contain', marginBottom: 10 }}
+            />
+            <GradientBrand />
             <Text style={{ fontSize: 15, color: theme.textTertiary, marginTop: 6 }}>Your Campus, Your Marketplace</Text>
           </View>
 
@@ -68,7 +84,7 @@ const LoginScreen = ({ navigation }) => {
               <Ionicons name="mail-outline" size={20} color={theme.textTertiary} style={{ marginRight: 10 }} />
               <TextInput
                 style={{ flex: 1, paddingVertical: 14, fontSize: 16, color: theme.textMain }}
-                placeholder="e.g. f2022xxxx@bits-pilani.ac.in"
+                placeholder="yourname@collegedomain"
                 placeholderTextColor={theme.textTertiary}
                 keyboardType="email-address"
                 autoCapitalize="none"
