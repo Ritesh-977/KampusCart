@@ -31,6 +31,11 @@
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#0B0C10"
       },
+      "notification": {
+        "icon": "./assets/images/icon.png",
+        "color": "#4f46e5",
+        "iosDisplayInForeground": true
+      },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
@@ -38,7 +43,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png",
+      "favicon": "./assets/images/icon.png",
       "backgroundColor": "#0f172a"
     },
     "plugins": [
