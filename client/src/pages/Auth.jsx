@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaEye, FaEyeSlash, FaStore } from "react-icons/fa";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import API from '../api/axios'; // ✅ Using configured Axios instance
 import { toast } from 'react-toastify';
 import { colleges } from '../data/colleges';
@@ -73,13 +73,16 @@ const Auth = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // --- GOOGLE SIGNUP STATES ---
+  // --- GOOGLE SIGNUP STATES (COMMENTED OUT) ---
+
   const [isCampusModalOpen, setIsCampusModalOpen] = useState(false);
   const [modalCollege, setModalCollege] = useState(null);
   const [pendingGoogleLogin, setPendingGoogleLogin] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // --- GOOGLE SIGNUP HOOK (signup tab — filtered by campus domain) ---
+
+  // --- GOOGLE HOOKS AND LOGIC (COMMENTED OUT) ---
+
   // Re-configured on every render so hosted_domain always reflects current signupCollege
   const googleSignupHook = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -285,8 +288,14 @@ const Auth = () => {
         {/* Logo */}
         <div className="absolute top-6 left-6">
             <Link to="/" className="flex items-center text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-            <FaStore className="h-8 w-8 mr-2" />
-            <span className="text-gray-800 dark:text-white">kampus<span className="text-indigo-600 dark:text-indigo-400">Cart</span></span>
+            <img 
+              src="/logo.png" 
+              alt="KampusCart Logo" 
+              className="h-10 w-10 sm:h-12 sm:w-12 mr-0.5 sm:mr-1 object-contain"
+            />
+            <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
+    kampusCart
+  </span>
             </Link>
         </div>
 
@@ -502,7 +511,7 @@ const Auth = () => {
 
             </form>
 
-            {/* Google Sign-in — only visible on login tab */}
+           {/* Google Sign-in — only visible on login tab */}
             {isLogin && (
               <div className="mt-6">
                 <div className="relative">
@@ -595,8 +604,8 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Campus Selection Modal */}
-      {isCampusModalOpen && (
+      {/* Campus Selection Modal (COMMENTED OUT) */}
+     {isCampusModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"

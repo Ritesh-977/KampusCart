@@ -32,9 +32,9 @@ const Footer = () => {
                 alt="KampusCart Logo" 
                 className="h-6 w-6 mr-1 object-contain" 
               />
-              <span>
-                kampus<span className="text-cyan-400">Cart</span>
-              </span>
+              <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
+    kampusCart
+  </span>
             </Link>
 
             <p className="text-slate-400 mb-4 text-sm leading-snug max-w-xs">
@@ -43,10 +43,10 @@ const Footer = () => {
 
             {/* Social Icons */}
             <div className="flex space-x-3 mb-6">
-              <a href="#" className="text-slate-400 hover:text-cyan-400 transition-colors"><FaFacebook size={18} /></a>
-              <a href="#" className="text-slate-400 hover:text-cyan-400 transition-colors"><FaTwitter size={18} /></a>
+              {/* <a href="#" className="text-slate-400 hover:text-cyan-400 transition-colors"><FaFacebook size={18} /></a> */}
+              <a href="https://x.com/kampus_cart" className="text-slate-400 hover:text-cyan-400 transition-colors"><FaTwitter size={18} /></a>
               <a href="https://www.instagram.com/kampuscart/?hl=en" className="text-slate-400 hover:text-cyan-400 transition-colors"><FaInstagram size={18} /></a>
-              <a href="#" className="text-slate-400 hover:text-cyan-400 transition-colors"><FaLinkedin size={18} /></a>
+              <a href="https://www.linkedin.com/company/kampuscart" className="text-slate-400 hover:text-cyan-400 transition-colors"><FaLinkedin size={18} /></a>
             </div>
           </div>
 

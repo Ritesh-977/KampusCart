@@ -17,13 +17,13 @@ const sendToken = (user, statusCode, res) => {
   // If you are testing on localhost, you might need to temporarily toggle these, 
   // but for your live Vercel/Render site, they MUST be exactly this:
   const options = {
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 Days
-    httpOnly: true,
-    sameSite: 'lax', // Required for Vercel -> Render communication
-    secure: false,     // Required when sameSite is 'None'
-    // domain: ".kampuscart.site",
-    path: "/"
-  };
+  expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 Days
+  httpOnly: true, // Prevents XSS attacks
+  sameSite: 'lax', // Protects against CSRF attacks
+  secure: true, // MUST be true in production (requires HTTPS)
+ // domain: ".kampuscart.site", // Allows sharing between api. and www.
+  path: "/"
+};
 
   res.cookie('token', token, options);
 
@@ -53,9 +53,9 @@ export const registerUser = async (req, res) => {
     // 2. Check if the college is supported
     if (!supportedColleges[emailDomain]) {
       return res.status(403).json({
-        message: `Access restricted. KampusCart is not currently available for ${emailDomain}.`
+        message: "Please use an official college domain email to access the marketplace.",
       });
-    }
+}
 
     const collegeName = supportedColleges[emailDomain];
 
@@ -321,9 +321,9 @@ export const googleLogin = async (req, res) => {
     const emailDomain = email.split('@')[1];
     if (!supportedColleges[emailDomain]) {
       return res.status(403).json({
-        message: `Access restricted. KampusCart is not currently available for ${emailDomain}.`,
+        message: "Please use an official college domain email to access the marketplace.",
       });
-    }
+}
 
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
@@ -385,11 +385,11 @@ export const googleSignup = async (req, res) => {
     }
 
     // 3. Validate that the domain is supported by KampusCart
-    if (!supportedColleges[emailDomain]) {
+   if (!supportedColleges[emailDomain]) {
       return res.status(403).json({
-        message: `Access restricted. KampusCart is not currently available for ${emailDomain}.`,
+        message: "Please use an official college domain email to access the marketplace.",
       });
-    }
+}
 
     const collegeName = supportedColleges[emailDomain];
 
