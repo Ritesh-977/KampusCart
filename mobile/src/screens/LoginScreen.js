@@ -47,6 +47,7 @@ const LoginScreen = ({ navigation }) => {
     setGoogleLoading(true);
     try {
       await GoogleSignin.hasPlayServices();
+      await GoogleSignin.signOut(); // ensure account picker always shows
       await GoogleSignin.signIn();
       const { accessToken } = await GoogleSignin.getTokens();
 
