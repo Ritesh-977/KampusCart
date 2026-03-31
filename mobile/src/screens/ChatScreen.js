@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useContext, useCallback, useMemo } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { TAB_BAR_STYLE } from '../navigation/MainTabNavigator';
 import {
   View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet,
   Platform, ActivityIndicator, Image, Alert, StatusBar,
-  Animated, Keyboard,
+  Animated, Keyboard, Modal, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -105,6 +105,12 @@ export default function ChatScreen({ route, navigation }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [matchIndices, setMatchIndices] = useState([]);
   const [currentMatch, setCurrentMatch] = useState(0);
+
+  // emoji picker
+  const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
+
+  // full-screen image viewer
+  const [viewingImage, setViewingImage] = useState(null);
 
   // refs
   const flatListRef = useRef(null);
@@ -270,7 +276,7 @@ export default function ChatScreen({ route, navigation }) {
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       quality: 0.75,
     });
     if (result.canceled) return;
@@ -297,13 +303,15 @@ export default function ChatScreen({ route, navigation }) {
       const up = await API.post('/upload', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const imageUrl = up.data?.url || up.data?.secure_url || up.data;
+      const imageUrl = up.data?.filePath || up.data?.url || up.data?.secure_url;
+      if (!imageUrl) throw new Error('No image URL returned from upload');
       const res = await API.post('/message', { content: imageUrl, chatId: chat._id });
       setMessages((prev) =>
         prev.map((m) => (m._id === tempId ? { ...res.data, isImage: true } : m))
       );
       socketRef.current?.emit('new message', { ...res.data, isImage: true });
-    } catch {
+    } catch (err) {
+      console.error('Image upload error:', err?.response?.data || err.message);
       setMessages((prev) => prev.filter((m) => m._id !== tempId));
       Alert.alert('Failed', 'Could not send image.');
     }
@@ -427,12 +435,16 @@ export default function ChatScreen({ route, navigation }) {
           )}
           <View style={[styles.bubbleCol, mine ? styles.bubbleColRight : styles.bubbleColLeft]}>
             {isImg ? (
-              <View style={[styles.imgBubble, mine ? styles.imgBubbleMe : styles.imgBubbleOther, isCurrentMatch && styles.imgBubbleCurrentMatch]}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => !item._pending && setViewingImage(item.content)}
+                style={[styles.imgBubble, mine ? styles.imgBubbleMe : styles.imgBubbleOther, isCurrentMatch && styles.imgBubbleCurrentMatch]}
+              >
                 <Image source={{ uri: item.content }} style={styles.chatImage} resizeMode="cover" />
                 {item._pending && (
                   <View style={styles.imgOverlay}><ActivityIndicator color="#fff" /></View>
                 )}
-              </View>
+              </TouchableOpacity>
             ) : (
               <View style={[
                 styles.bubble,
@@ -534,10 +546,31 @@ export default function ChatScreen({ route, navigation }) {
           </View>
         )}
 
+        {emojiPickerVisible && (
+          <View style={styles.emojiPanel}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.emojiScroll}>
+              {COMMON_EMOJIS.map((e) => (
+                <TouchableOpacity key={e} onPress={() => setNewMessage((prev) => prev + e)} style={styles.emojiBtn}>
+                  <Text style={styles.emojiChar}>{e}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         <View style={styles.inputRow}>
           <View style={styles.inputWrap}>
             <TouchableOpacity style={styles.attachBtn} onPress={handleAttach}>
               <Ionicons name="attach" size={22} color={colors.textTertiary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.attachBtn}
+              onPress={() => {
+                Keyboard.dismiss();
+                setEmojiPickerVisible((v) => !v);
+              }}
+            >
+              <Ionicons name="happy-outline" size={22} color={colors.textTertiary} />
             </TouchableOpacity>
             <TextInput
               style={styles.input}
@@ -545,6 +578,7 @@ export default function ChatScreen({ route, navigation }) {
               placeholderTextColor={colors.textTertiary}
               value={newMessage}
               onChangeText={handleChangeText}
+              onFocus={() => setEmojiPickerVisible(false)}
               multiline
               maxLength={1000}
             />
@@ -558,9 +592,23 @@ export default function ChatScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
       </Animated.View>
+
+      {/* Full-screen image viewer */}
+      <Modal visible={!!viewingImage} transparent animationType="fade" onRequestClose={() => setViewingImage(null)}>
+        <TouchableOpacity style={styles.imgViewerBg} activeOpacity={1} onPress={() => setViewingImage(null)}>
+          <Image source={{ uri: viewingImage }} style={styles.imgViewerImg} resizeMode="contain" />
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
+
+const COMMON_EMOJIS = [
+  '😀','😂','😍','🥰','😊','😎','😢','😭','😡','🤔',
+  '😴','😏','🤣','😘','🥺','😅','😱','🤗','😤','🙄',
+  '👍','👎','❤️','🔥','🎉','💪','🙏','✨','💯','👀',
+  '😋','🤩','😜','🥳','😇','🤫','😬','🫡','🫶','💀',
+];
 
 // ─── Theme-Aware Style Generator ────────────────────────────────────────────
 const createStyles = (theme) => StyleSheet.create({
@@ -679,4 +727,18 @@ const createStyles = (theme) => StyleSheet.create({
   emptyAvatar: { width: 72, height: 72, borderRadius: 36, marginBottom: 12, backgroundColor: theme.cardAccent },
   emptyName: { fontSize: 17, fontWeight: '700', color: theme.textMain, marginBottom: 4 },
   emptyHint: { fontSize: 14, color: theme.textSub },
+
+  emojiPanel: {
+    backgroundColor: theme.card, borderTopWidth: 1, borderTopColor: theme.headerDivider,
+    paddingVertical: 8,
+  },
+  emojiScroll: { paddingHorizontal: 8 },
+  emojiBtn: { paddingHorizontal: 6, paddingVertical: 4 },
+  emojiChar: { fontSize: 26 },
+
+  imgViewerBg: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.92)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  imgViewerImg: { width: '100%', height: '80%' },
 });

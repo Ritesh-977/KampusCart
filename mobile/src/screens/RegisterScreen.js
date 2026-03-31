@@ -1,13 +1,19 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useContext } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
   Modal, FlatList, SafeAreaView, StatusBar, ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import Constants from 'expo-constants';
 import { useTheme } from '../context/ThemeContext';
+import { AuthContext } from '../context/AuthContext';
 import { colleges } from '../utils/colleges';
 import API from '../api/axios';
+
+WebBrowser.maybeCompleteAuthSession();
 
 const RegisterScreen = ({ navigation }) => {
   const { theme } = useTheme();
@@ -19,6 +25,52 @@ const RegisterScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const { login } = useContext(AuthContext);
+
+  const GOOGLE_WEB_CLIENT_ID = Constants.expoConfig?.extra?.googleWebClientId;
+  const GOOGLE_ANDROID_CLIENT_ID = Constants.expoConfig?.extra?.googleAndroidClientId;
+  const [, googleResponse, googlePrompt] = Google.useAuthRequest({
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
+  });
+
+  useEffect(() => {
+    if (googleResponse?.type === 'success') {
+      handleGoogleAuth(googleResponse.authentication?.accessToken);
+    } else if (googleResponse?.type === 'error') {
+      Alert.alert('Google Error', googleResponse.error?.message || 'Google sign-in failed.');
+    }
+  }, [googleResponse]);
+
+  const handleGoogleAuth = async (accessToken) => {
+    if (!accessToken) return;
+    setGoogleLoading(true);
+    try {
+      // Try login first (user may already exist)
+      const res = await API.post('/auth/google-login', { access_token: accessToken });
+      await login(res.data.token, res.data.user);
+    } catch (err) {
+      if (err.response?.status === 404) {
+        try {
+          const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          const profile = await profileRes.json();
+          const emailDomain = profile.email?.split('@')[1];
+          if (!emailDomain) throw new Error('Could not determine email domain');
+          const signupRes = await API.post('/auth/google-signup', { access_token: accessToken, emailDomain });
+          await login(signupRes.data.token, signupRes.data.user);
+        } catch (signupErr) {
+          Alert.alert('Sign Up Failed', signupErr.response?.data?.message || 'Could not create account.');
+        }
+      } else {
+        Alert.alert('Sign In Failed', err.response?.data?.message || 'Google sign-in failed.');
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const filteredColleges = colleges.filter(c =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -267,6 +319,29 @@ const RegisterScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           )}
+
+          {/* Divider */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20, marginBottom: 16 }}>
+            <View style={{ flex: 1, height: 1, backgroundColor: theme.inputBorder }} />
+            <Text style={{ marginHorizontal: 12, color: theme.textTertiary, fontSize: 14 }}>or</Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: theme.inputBorder }} />
+          </View>
+
+          {/* Google Sign-Up */}
+          <TouchableOpacity
+            style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: theme.inputBorder, backgroundColor: theme.inputBg, marginBottom: 20, opacity: googleLoading ? 0.7 : 1 }}
+            onPress={() => googlePrompt()}
+            disabled={googleLoading}
+          >
+            {googleLoading ? (
+              <ActivityIndicator color="#EA4335" size="small" />
+            ) : (
+              <>
+                <Ionicons name="logo-google" size={20} color="#EA4335" style={{ marginRight: 10 }} />
+                <Text style={{ color: theme.textSub, fontSize: 15, fontWeight: '600' }}>Continue with Google</Text>
+              </>
+            )}
+          </TouchableOpacity>
 
           {/* Login link */}
           <View style={memoStyles.footer}>

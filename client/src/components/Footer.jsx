@@ -7,6 +7,7 @@ import {
   FaLinkedin,
   FaGooglePlay
 } from 'react-icons/fa';
+import AdBanner from './AdBanner';
 
 const Footer = () => {
 
@@ -15,6 +16,19 @@ const Footer = () => {
     "inline-block transition-all duration-200 ease-out hover:text-cyan-400 hover:translate-x-0.5 active:scale-95";
 
   return (
+    <>
+      {/* Responsive horizontal ad banner above the footer */}
+      <div className="w-full bg-white border-t border-gray-200 py-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AdBanner
+            adClient="ca-pub-8205690358508264"
+            adSlot="XXXXXXXXXX"
+            adFormat="auto"
+            fullWidthResponsive={true}
+          />
+        </div>
+      </div>
+
     <footer className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-300 pt-8 pb-4 mt-auto border-t border-cyan-700/30 shadow-lg shadow-cyan-500/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -108,6 +122,7 @@ const Footer = () => {
 
       </div>
     </footer>
+    </>
   );
 };
 
