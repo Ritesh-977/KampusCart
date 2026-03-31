@@ -237,7 +237,7 @@ const ChatListScreen = ({ navigation, route }) => {
             )}
             <Text style={[memoStyles.lastMessage, isUnread && memoStyles.lastMessageUnread]} numberOfLines={1}>
               {lastMsg
-                ? (isMine ? 'You: ' : '') + lastMsg.content
+                ? (isMine ? 'You: ' : '') + (/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)/i.test(lastMsg.content) ? '📷 Photo' : lastMsg.content)
                 : 'Start a conversation...'}
             </Text>
             {isUnread && (

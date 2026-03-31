@@ -58,6 +58,8 @@
       "reactCompiler": true
     },
     "extra": {
+      "googleWebClientId": "66888588906-ibk5dgbo44bfq8jdk5h98n0bmsd4fsqf.apps.googleusercontent.com",
+      "googleAndroidClientId": "66888588906-p8c2f1bhmq3bqrts789s7hs58ok5jucn.apps.googleusercontent.com",
       "eas": {
         "projectId": "2fd5f259-43cf-4cba-a052-8d9206b1882b"
       }
