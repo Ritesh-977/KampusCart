@@ -1,19 +1,16 @@
 import React, { useState, useContext, useEffect } from 'react';
 import Toast from 'react-native-toast-message';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  View, Text, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, ActivityIndicator,
   ScrollView, SafeAreaView, Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import Constants from 'expo-constants';
 import API from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-
-WebBrowser.maybeCompleteAuthSession();
 
 const GRAD_CHARS = 'KampusCart'.split('');
 const GRAD_START = [139, 92, 246];  // #8b5cf6 purple
@@ -40,33 +37,24 @@ const LoginScreen = ({ navigation }) => {
 
   const { login, skipLogin } = useContext(AuthContext);
 
-  const GOOGLE_WEB_CLIENT_ID = Constants.expoConfig?.extra?.googleWebClientId;
-  const GOOGLE_ANDROID_CLIENT_ID = Constants.expoConfig?.extra?.googleAndroidClientId;
-
-  const [, googleResponse, googlePrompt] = Google.useAuthRequest({
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
-    redirectUri: 'https://auth.expo.io/@ritesh977/kampuscart',
-  });
-
   useEffect(() => {
-    if (googleResponse?.type === 'success') {
-      handleGoogleAuth(googleResponse.authentication?.accessToken);
-    } else if (googleResponse?.type === 'error') {
-      Toast.show({ type: 'error', text1: 'Google Error', text2: googleResponse.error?.message || 'Google sign-in failed.' });
-    }
-  }, [googleResponse]);
+    GoogleSignin.configure({
+      webClientId: Constants.expoConfig?.extra?.googleWebClientId,
+    });
+  }, []);
 
-  const handleGoogleAuth = async (accessToken) => {
-    if (!accessToken) return;
+  const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      const res = await API.post('/auth/google-login', { access_token: accessToken });
-      await login(res.data.token, res.data.user);
-    } catch (err) {
-      if (err.response?.status === 404) {
-        // No account yet — auto-signup using the Google email domain
-        try {
+      await GoogleSignin.hasPlayServices();
+      await GoogleSignin.signIn();
+      const { accessToken } = await GoogleSignin.getTokens();
+
+      try {
+        const res = await API.post('/auth/google-login', { access_token: accessToken });
+        await login(res.data.token, res.data.user);
+      } catch (err) {
+        if (err.response?.status === 404) {
           const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
@@ -76,11 +64,17 @@ const LoginScreen = ({ navigation }) => {
           const signupRes = await API.post('/auth/google-signup', { access_token: accessToken, emailDomain });
           await login(signupRes.data.token, signupRes.data.user);
           Toast.show({ type: 'success', text1: 'Welcome!', text2: 'Account created with Google.' });
-        } catch (signupErr) {
-          Toast.show({ type: 'error', text1: 'Sign Up Failed', text2: signupErr.response?.data?.message || 'Could not create account.' });
+        } else {
+          Toast.show({ type: 'error', text1: 'Sign In Failed', text2: err.response?.data?.message || 'Google sign-in failed.' });
         }
+      }
+    } catch (err) {
+      if (err.code === statusCodes.SIGN_IN_CANCELLED) {
+        // user cancelled, do nothing
+      } else if (err.code === statusCodes.IN_PROGRESS) {
+        Toast.show({ type: 'error', text1: 'Google Error', text2: 'Sign-in already in progress.' });
       } else {
-        Toast.show({ type: 'error', text1: 'Sign In Failed', text2: err.response?.data?.message || 'Google sign-in failed.' });
+        Toast.show({ type: 'error', text1: 'Google Error', text2: err.message || 'Google sign-in failed.' });
       }
     } finally {
       setGoogleLoading(false);
@@ -194,7 +188,7 @@ const LoginScreen = ({ navigation }) => {
           {/* Google Sign-In */}
           <TouchableOpacity
             style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: theme.inputBorder, backgroundColor: theme.inputBg, marginBottom: 12, opacity: googleLoading ? 0.7 : 1 }}
-            onPress={() => googlePrompt()}
+            onPress={handleGoogleSignIn}
             disabled={googleLoading}
           >
             {googleLoading ? (
