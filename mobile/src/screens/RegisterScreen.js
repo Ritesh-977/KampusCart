@@ -5,15 +5,12 @@ import {
   Modal, FlatList, SafeAreaView, StatusBar, ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import Constants from 'expo-constants';
 import { useTheme } from '../context/ThemeContext';
 import { AuthContext } from '../context/AuthContext';
 import { colleges } from '../utils/colleges';
 import API from '../api/axios';
-
-WebBrowser.maybeCompleteAuthSession();
 
 const RegisterScreen = ({ navigation }) => {
   const { theme } = useTheme();
@@ -28,44 +25,53 @@ const RegisterScreen = ({ navigation }) => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const { login } = useContext(AuthContext);
 
-  const GOOGLE_WEB_CLIENT_ID = Constants.expoConfig?.extra?.googleWebClientId;
-  const GOOGLE_ANDROID_CLIENT_ID = Constants.expoConfig?.extra?.googleAndroidClientId;
-  const [, googleResponse, googlePrompt] = Google.useAuthRequest({
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
-  });
-
   useEffect(() => {
-    if (googleResponse?.type === 'success') {
-      handleGoogleAuth(googleResponse.authentication?.accessToken);
-    } else if (googleResponse?.type === 'error') {
-      Alert.alert('Google Error', googleResponse.error?.message || 'Google sign-in failed.');
-    }
-  }, [googleResponse]);
+    GoogleSignin.configure({
+      webClientId: Constants.expoConfig?.extra?.googleWebClientId,
+    });
+  }, []);
 
-  const handleGoogleAuth = async (accessToken) => {
-    if (!accessToken) return;
+  const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      // Try login first (user may already exist)
-      const res = await API.post('/auth/google-login', { access_token: accessToken });
-      await login(res.data.token, res.data.user);
-    } catch (err) {
-      if (err.response?.status === 404) {
-        try {
-          const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
-          const profile = await profileRes.json();
-          const emailDomain = profile.email?.split('@')[1];
-          if (!emailDomain) throw new Error('Could not determine email domain');
+      await GoogleSignin.hasPlayServices();
+      await GoogleSignin.signIn();
+      const { accessToken } = await GoogleSignin.getTokens();
+
+      // Verify the signed-in email matches the selected college's domain
+      const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const profile = await profileRes.json();
+      const emailDomain = profile.email?.split('@')[1];
+
+      if (emailDomain !== selectedCollege.emailDomain) {
+        await GoogleSignin.signOut();
+        Alert.alert(
+          'Wrong College Email',
+          `Please sign in with your ${selectedCollege.name} Google account (@${selectedCollege.emailDomain}).`
+        );
+        return;
+      }
+
+      try {
+        const res = await API.post('/auth/google-login', { access_token: accessToken });
+        await login(res.data.token, res.data.user);
+      } catch (err) {
+        if (err.response?.status === 404) {
           const signupRes = await API.post('/auth/google-signup', { access_token: accessToken, emailDomain });
           await login(signupRes.data.token, signupRes.data.user);
-        } catch (signupErr) {
-          Alert.alert('Sign Up Failed', signupErr.response?.data?.message || 'Could not create account.');
+        } else {
+          Alert.alert('Sign In Failed', err.response?.data?.message || 'Google sign-in failed.');
         }
+      }
+    } catch (err) {
+      if (err.code === statusCodes.SIGN_IN_CANCELLED) {
+        // user cancelled, do nothing
+      } else if (err.code === statusCodes.IN_PROGRESS) {
+        Alert.alert('Google Error', 'Sign-in already in progress.');
       } else {
-        Alert.alert('Sign In Failed', err.response?.data?.message || 'Google sign-in failed.');
+        Alert.alert('Google Error', err.message || 'Google sign-in failed.');
       }
     } finally {
       setGoogleLoading(false);
@@ -317,31 +323,34 @@ const RegisterScreen = ({ navigation }) => {
                   <Text style={memoStyles.loginButtonText}>Create Account</Text>
                 )}
               </TouchableOpacity>
+
+              {/* Divider */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20, marginBottom: 16 }}>
+                <View style={{ flex: 1, height: 1, backgroundColor: theme.inputBorder }} />
+                <Text style={{ marginHorizontal: 12, color: theme.textTertiary, fontSize: 14 }}>or</Text>
+                <View style={{ flex: 1, height: 1, backgroundColor: theme.inputBorder }} />
+              </View>
+
+              {/* Google Sign-Up */}
+              <TouchableOpacity
+                style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: theme.inputBorder, backgroundColor: theme.inputBg, marginBottom: 8, opacity: googleLoading ? 0.7 : 1 }}
+                onPress={handleGoogleSignIn}
+                disabled={googleLoading}
+              >
+                {googleLoading ? (
+                  <ActivityIndicator color="#EA4335" size="small" />
+                ) : (
+                  <>
+                    <Ionicons name="logo-google" size={20} color="#EA4335" style={{ marginRight: 10 }} />
+                    <Text style={{ color: theme.textSub, fontSize: 15, fontWeight: '600' }}>Continue with Google</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+              <Text style={{ fontSize: 12, color: theme.textTertiary, textAlign: 'center', marginBottom: 12 }}>
+                Only @{selectedCollege.emailDomain} accounts accepted
+              </Text>
             </View>
           )}
-
-          {/* Divider */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20, marginBottom: 16 }}>
-            <View style={{ flex: 1, height: 1, backgroundColor: theme.inputBorder }} />
-            <Text style={{ marginHorizontal: 12, color: theme.textTertiary, fontSize: 14 }}>or</Text>
-            <View style={{ flex: 1, height: 1, backgroundColor: theme.inputBorder }} />
-          </View>
-
-          {/* Google Sign-Up */}
-          <TouchableOpacity
-            style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: theme.inputBorder, backgroundColor: theme.inputBg, marginBottom: 20, opacity: googleLoading ? 0.7 : 1 }}
-            onPress={() => googlePrompt()}
-            disabled={googleLoading}
-          >
-            {googleLoading ? (
-              <ActivityIndicator color="#EA4335" size="small" />
-            ) : (
-              <>
-                <Ionicons name="logo-google" size={20} color="#EA4335" style={{ marginRight: 10 }} />
-                <Text style={{ color: theme.textSub, fontSize: 15, fontWeight: '600' }}>Continue with Google</Text>
-              </>
-            )}
-          </TouchableOpacity>
 
           {/* Login link */}
           <View style={memoStyles.footer}>
