@@ -243,7 +243,7 @@ const EventsCalendar = ({ events = [], navigation, themeColors }) => {
 
 
 // ─── HomeScreen ───────────────────────────────────────────────────────────────
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation, route }) => {
   const { styles: mainStyles, colors } = useThemeStyles(createStyles);
   const { currentUser, isGuest, logout } = useContext(AuthContext);
 
@@ -389,6 +389,14 @@ const HomeScreen = ({ navigation }) => {
   }, [fetchItems, fetchEvents]);
 
   const onRefresh = () => { setRefreshing(true); fetchItems(); fetchEvents(); };
+
+  // Scroll to top + refresh when home tab is pressed while already on this screen
+  useEffect(() => {
+    if (route.params?.scrollToTop) {
+      listRef.current?.scrollToOffset({ offset: 0, animated: true });
+      onRefresh();
+    }
+  }, [route.params?.scrollToTop]);
 
   const suggestions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();

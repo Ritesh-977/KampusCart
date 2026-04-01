@@ -76,6 +76,8 @@ const LoginScreen = ({ navigation }) => {
         // user cancelled, do nothing
       } else if (err.code === statusCodes.IN_PROGRESS) {
         Toast.show({ type: 'error', text1: 'Google Error', text2: 'Sign-in already in progress.' });
+      } else if (err.message?.includes('getToken requires a user to be signed in')) {
+        // user dismissed account picker without selecting — treat as cancel
       } else {
         Toast.show({ type: 'error', text1: 'Google Error', text2: err.message || 'Google sign-in failed.' });
       }
