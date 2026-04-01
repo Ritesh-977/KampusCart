@@ -57,18 +57,47 @@ export default function ChatScreen({ route, navigation }) {
   );
 
   useEffect(() => {
-    const setOffset = (height) => {
-      Animated.timing(kbOffset, { toValue: height, duration: 0, useNativeDriver: false }).start();
+    const setOffset = (e) => {
+      // Android doesn't always provide e.duration, so we give it a 150ms fallback
+      // This allows the input bar to smoothly "ride" the emoji keyboard upward
+      Animated.timing(kbOffset, { 
+        toValue: e.endCoordinates.height, 
+        duration: e.duration || 150, 
+        useNativeDriver: false 
+      }).start();
     };
-    const onShow   = Keyboard.addListener('keyboardDidShow',        (e) => setOffset(e.endCoordinates.height));
-    const onHide   = Keyboard.addListener('keyboardDidHide',        ()  => setOffset(0));
-    // fires when keyboard resizes (e.g. switching from text to emoji keyboard)
-    const onChange = Keyboard.addListener('keyboardDidChangeFrame', (e) => {
-      setOffset(e.endCoordinates.height > 0 ? e.endCoordinates.height : 0);
-    });
-    return () => { onShow.remove(); onHide.remove(); onChange.remove(); };
+
+    const resetOffset = (e) => {
+      Animated.timing(kbOffset, { 
+        toValue: 0, 
+        duration: e?.duration || 150, 
+        useNativeDriver: false 
+      }).start();
+    };
+
+    // Platform-specific event names
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const onShow = Keyboard.addListener(showEvent, setOffset);
+    const onHide = Keyboard.addListener(hideEvent, resetOffset);
+    
+    // iOS ONLY: Handle the specific frame change event
+    let onChange;
+    if (Platform.OS === 'ios') {
+      onChange = Keyboard.addListener('keyboardWillChangeFrame', (e) => {
+        if (e.endCoordinates.height > 0) setOffset(e);
+      });
+    }
+
+    return () => { 
+      onShow.remove(); 
+      onHide.remove(); 
+      if (onChange) onChange.remove(); 
+    };
   }, []);
 
+  
   const myId = useMemo(
     () => String(currentUser?._id || currentUser?.id || ''),
     [currentUser]
