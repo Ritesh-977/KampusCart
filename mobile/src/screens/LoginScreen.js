@@ -48,7 +48,9 @@ const LoginScreen = ({ navigation }) => {
     try {
       await GoogleSignin.hasPlayServices();
       await GoogleSignin.signOut(); // ensure account picker always shows
-      await GoogleSignin.signIn();
+      const userInfo = await GoogleSignin.signIn();
+      if (!userInfo) return; // user dismissed without selecting an account
+
       const { accessToken } = await GoogleSignin.getTokens();
 
       try {

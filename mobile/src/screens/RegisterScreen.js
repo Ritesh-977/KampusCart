@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect, useContext } from 'react';
+import Toast from 'react-native-toast-message';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
+  KeyboardAvoidingView, Platform, ActivityIndicator,
   Modal, FlatList, SafeAreaView, StatusBar, ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,7 +36,9 @@ const RegisterScreen = ({ navigation }) => {
     setGoogleLoading(true);
     try {
       await GoogleSignin.hasPlayServices();
-      await GoogleSignin.signIn();
+      const userInfo = await GoogleSignin.signIn();
+      if (!userInfo) return; // user dismissed without selecting an account
+
       const { accessToken } = await GoogleSignin.getTokens();
 
       // Verify the signed-in email matches the selected college's domain
@@ -47,10 +50,7 @@ const RegisterScreen = ({ navigation }) => {
 
       if (emailDomain !== selectedCollege.emailDomain) {
         await GoogleSignin.signOut();
-        Alert.alert(
-          'Wrong College Email',
-          `Please sign in with your ${selectedCollege.name} Google account (@${selectedCollege.emailDomain}).`
-        );
+        Toast.show({ type: 'error', text1: 'Wrong College Email', text2: `Use your @${selectedCollege.emailDomain} account.` });
         return;
       }
 
@@ -62,16 +62,16 @@ const RegisterScreen = ({ navigation }) => {
           const signupRes = await API.post('/auth/google-signup', { access_token: accessToken, emailDomain });
           await login(signupRes.data.token, signupRes.data.user);
         } else {
-          Alert.alert('Sign In Failed', err.response?.data?.message || 'Google sign-in failed.');
+          Toast.show({ type: 'error', text1: 'Sign In Failed', text2: err.response?.data?.message || 'Google sign-in failed.' });
         }
       }
     } catch (err) {
       if (err.code === statusCodes.SIGN_IN_CANCELLED) {
         // user cancelled, do nothing
       } else if (err.code === statusCodes.IN_PROGRESS) {
-        Alert.alert('Google Error', 'Sign-in already in progress.');
+        Toast.show({ type: 'error', text1: 'Google Error', text2: 'Sign-in already in progress.' });
       } else {
-        Alert.alert('Google Error', err.message || 'Google sign-in failed.');
+        Toast.show({ type: 'error', text1: 'Google Error', text2: err.message || 'Google sign-in failed.' });
       }
     } finally {
       setGoogleLoading(false);
@@ -145,17 +145,17 @@ const RegisterScreen = ({ navigation }) => {
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password || !selectedCollege) {
-      Alert.alert('Error', 'Please fill in all fields and select your campus.');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Please fill in all fields and select your campus.' });
       return;
     }
 
     if (selectedCollege.emailDomain && !email.trim().toLowerCase().endsWith(selectedCollege.emailDomain)) {
-      Alert.alert('Invalid Email', `Please use your official @${selectedCollege.emailDomain} college email.`);
+      Toast.show({ type: 'error', text1: 'Invalid Email', text2: `Please use your official @${selectedCollege.emailDomain} college email.` });
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Weak Password', 'Password must be at least 6 characters.');
+      Toast.show({ type: 'error', text1: 'Weak Password', text2: 'Password must be at least 6 characters.' });
       return;
     }
 
@@ -168,14 +168,11 @@ const RegisterScreen = ({ navigation }) => {
         college: selectedCollege.name,
       });
 
-      Alert.alert(
-        'Check Your Email!',
-        `A 6-digit verification code has been sent to ${email.trim().toLowerCase()}`,
-        [{ text: 'Continue', onPress: () => navigation.navigate('OTPVerification', { email: email.trim().toLowerCase() }) }]
-      );
+      navigation.navigate('OTPVerification', { email: email.trim().toLowerCase() });
+      Toast.show({ type: 'success', text1: 'Check Your Email!', text2: `Verification code sent to ${email.trim().toLowerCase()}` });
     } catch (error) {
       const message = error.response?.data?.message || 'Registration failed. Please try again.';
-      Alert.alert('Error', message);
+      Toast.show({ type: 'error', text1: 'Error', text2: message });
     } finally {
       setLoading(false);
     }
@@ -183,10 +180,10 @@ const RegisterScreen = ({ navigation }) => {
 
   const handleWaitlist = async () => {
     if (!email.trim()) {
-      Alert.alert('Waitlist', 'Please enter your email address.');
+      Toast.show({ type: 'error', text1: 'Waitlist', text2: 'Please enter your email address.' });
       return;
     }
-    Alert.alert("You're on the list! 🎉", `We'll notify you when KampusCart launches at ${selectedCollege.name}!`);
+    Toast.show({ type: 'success', text1: "You're on the list! 🎉", text2: `We'll notify you when KampusCart launches at ${selectedCollege.name}!` });
     navigation.goBack();
   };
 
