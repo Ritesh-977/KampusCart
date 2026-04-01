@@ -57,21 +57,16 @@ export default function ChatScreen({ route, navigation }) {
   );
 
   useEffect(() => {
-    const onShow = Keyboard.addListener('keyboardDidShow', (e) => {
-      Animated.timing(kbOffset, {
-        toValue: e.endCoordinates.height,
-        duration: 0,
-        useNativeDriver: false,
-      }).start();
+    const setOffset = (height) => {
+      Animated.timing(kbOffset, { toValue: height, duration: 0, useNativeDriver: false }).start();
+    };
+    const onShow   = Keyboard.addListener('keyboardDidShow',        (e) => setOffset(e.endCoordinates.height));
+    const onHide   = Keyboard.addListener('keyboardDidHide',        ()  => setOffset(0));
+    // fires when keyboard resizes (e.g. switching from text to emoji keyboard)
+    const onChange = Keyboard.addListener('keyboardDidChangeFrame', (e) => {
+      setOffset(e.endCoordinates.height > 0 ? e.endCoordinates.height : 0);
     });
-    const onHide = Keyboard.addListener('keyboardDidHide', () => {
-      Animated.timing(kbOffset, {
-        toValue: 0,
-        duration: 0,
-        useNativeDriver: false,
-      }).start();
-    });
-    return () => { onShow.remove(); onHide.remove(); };
+    return () => { onShow.remove(); onHide.remove(); onChange.remove(); };
   }, []);
 
   const myId = useMemo(
@@ -108,6 +103,7 @@ export default function ChatScreen({ route, navigation }) {
 
   // emoji picker
   const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
 
   // full-screen image viewer
   const [viewingImage, setViewingImage] = useState(null);
@@ -548,13 +544,40 @@ export default function ChatScreen({ route, navigation }) {
 
         {emojiPickerVisible && (
           <View style={styles.emojiPanel}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.emojiScroll}>
-              {COMMON_EMOJIS.map((e) => (
-                <TouchableOpacity key={e} onPress={() => setNewMessage((prev) => prev + e)} style={styles.emojiBtn}>
-                  <Text style={styles.emojiChar}>{e}</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.emojiCategoryBar}
+              contentContainerStyle={styles.emojiCategoryBarContent}
+              keyboardShouldPersistTaps="always"
+            >
+              {EMOJI_CATEGORIES.map((cat, i) => (
+                <TouchableOpacity
+                  key={cat.name}
+                  onPress={() => setActiveCategoryIndex(i)}
+                  style={[styles.emojiCategoryTab, activeCategoryIndex === i && styles.emojiCategoryTabActive]}
+                >
+                  <Text style={styles.emojiCategoryIcon}>{cat.icon}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
+            <FlatList
+              data={EMOJI_CATEGORIES[activeCategoryIndex].emojis}
+              keyExtractor={(item, index) => `${item}_${index}`}
+              numColumns={8}
+              renderItem={({ item: emoji }) => (
+                <TouchableOpacity
+                  onPress={() => setNewMessage((prev) => prev + emoji)}
+                  style={styles.emojiBtn}
+                >
+                  <Text style={styles.emojiChar}>{emoji}</Text>
+                </TouchableOpacity>
+              )}
+              style={styles.emojiGrid}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="always"
+              extraData={activeCategoryIndex}
+            />
           </View>
         )}
 
@@ -603,11 +626,43 @@ export default function ChatScreen({ route, navigation }) {
   );
 }
 
-const COMMON_EMOJIS = [
-  '😀','😂','😍','🥰','😊','😎','😢','😭','😡','🤔',
-  '😴','😏','🤣','😘','🥺','😅','😱','🤗','😤','🙄',
-  '👍','👎','❤️','🔥','🎉','💪','🙏','✨','💯','👀',
-  '😋','🤩','😜','🥳','😇','🤫','😬','🫡','🫶','💀',
+const EMOJI_CATEGORIES = [
+  {
+    name: 'Smileys', icon: '😀',
+    emojis: ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖'],
+  },
+  {
+    name: 'Gestures', icon: '👋',
+    emojis: ['👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦵','🦶','👂','🦻','👃','👀','👁️','👅','👄','💋'],
+  },
+  {
+    name: 'People', icon: '👤',
+    emojis: ['👶','🧒','👦','👧','🧑','👱','👨','🧔','👩','🧓','👴','👵','🙍','🙎','🙅','🙆','💁','🙋','🧏','🙇','🤦','🤷','👮','🕵️','💂','🥷','👷','🤴','👸','👳','👲','🧕','🤵','👰','🤰','🤱','👼','🎅','🤶','🦸','🦹','🧙','🧝','🧛','🧟','🧞','🧜','🧚','👫','👬','👭','💏','💑','👪'],
+  },
+  {
+    name: 'Animals', icon: '🐶',
+    emojis: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈','🙉','🙊','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗','🦂','🐢','🐍','🦎','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🐈','🐓','🦃','🦚','🦜','🦢','🦩','🕊️','🐇','🦝','🦨','🦡','🦫','🦦','🦥','🐁','🐀','🐿️','🦔'],
+  },
+  {
+    name: 'Food', icon: '🍎',
+    emojis: ['🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🥕','🧄','🧅','🥔','🍠','🌰','🥜','🍞','🥐','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🌭','🍔','🍟','🍕','🌮','🌯','🥙','🧆','🍜','🍝','🍛','🍣','🍱','🥟','🍤','🍙','🍚','🍘','🍥','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🍯','🧃','🥤','🧋','☕','🍵','🫖','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧉','🍾','🧊'],
+  },
+  {
+    name: 'Travel', icon: '🌍',
+    emojis: ['🌍','🌎','🌏','🌐','🗺️','🧭','🏔️','⛰️','🌋','🗻','🏕️','🏖️','🏜️','🏝️','🏞️','🏟️','🏛️','🏗️','🏘️','🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','💒','🗼','🗽','⛪','🕌','🛕','🕍','⛩️','🕋','⛲','⛺','🌁','🌃','🏙️','🌄','🌅','🌆','🌇','🌉','🎠','🎡','🎢','🎪','🚂','🚃','🚄','🚅','🚆','🚇','🚈','🚉','🚊','🚝','🚞','🚌','🚍','🚎','🚐','🚑','🚒','🚓','🚔','🚕','🚖','🚗','🚘','🚙','🛻','🚚','🚛','🚜','🏎️','🏍️','🛵','🚲','🛴','🛹','🛼','🚨','🚥','🚦','🛑','🚧','⚓','⛵','🚤','🛥️','🛳️','⛴️','🚢','✈️','🛩️','🛫','🛬','🪂','💺','🚁','🚀','🛸'],
+  },
+  {
+    name: 'Activities', icon: '⚽',
+    emojis: ['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🏓','🏸','🏒','🥅','⛳','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🤼','🤸','⛹️','🤺','🤾','🏌️','🏇','🧘','🏄','🏊','🤽','🚣','🧗','🚵','🚴','🏆','🥇','🥈','🥉','🏅','🎖️','🏵️','🎗️','🎫','🎟️','🎪','🤹','🎭','🩰','🎨','🎬','🎤','🎧','🎼','🎵','🎶','🥁','🪘','🎷','🎺','🪗','🎸','🪕','🎻','🎲','♟️','🎯','🎳','🎮','🎰','🧩'],
+  },
+  {
+    name: 'Objects', icon: '💡',
+    emojis: ['⌚','📱','💻','⌨️','🖥️','🖨️','🖱️','💾','💿','📀','📷','📸','📹','🎥','📞','☎️','📺','📻','🧭','⏱️','⏲️','⏰','🕰️','⌛','⏳','📡','🔋','🔌','💡','🔦','🕯️','🧯','💸','💵','💴','💶','💷','🪙','💰','💳','💎','⚖️','🔧','🪛','🔩','⚙️','🔗','🧲','🪜','⚗️','🧪','🧫','🧬','🔭','🔬','🩹','🩺','💊','💉','🩸','🧹','🧺','🧻','🚽','🚿','🛁','🧴','🧷','🧼','🪥','🧽','🛒','🚪','🪞','🪟','🛏️','🛋️','🪑','🧳','⛱️','🌂','☂️','🧵','🪡','🧶','👓','🕶️','🥽','🌡️','🪤','🪣','🗑️','🔑','🗝️','🔐','🔏','🔒','🔓','🪓','🗡️','⚔️','🛡️','🔫','🪃','🏹','🪚','🔨','⛏️','⚒️','🛠️','🗜️','💣','🪝'],
+  },
+  {
+    name: 'Symbols', icon: '❤️',
+    emojis: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉️','☸️','✡️','🔯','☯️','☦️','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','✅','❌','⭕','🛑','⛔','📛','🚫','💯','💢','♨️','🚷','🚯','🚳','🚱','🔞','📵','🚭','❗','❕','❓','❔','‼️','⁉️','⚠️','🚸','♻️','🔱','⚜️','🔰','💤','🏧','♿','🈳','🆕','🆓','🆒','🆗','🆙','🆚','🆖','🆎','🆑','🅰️','🅱️','🅾️','🆘','0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟','▶️','⏸️','⏹️','⏺️','⏭️','⏮️','⏩','⏪','⏫','⏬','◀️','🔼','🔽','➡️','⬅️','⬆️','⬇️','↗️','↘️','↙️','↖️','↕️','↔️','↩️','↪️','🔀','🔁','🔂','🔃','➕','➖','➗','✖️','💲','💱','™️','©️','®️','〰️','➰','➿','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔺','🔻','🔷','🔶','🔹','🔸','🔲','🔳','▪️','▫️','🟥','🟧','🟨','🟩','🟦','🟪','⬛','⬜','🟫'],
+  },
 ];
 
 // ─── Theme-Aware Style Generator ────────────────────────────────────────────
@@ -730,11 +785,20 @@ const createStyles = (theme) => StyleSheet.create({
 
   emojiPanel: {
     backgroundColor: theme.card, borderTopWidth: 1, borderTopColor: theme.headerDivider,
-    paddingVertical: 8,
+    height: 280,
   },
-  emojiScroll: { paddingHorizontal: 8 },
-  emojiBtn: { paddingHorizontal: 6, paddingVertical: 4 },
-  emojiChar: { fontSize: 26 },
+  emojiCategoryBar: {
+    borderBottomWidth: 1, borderBottomColor: theme.headerDivider, maxHeight: 44,
+  },
+  emojiCategoryBarContent: { paddingHorizontal: 6, paddingVertical: 6, alignItems: 'center' },
+  emojiCategoryTab: {
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginHorizontal: 2,
+  },
+  emojiCategoryTabActive: { backgroundColor: theme.primaryAction + '35' },
+  emojiCategoryIcon: { fontSize: 20 },
+  emojiGrid: { flex: 1, paddingHorizontal: 4 },
+  emojiBtn: { flex: 1, aspectRatio: 1, justifyContent: 'center', alignItems: 'center' },
+  emojiChar: { fontSize: 24 },
 
   imgViewerBg: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.92)',

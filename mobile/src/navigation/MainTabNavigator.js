@@ -70,6 +70,16 @@ const MainTabNavigator = () => {
         name="Home"
         component={HomeStackNavigator}
         options={{ title: 'Home' }}
+        listeners={({ navigation }) => ({
+          tabPress: () => {
+            if (navigation.isFocused()) {
+              navigation.navigate('Home', {
+                screen: 'HomeFeed',
+                params: { scrollToTop: Date.now() },
+              });
+            }
+          },
+        })}
       />
       <Tab.Screen
         name="Sell"
