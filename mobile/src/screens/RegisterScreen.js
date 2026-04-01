@@ -37,7 +37,10 @@ const RegisterScreen = ({ navigation }) => {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
-      if (!userInfo) return; // user dismissed without selecting an account
+      if (!userInfo || userInfo.type === 'cancelled') return;
+
+      const idToken = userInfo.data?.idToken ?? userInfo.idToken;
+      if (!idToken) return; // sign-in didn't complete properly
 
       const { accessToken } = await GoogleSignin.getTokens();
 
