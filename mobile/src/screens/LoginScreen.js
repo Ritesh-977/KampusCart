@@ -49,8 +49,13 @@ const LoginScreen = ({ navigation }) => {
       await GoogleSignin.hasPlayServices();
       await GoogleSignin.signOut(); // ensure account picker always shows
       const userInfo = await GoogleSignin.signIn();
-      if (!userInfo) return; // user dismissed without selecting an account
 
+      if (!userInfo || userInfo.type === 'cancelled') return;
+
+      // Optional but recommended safety check (same as your RegisterScreen)
+      const idToken = userInfo.data?.idToken ?? userInfo.idToken;
+      if (!idToken) return;
+    
       const { accessToken } = await GoogleSignin.getTokens();
 
       try {
