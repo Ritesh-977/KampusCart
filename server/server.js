@@ -51,6 +51,8 @@ app.use(express.json());
 app.use(cookieParser()); // 2. USE THIS (Must be before routes)
 app.use('/uploads', express.static('uploads')); 
 
+app.use('/.well-known', express.static(path.join(__dirname, '.well-known')));
+
 // Register Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/items', itemRoutes);
@@ -64,6 +66,51 @@ app.use('/api/events', eventRoutes);
 app.use('/api/materials', studyMaterialRoutes);
 app.use('/api/sports', sportRoutes);
 app.use('/api/feedback', feedbackRoutes);
+
+// ── App Link / Universal Link verification files ──────────────────────────────
+// Android verifies   GET https://kampuscart.site/.well-known/assetlinks.json
+// iOS     verifies   GET https://kampuscart.site/.well-known/apple-app-site-association
+//
+// Both MUST be served over HTTPS with the exact Content-Type shown below.
+// Both MUST be reachable without any redirect (no www→bare or bare→www redirect
+// on this specific path).
+// Fill in the placeholder values in the JSON files before your first Play Store
+// or App Store submission.
+
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+app.get('/.well-known/assetlinks.json', (_req, res) => {
+  try {
+    const file = readFileSync(
+      join(__dirname, '.well-known', 'assetlinks.json'),
+      'utf8'
+    );
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.send(file);
+  } catch {
+    res.status(404).json({ error: 'assetlinks.json not configured' });
+  }
+});
+
+app.get('/.well-known/apple-app-site-association', (_req, res) => {
+  try {
+    const file = readFileSync(
+      join(__dirname, '.well-known', 'apple-app-site-association'),
+      'utf8'
+    );
+    // Must be application/json — NOT application/pkcs7-mime
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.send(file);
+  } catch {
+    res.status(404).json({ error: 'apple-app-site-association not configured' });
+  }
+});
 
 app.get("/health", (req, res) => {
   res.status(200).json({

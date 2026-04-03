@@ -18,7 +18,12 @@
 
     "ios": {
       "supportsTablet": true,
-      "backgroundColor": "#0f172a"
+      "backgroundColor": "#0f172a",
+      "bundleIdentifier": "com.ritesh977.kampuscart",
+      "associatedDomains": [
+        "applinks:kampuscart.site",
+        "applinks:www.kampuscart.site"
+      ]
     },
     "android": {
       "backgroundColor": "#0f172a",
