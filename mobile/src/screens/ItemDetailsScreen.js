@@ -1,4 +1,5 @@
-import React, { useState, useContext, useEffect, useMemo } from 'react';
+import React, { useState, useContext, useEffect, useMemo, useCallback } from 'react';
+import * as ExpoLinking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 import {
   View, Text, Image, ScrollView,
@@ -20,11 +21,43 @@ const REPORT_REASONS = [
 ];
 
 const ItemDetailsScreen = ({ route, navigation }) => {
-  const { item, activeCollege, isOwner } = route.params;
+  // Two entry paths:
+  //  Normal navigation: { item, activeCollege, isOwner }  — full object passed by HomeScreen
+  //  Deep link arrival: { itemId }                         — only the ID from the URL
+  const { item: routeItem, activeCollege, isOwner: routeIsOwner, itemId } = route.params;
+
   const { currentUser } = useContext(AuthContext);
   const { theme } = useTheme();
 
-  const [isSold, setIsSold]                   = useState(item.isSold || false);
+  // item may be null on first render if we arrived via a deep link
+  const [item, setItem]                       = useState(routeItem ?? null);
+  const [deepLinkLoading, setDeepLinkLoading] = useState(!routeItem && !!itemId);
+  const [deepLinkError, setDeepLinkError]     = useState(false);
+
+  // Fetch the full item when the screen is opened via a deep link
+  useEffect(() => {
+    if (routeItem || !itemId) return;           // nothing to fetch
+    let cancelled = false;
+
+    API.get(`/items/${itemId}`)
+      .then((res) => {
+        if (!cancelled) {
+          setItem(res.data);
+          setIsSold(res.data.isSold ?? false);
+        }
+      })
+      .catch(() => { if (!cancelled) setDeepLinkError(true); })
+      .finally(() => { if (!cancelled) setDeepLinkLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [itemId, routeItem]);
+
+  // isOwner: explicit when navigated normally; derived from currentUser when deep-linked
+  const isOwner = routeIsOwner ??
+    (!!currentUser && !!item &&
+      currentUser._id === (item.seller?._id?.toString() ?? item.seller?.toString()));
+
+  const [isSold, setIsSold]                   = useState(routeItem?.isSold || false);
   const [loadingAction, setLoadingAction]     = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isWishlisted, setIsWishlisted]       = useState(false);
@@ -205,7 +238,7 @@ const ItemDetailsScreen = ({ route, navigation }) => {
         params: {
           pendingChat: {
             chat: response.data,
-            otherUser: { _id: sellerId, name: item.sellerName, profilePic: null },
+            otherUser: { _id: sellerId, name: item.seller?.name || item.sellerName, profilePic: null },
           },
         },
       });
@@ -242,19 +275,33 @@ const ItemDetailsScreen = ({ route, navigation }) => {
 
   // ── Share ───────────────────────────────────────────────────────────────────
   const handleShare = async () => {
+    // kampuscart://item/<id>  in a production build
+    // exp://...--/item/<id>   in Expo Go (still usable for testing)
+    const deepLink    = ExpoLinking.createURL(`item/${item._id}`);
+    // HTTPS fallback for users who don't have the app installed yet
+    const webFallback = `https://www.kampuscart.site/item/${item._id}`;
+
+    const priceStr    = `₹${Number(item.price).toLocaleString('en-IN')}`;
+    const snippet     = item.description ? item.description.slice(0, 100).trimEnd() + '…' : '';
+    const location    = item.location || item.college || '';
+
+    const message =
+      `*${item.title}* — ${priceStr}\n` +
+      `${location ? `📍 ${location}  ` : ''}` +
+      `📦 ${item.category || 'General'}\n` +
+      (snippet ? `\n${snippet}\n` : '') +
+      `\n👉 Open in KampusCart:\n${deepLink}\n` +
+      `\n(No app? Browse here: ${webFallback})`;
+
     try {
       await Share.share({
         title: item.title,
-        message:
-          `🛒 *${item.title}*\n` +
-          `💰 ₹${Number(item.price).toLocaleString('en-IN')}\n` +
-          `📍 ${item.location || item.college}\n` +
-          `📦 ${item.category || 'General'}\n\n` +
-          `${item.description ? item.description.slice(0, 120) + '…' : ''}\n\n` +
-          `Found on KampusCart — the campus marketplace!`,
+        message,
+        // iOS prefers the `url` field; Android uses `message`
+        url: deepLink,
       });
     } catch {
-      /* user cancelled share */
+      /* user cancelled the share sheet */
     }
   };
 
@@ -333,6 +380,29 @@ const ItemDetailsScreen = ({ route, navigation }) => {
     const index = event.nativeEvent.contentOffset.x / event.nativeEvent.layoutMeasurement.width;
     setCurrentImageIndex(Math.round(index));
   };
+
+  // ── Deep-link loading / error guards ────────────────────────────────────────
+  if (deepLinkLoading) {
+    return (
+      <SafeAreaView style={[memoStyles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={theme.primaryAccent} />
+      </SafeAreaView>
+    );
+  }
+
+  if (deepLinkError || !item) {
+    return (
+      <SafeAreaView style={[memoStyles.safeArea, { justifyContent: 'center', alignItems: 'center', gap: 12 }]}>
+        <Ionicons name="cloud-offline-outline" size={48} color={theme.textTertiary} />
+        <Text style={{ color: theme.textTertiary, fontSize: 15, fontWeight: '600' }}>
+          Item not found
+        </Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <Text style={{ color: theme.primaryAccent, fontSize: 14 }}>Go back</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={memoStyles.safeArea}>
@@ -422,11 +492,26 @@ const ItemDetailsScreen = ({ route, navigation }) => {
                 Listed {new Date(item.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
               </Text>
             </View>
-            {item.sellerName && (
-              <View style={[memoStyles.infoRow, { marginBottom: 0 }]}>
-                <Ionicons name="person-outline" size={18} color={theme.primaryAccent} />
-                <Text style={memoStyles.infoText}>Seller: {item.sellerName}</Text>
-              </View>
+            {(item.sellerName || item.seller?.name) && (
+              <TouchableOpacity
+                style={[memoStyles.infoRow, { marginBottom: 0 }]}
+                onPress={() => {
+                  const sellerId = item.seller?._id || item.seller;
+                  if (sellerId) {
+                    navigation.navigate('SellerProfile', {
+                      sellerId,
+                      sellerName: item.seller?.name || item.sellerName,
+                    });
+                  }
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="person-circle-outline" size={18} color={theme.primaryAccent} />
+                <Text style={[memoStyles.infoText, { flex: 1 }]}>
+                  {item.seller?.name || item.sellerName}
+                </Text>
+                <Ionicons name="chevron-forward" size={14} color={theme.textTertiary} />
+              </TouchableOpacity>
             )}
           </View>
 

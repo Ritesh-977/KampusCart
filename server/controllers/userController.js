@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import Item from '../models/Item.js';
 
 //Get user profile
 // @route   GET /api/users/profile
@@ -136,6 +137,58 @@ export const getWishlist = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
+};
+
+/**
+ * GET /api/users/:userId/profile
+ * Public seller profile: safe user fields + paginated active listings.
+ *
+ * Query params:
+ *   page  (default 1)
+ *   limit (default 10, capped at 20)
+ */
+export const getSellerProfile = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
+    const limit = Math.min(20, Math.max(1, parseInt(req.query.limit, 10) || 10));
+    const skip  = (page - 1) * limit;
+
+    // Exclude every field that must never leave the server
+    const user = await User.findById(userId).select(
+      '-password -otp -otpExpires -resetPasswordToken -resetPasswordExpire ' +
+      '-wishlist -pushSubscription -notificationPrefs -isBanned -banExpiresAt -isAdmin'
+    );
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Only show active (non-sold) listings, newest first
+    const filter = { seller: userId, isSold: false };
+
+    const [items, total] = await Promise.all([
+      Item.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select('-__v'),
+      Item.countDocuments(filter),
+    ]);
+
+    res.json({
+      user,
+      items,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasMore: skip + items.length < total,
+      },
+    });
+  } catch (error) {
+    console.error('[getSellerProfile]', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 export const getUserById = async (req, res) => {

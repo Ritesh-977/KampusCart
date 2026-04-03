@@ -1,11 +1,12 @@
 import express from 'express';
 import multer from 'multer';
-import { 
-    getUserProfile, 
-    updateUserProfile, 
-    toggleWishlist, 
-    getWishlist, 
-    getUserById
+import {
+    getUserProfile,
+    updateUserProfile,
+    toggleWishlist,
+    getWishlist,
+    getUserById,
+    getSellerProfile,
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -106,6 +107,9 @@ router.put('/notification-prefs', protect, async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+// Seller profile with paginated active listings — must be before /:id
+router.get('/:userId/profile', protect, getSellerProfile);
 
 router.get('/:id', getUserById);
 
