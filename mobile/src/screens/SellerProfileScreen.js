@@ -27,8 +27,6 @@ import API from '../api/axios';
 
 const { width } = Dimensions.get('window');
 
-const FALLBACK_AVATAR =
-  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&q=80';
 
 const ITEMS_PER_PAGE = 10;
 const CARD_GAP = 12;
@@ -151,10 +149,15 @@ const ItemCard = React.memo(function ItemCard({ item, onPress, theme }) {
 
 // ─── Profile Header ───────────────────────────────────────────────────────────
 
+// ─── Profile Header ───────────────────────────────────────────────────────────
+
 const ProfileHeader = React.memo(function ProfileHeader({ user, totalListings, theme }) {
   const memberSince = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
     : null;
+
+  // 👇 Extract the first letter of the seller's name (defaults to 'S' if name is missing)
+  const initial = user?.name ? user.name.charAt(0).toUpperCase() : 'S';
 
   return (
     <View style={{ backgroundColor: theme.background, marginBottom: 4 }}>
@@ -189,13 +192,32 @@ const ProfileHeader = React.memo(function ProfileHeader({ user, totalListings, t
               borderColor: theme.background,
               overflow: 'hidden',
               backgroundColor: theme.card,
+              justifyContent: 'center',
+              alignItems: 'center',
             }}
           >
-            <Image
-              source={{ uri: user?.profilePic || FALLBACK_AVATAR }}
-              style={{ width: '100%', height: '100%' }}
-              resizeMode="cover"
-            />
+            {/* 👇 Check for profile pic, otherwise show the Letter Avatar */}
+            {user?.profilePic ? (
+              <Image
+                source={{ uri: user.profilePic }}
+                style={{ width: '100%', height: '100%' }}
+                resizeMode="cover"
+              />
+            ) : (
+              <View 
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  backgroundColor: theme.primaryAccent, 
+                  justifyContent: 'center', 
+                  alignItems: 'center' 
+                }}
+              >
+                <Text style={{ fontSize: 32, fontWeight: '800', color: '#ffffff' }}>
+                  {initial}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
 
