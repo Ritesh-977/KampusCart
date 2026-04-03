@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.ritesh977.kampuscart",
+
+      "sha256_cert_fingerprints": [
+        "76:D0:3C:7A:10:F8:AC:DD:B9:35:36:E8:B5:0C:1F:8B:DC:73:C5:9D:61:3F:E9:5C:56:06:DD:77:E7:B5:56:66"
+      ]
+    }
+  }
+]

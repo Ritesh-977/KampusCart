@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useContext, useEffect, useMemo } from 'react';
 import * as ExpoLinking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 import {
@@ -23,7 +23,7 @@ const REPORT_REASONS = [
 const ItemDetailsScreen = ({ route, navigation }) => {
   // Two entry paths:
   //  Normal navigation: { item, activeCollege, isOwner }  — full object passed by HomeScreen
-  //  Deep link arrival: { itemId }                         — only the ID from the URL
+  //  Deep link arrival: { itemId }                        — only the ID from the URL
   const { item: routeItem, activeCollege, isOwner: routeIsOwner, itemId } = route.params;
 
   const { currentUser } = useContext(AuthContext);
@@ -184,22 +184,29 @@ const ItemDetailsScreen = ({ route, navigation }) => {
     reportCancelText: { color: '#ef4444', fontWeight: '700', fontSize: 15 },
   }), [theme]);
 
+  // 👇 SAFE OPTIONAL CHAINING
   const isLocalCampus =
-    item.college?.toLowerCase() === currentUser?.college?.toLowerCase();
+    item?.college?.toLowerCase() === currentUser?.college?.toLowerCase();
 
-  // ── Fetch wishlist status on mount ──────────────────────────────────────────
+  // ── Fetch wishlist status on mount OR when deep-linked item loads ───────────
   useEffect(() => {
     const checkWishlist = async () => {
+      // 👇 GUARD: Do not fetch the wishlist if the item hasn't loaded yet
+      if (!item || !item._id) return; 
+
       try {
         const res = await API.get('/users/wishlist');
         const ids = (res.data || []).map(w => w._id || w);
-        setIsWishlisted(ids.includes(item._id));
+        setIsWishlisted(ids.includes(item._id)); // Now safe!
       } catch (_) {
         // silent — wishlist state just defaults to false
       }
     };
+    
     if (!isOwner) checkWishlist();
-  }, []);
+    
+  // 👇 ADD DEPENDENCIES: Re-run this hook once the deep link API fetches the item
+  }, [item?._id, isOwner]); 
 
   // ── WhatsApp ────────────────────────────────────────────────────────────────
   const handleWhatsApp = async () => {
@@ -275,30 +282,28 @@ const ItemDetailsScreen = ({ route, navigation }) => {
 
   // ── Share ───────────────────────────────────────────────────────────────────
   const handleShare = async () => {
-    // kampuscart://item/<id>  in a production build
-    // exp://...--/item/<id>   in Expo Go (still usable for testing)
-    const deepLink    = ExpoLinking.createURL(`item/${item._id}`);
-    // HTTPS fallback for users who don't have the app installed yet
-    const webFallback = `https://www.kampuscart.site/item/${item._id}`;
-
-    const priceStr    = `₹${Number(item.price).toLocaleString('en-IN')}`;
-    const snippet     = item.description ? item.description.slice(0, 100).trimEnd() + '…' : '';
-    const location    = item.location || item.college || '';
+    // Single HTTPS link — the OS intercepts it and opens the app if installed
+    // (Android App Link / iOS Universal Link). Falls back to the web browser
+    // automatically when the app is not present. No custom scheme needed.
+    const url      = `https://www.kampuscart.site/item/${item._id}`;
+    const priceStr = `₹${Number(item.price).toLocaleString('en-IN')}`;
+    const location = item.location || item.college || '';
+    const snippet  = item.description
+      ? item.description.slice(0, 100).trimEnd() + '…'
+      : '';
 
     const message =
       `*${item.title}* — ${priceStr}\n` +
-      `${location ? `📍 ${location}  ` : ''}` +
+      (location ? `📍 ${location}   ` : '') +
       `📦 ${item.category || 'General'}\n` +
       (snippet ? `\n${snippet}\n` : '') +
-      `\n👉 Open in KampusCart:\n${deepLink}\n` +
-      `\n(No app? Browse here: ${webFallback})`;
+      `\n${url}`;
 
     try {
       await Share.share({
         title: item.title,
         message,
-        // iOS prefers the `url` field; Android uses `message`
-        url: deepLink,
+        url, // iOS Share Sheet uses `url` as the canonical link
       });
     } catch {
       /* user cancelled the share sheet */

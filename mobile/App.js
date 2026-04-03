@@ -63,23 +63,24 @@ const splash = StyleSheet.create({
 
 // ─── Deep Linking ────────────────────────────────────────────────────────────
 //
-// URL resolution priority (Android):
-//   1. Verified HTTPS App Link  → kampuscart.site/item/:id  (opens app directly)
-//   2. Custom scheme fallback   → kampuscart://item/:id     (always works)
+// Primary mechanism: HTTPS App Links (Android) / Universal Links (iOS)
+//   kampuscart.site/item/:id  →  opens app directly (no dialog, no chooser)
+//   Falls back to the browser automatically if the app is not installed.
 //
-// To activate Android App Links you must serve:
-//   https://kampuscart.site/.well-known/assetlinks.json
-// with your SHA-256 cert fingerprint and package "com.ritesh977.kampuscart".
-// Run `eas credentials` to get the fingerprint for your keystore.
+// The custom scheme (kampuscart://) is kept as a silent fallback so that any
+// old links shared before this change still work. It is never used in new
+// share messages.
 //
-// Linking config maps inbound URLs → navigator screen tree:
-//   Home tab (HomeStackNavigator) > ItemDetails screen
-// The `itemId` param is extracted from the URL path and passed as a route param.
+// Verification files the server MUST serve (see server.js):
+//   Android: https://kampuscart.site/.well-known/assetlinks.json
+//   iOS:     https://kampuscart.site/.well-known/apple-app-site-association
 const linking = {
   prefixes: [
-    ExpoLinking.createURL('/'),         // kampuscart:// in production, exp://... in Expo Go
+    // HTTPS first — these are the canonical links shared by the app
     'https://kampuscart.site',
     'https://www.kampuscart.site',
+    // Custom scheme kept as a backward-compatibility fallback only
+    ExpoLinking.createURL('/'),
   ],
   config: {
     screens: {
@@ -87,7 +88,7 @@ const linking = {
         screens: {
           ItemDetails: {
             path: 'item/:itemId',
-            parse: { itemId: String },  // coerce to string, never trust raw URL value
+            parse: { itemId: String },
           },
         },
       },
