@@ -292,12 +292,7 @@ const ItemDetailsScreen = ({ route, navigation }) => {
       ? item.description.slice(0, 100).trimEnd() + '…'
       : '';
 
-    const message =
-      `*${item.title}* — ${priceStr}\n` +
-      (location ? `📍 ${location}   ` : '') +
-      `📦 ${item.category || 'General'}\n` +
-      (snippet ? `\n${snippet}\n` : '') +
-      `\n${url}`;
+    const message = `Check out this deal on KampusCart! 🛒\n\n*${item.title}* — ${priceStr}\n\n${url}`;
 
     try {
       await Share.share({
