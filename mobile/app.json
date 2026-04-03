@@ -34,7 +34,29 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
-      "package": "com.ritesh977.kampuscart"
+      "package": "com.ritesh977.kampuscart",
+
+      "versionCode": 1,
+
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "kampuscart.site",
+              "pathPrefix": "/item"
+            },
+            {
+              "scheme": "https",
+              "host": "www.kampuscart.site",
+              "pathPrefix": "/item"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "output": "static",

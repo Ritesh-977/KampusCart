@@ -15,6 +15,7 @@ import SportDetailsScreen from '../screens/SportDetailsScreen';
 import PostSportScreen from '../screens/PostSportScreen';
 import SportRegistrationScreen from '../screens/SportRegistrationScreen';
 import SportRegistrationsListScreen from '../screens/SportRegistrationsListScreen';
+import SellerProfileScreen from '../screens/SellerProfileScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -73,6 +74,11 @@ const HomeStackNavigator = () => {
         name="MaterialViewer"
         component={MaterialViewerScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="SellerProfile"
+        component={SellerProfileScreen}
+        options={{ title: 'Seller Profile', headerBackTitle: 'Back' }}
       />
       <Stack.Screen name="Sports"             component={SportsScreen}                options={{ headerShown: false }} />
       <Stack.Screen name="SportDetails"       component={SportDetailsScreen}          options={{ headerShown: false }} />

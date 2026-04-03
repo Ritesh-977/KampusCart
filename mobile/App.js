@@ -2,6 +2,7 @@ import React, { useRef, useContext, useEffect, useState } from 'react';
 import { View, Image, Text, StatusBar, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
+import * as ExpoLinking from 'expo-linking';
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
 import { SocketProvider } from './src/context/SocketContext';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
@@ -59,6 +60,40 @@ const splash = StyleSheet.create({
     letterSpacing: 1,
   },
 });
+
+// ─── Deep Linking ────────────────────────────────────────────────────────────
+//
+// URL resolution priority (Android):
+//   1. Verified HTTPS App Link  → kampuscart.site/item/:id  (opens app directly)
+//   2. Custom scheme fallback   → kampuscart://item/:id     (always works)
+//
+// To activate Android App Links you must serve:
+//   https://kampuscart.site/.well-known/assetlinks.json
+// with your SHA-256 cert fingerprint and package "com.ritesh977.kampuscart".
+// Run `eas credentials` to get the fingerprint for your keystore.
+//
+// Linking config maps inbound URLs → navigator screen tree:
+//   Home tab (HomeStackNavigator) > ItemDetails screen
+// The `itemId` param is extracted from the URL path and passed as a route param.
+const linking = {
+  prefixes: [
+    ExpoLinking.createURL('/'),         // kampuscart:// in production, exp://... in Expo Go
+    'https://kampuscart.site',
+    'https://www.kampuscart.site',
+  ],
+  config: {
+    screens: {
+      Home: {
+        screens: {
+          ItemDetails: {
+            path: 'item/:itemId',
+            parse: { itemId: String },  // coerce to string, never trust raw URL value
+          },
+        },
+      },
+    },
+  },
+};
 
 // ─── Global Dark Theme ───────────────────────────────────────────────────────
 const createNavigationTheme = (themeColors) => ({
@@ -170,7 +205,7 @@ function AppWithTheme({ navigationRef }) {
   return (
     <>
       <StatusBar backgroundColor={theme.background} barStyle={theme.statusBarStyle} />
-      <NavigationContainer ref={navigationRef} theme={navigationTheme}>
+      <NavigationContainer ref={navigationRef} theme={navigationTheme} linking={linking}>
         <AppWithNotifications navigationRef={navigationRef} />
       </NavigationContainer>
       <Toast config={toastConfig} />

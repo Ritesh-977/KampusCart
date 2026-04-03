@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import Item from '../models/Item.js';
 import asyncHandler from 'express-async-handler';
+import redis from '../config/redis.js';
 
 // @desc    Get dashboard stats (Users, Items, Sold Items)
 // @route   GET /api/admin/stats
@@ -114,7 +115,19 @@ export const deleteItemAdmin = async (req, res) => {
         const item = await Item.findById(req.params.id);
         
         if (item) {
+            const college = item.college;
             await item.deleteOne();
+
+            // Invalidate the Redis feed cache for this item's college
+            if (college) {
+                try {
+                    const keys = await redis.keys(`items:${college}:*`);
+                    if (keys.length > 0) await redis.del(keys);
+                } catch (cacheError) {
+                    console.error('Cache clear error after admin delete:', cacheError);
+                }
+            }
+
             res.json({ message: 'Item removed by Admin' });
         } else {
             res.status(404).json({ message: 'Item not found' });
