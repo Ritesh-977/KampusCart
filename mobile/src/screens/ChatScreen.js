@@ -12,7 +12,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
 import { SocketContext } from '../context/SocketContext';
 import API from '../api/axios';
-import { useThemeStyles } from '../hooks/useThemeStyles'; // <-- Make sure path is correct
+import { useThemeStyles } from '../hooks/useThemeStyles';
 
 const FALLBACK_AVATAR =
   'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
@@ -39,7 +39,6 @@ const formatTime = (dateStr) => {
 
 // ─── component ──────────────────────────────────────────────────────────────
 export default function ChatScreen({ route, navigation }) {
-  // 1. Initialize dynamic theme hook
   const { styles, colors } = useThemeStyles(createStyles);
 
   const { chat, otherUser } = route.params;
@@ -58,8 +57,6 @@ export default function ChatScreen({ route, navigation }) {
 
   useEffect(() => {
     const setOffset = (e) => {
-      // Android doesn't always provide e.duration, so we give it a 150ms fallback
-      // This allows the input bar to smoothly "ride" the emoji keyboard upward
       Animated.timing(kbOffset, { 
         toValue: e.endCoordinates.height, 
         duration: e.duration || 150, 
@@ -75,14 +72,12 @@ export default function ChatScreen({ route, navigation }) {
       }).start();
     };
 
-    // Platform-specific event names
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
     const onShow = Keyboard.addListener(showEvent, setOffset);
     const onHide = Keyboard.addListener(hideEvent, resetOffset);
     
-    // iOS ONLY: Handle the specific frame change event
     let onChange;
     if (Platform.OS === 'ios') {
       onChange = Keyboard.addListener('keyboardWillChangeFrame', (e) => {
@@ -97,7 +92,6 @@ export default function ChatScreen({ route, navigation }) {
     };
   }, []);
 
-  
   const myId = useMemo(
     () => String(currentUser?._id || currentUser?.id || ''),
     [currentUser]
@@ -112,7 +106,6 @@ export default function ChatScreen({ route, navigation }) {
     [myId]
   );
 
-  // Derive online status directly from the shared context
   const isOnline = useMemo(
     () => (otherUser?._id ? onlineUsers.has(String(otherUser._id)) : false),
     [onlineUsers, otherUser]
@@ -124,20 +117,16 @@ export default function ChatScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
 
-  // search
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [matchIndices, setMatchIndices] = useState([]);
   const [currentMatch, setCurrentMatch] = useState(0);
 
-  // emoji picker
   const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
 
-  // full-screen image viewer
   const [viewingImage, setViewingImage] = useState(null);
 
-  // refs
   const flatListRef = useRef(null);
   const typingTimerRef = useRef(null);
   const searchRef = useRef(null);
@@ -146,12 +135,8 @@ export default function ChatScreen({ route, navigation }) {
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
-      
-      // ── THE FIX FOR THE WHITE FLASH ──
       contentStyle: { backgroundColor: colors.background }, 
       cardStyle: { backgroundColor: colors.background },    
-      // ─────────────────────────────────
-
       headerStyle: {
         backgroundColor: colors.header,
         elevation: 4,
@@ -208,7 +193,7 @@ export default function ChatScreen({ route, navigation }) {
         </TouchableOpacity>
       ),
     });
-  }, [isOnline, isTyping, searchVisible, colors]); // Added colors dependency here
+  }, [isOnline, isTyping, searchVisible, colors]); 
 
   // ── fetch messages ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -220,18 +205,18 @@ export default function ChatScreen({ route, navigation }) {
     const socket = socketRef.current;
     if (!socket || !connected) return;
 
-    console.log('[ChatScreen] Socket connected, joining room:', chat._id);
     socket.emit('join chat', chat._id);
 
     const handleMessage = (msg) => {
-      console.log('[ChatScreen] message received:', msg?._id);
       const msgChatId = normalizeId(msg?.chat?._id) || normalizeId(msg?.chat);
       if (msgChatId && msgChatId !== chat._id) return;
       const senderId = normalizeId(msg?.sender?._id) || normalizeId(msg?.sender);
       if (myId && senderId === myId) return;
+      
       setMessages((prev) => {
         if (prev.find((m) => m._id === msg._id)) return prev;
-        return [...prev, msg];
+        // 👇 Inverted list: new messages go at the front
+        return [msg, ...prev]; 
       });
       API.put('/message/read', { chatId: chat._id }).catch(() => {});
     };
@@ -255,7 +240,8 @@ export default function ChatScreen({ route, navigation }) {
   const fetchMessages = async () => {
     try {
       const res = await API.get(`/message/${chat._id}`);
-      setMessages(res.data || []);
+      // 👇 Inverted list: reverse the data so newest is index 0
+      setMessages((res.data || []).reverse());
       API.put('/message/read', { chatId: chat._id }).catch(() => {});
     } catch (e) {
       console.error('fetch messages:', e);
@@ -272,19 +258,20 @@ export default function ChatScreen({ route, navigation }) {
     socketRef.current?.emit('stop typing', chat._id);
 
     const tempId = `tmp_${Date.now()}`;
-    setMessages((prev) => [...prev, {
+    
+    // 👇 Inverted list: temporary message goes at the front
+    setMessages((prev) => [{
       _id: tempId,
       content: text,
       sender: { _id: myId, name: currentUser?.name },
       chat: { _id: chat._id, users: chat.users },
       createdAt: new Date().toISOString(),
       _pending: true,
-    }]);
+    }, ...prev]);
 
     try {
       const res = await API.post('/message', { content: text, chatId: chat._id });
       setMessages((prev) => prev.map((m) => (m._id === tempId ? res.data : m)));
-      console.log('[ChatScreen] Emitting new message');
       socketRef.current?.emit('new message', res.data);
     } catch {
       setMessages((prev) =>
@@ -312,7 +299,9 @@ export default function ChatScreen({ route, navigation }) {
     const type = ext ? `image/${ext[1]}` : 'image/jpeg';
 
     const tempId = `tmp_img_${Date.now()}`;
-    setMessages((prev) => [...prev, {
+    
+    // 👇 Inverted list: temporary image goes at the front
+    setMessages((prev) => [{
       _id: tempId,
       content: uri,
       isImage: true,
@@ -320,7 +309,7 @@ export default function ChatScreen({ route, navigation }) {
       chat: { _id: chat._id, users: chat.users },
       createdAt: new Date().toISOString(),
       _pending: true,
-    }]);
+    }, ...prev]);
 
     try {
       const form = new FormData();
@@ -385,14 +374,16 @@ export default function ChatScreen({ route, navigation }) {
 
   const goToPrevMatch = () => {
     if (!matchIndices.length) return;
-    const next = (currentMatch - 1 + matchIndices.length) % matchIndices.length;
+    // Because list is inverted, "Prev" match means going deeper into the array
+    const next = (currentMatch + 1) % matchIndices.length;
     setCurrentMatch(next);
     scrollToMatch(matchIndices[next]);
   };
 
   const goToNextMatch = () => {
     if (!matchIndices.length) return;
-    const next = (currentMatch + 1) % matchIndices.length;
+    // "Next" match means coming closer to index 0
+    const next = (currentMatch - 1 + matchIndices.length) % matchIndices.length;
     setCurrentMatch(next);
     scrollToMatch(matchIndices[next]);
   };
@@ -435,8 +426,12 @@ export default function ChatScreen({ route, navigation }) {
   const renderMessage = useCallback(
     ({ item, index }) => {
       const mine = checkIsMe(item);
-      const prevSender = normalizeId(messages[index - 1]?.sender?._id) || normalizeId(messages[index - 1]?.sender);
-      const nextSender = normalizeId(messages[index + 1]?.sender?._id) || normalizeId(messages[index + 1]?.sender);
+      
+      // 👇 Swapped +1 and -1 because the array is inverted!
+      // Index 0 is newest. So index + 1 is the OLDER message sent before this one.
+      const prevSender = normalizeId(messages[index + 1]?.sender?._id) || normalizeId(messages[index + 1]?.sender);
+      const nextSender = normalizeId(messages[index - 1]?.sender?._id) || normalizeId(messages[index - 1]?.sender);
+      
       const thisSender = normalizeId(item.sender?._id) || normalizeId(item.sender);
       const groupedWithNext = thisSender === nextSender;
       const showTime = !groupedWithNext;
@@ -543,8 +538,10 @@ export default function ChatScreen({ route, navigation }) {
             keyExtractor={(item) => item._id}
             renderItem={renderMessage}
             contentContainerStyle={styles.list}
-            onContentSizeChange={() => !searchVisible && flatListRef.current?.scrollToEnd({ animated: true })}
-            onLayout={() => !searchVisible && flatListRef.current?.scrollToEnd({ animated: false })}
+            
+            // 👇 THE WHATSAPP FIX: List is now inverted to anchor to the bottom naturally
+            inverted
+            
             onScrollToIndexFailed={(info) => {
               setTimeout(() => flatListRef.current?.scrollToIndex({ index: info.index, animated: true }), 300);
             }}
@@ -752,7 +749,7 @@ const createStyles = (theme) => StyleSheet.create({
   tailTopLeft: { borderTopLeftRadius: 4 },
 
   bubbleText: { fontSize: 15, lineHeight: 21 },
- textMe: { color: theme.textOnPrimary || '#ffffff' }, // Always white to contrast with solid primaryAction backgrounds
+  textMe: { color: theme.textOnPrimary || '#ffffff' }, 
   textOther: { color: theme.textBody },
 
   metaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2, marginBottom: 2 },
@@ -807,7 +804,7 @@ const createStyles = (theme) => StyleSheet.create({
   },
   sendOff: { backgroundColor: theme.cardAccent },
 
-  emptyBox: { alignItems: 'center', paddingTop: 60 },
+  emptyBox: { alignItems: 'center', paddingTop: 60, transform: [{ scaleY: -1 }] }, // Inverted empty box fix
   emptyAvatar: { width: 72, height: 72, borderRadius: 36, marginBottom: 12, backgroundColor: theme.cardAccent },
   emptyName: { fontSize: 17, fontWeight: '700', color: theme.textMain, marginBottom: 4 },
   emptyHint: { fontSize: 14, color: theme.textSub },
