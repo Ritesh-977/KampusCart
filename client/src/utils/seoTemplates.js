@@ -120,4 +120,40 @@ export const SEO = {
       url: `${BASE_URL}/terms`,
     };
   },
+
+  events(college) {
+    const fullName = college?.name || 'Your Campus';
+    const shortName = college?.shortName || 'campus';
+    return {
+      title: `Campus Events at ${fullName} | KampusCart`,
+      description:
+        `Discover and create upcoming events at ${shortName}. ` +
+        `From cultural fests to technical talks — stay in the loop on KampusCart.`,
+      url: `${BASE_URL}/events`,
+    };
+  },
+
+  sports(college) {
+    const fullName = college?.name || 'Your Campus';
+    const shortName = college?.shortName || 'campus';
+    return {
+      title: `Sports Registration at ${fullName} | KampusCart`,
+      description:
+        `Register for cricket, football, badminton, and more tournaments at ${shortName}. ` +
+        `Find sports events and compete with fellow students on KampusCart.`,
+      url: `${BASE_URL}/sports`,
+    };
+  },
+
+  studyMaterials(college) {
+    const fullName = college?.name || 'Your Campus';
+    const shortName = college?.shortName || 'campus';
+    return {
+      title: `Study Materials at ${fullName} | KampusCart`,
+      description:
+        `Access notes, exam papers, and books shared by ${shortName} students. ` +
+        `Upload and download free study resources on KampusCart.`,
+      url: `${BASE_URL}/study-materials`,
+    };
+  },
 };

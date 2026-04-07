@@ -29,6 +29,9 @@ import Terms from "./pages/Terms";
 import PublicProfile from "./pages/PublicProfile";
 import AdminDashboard from "./pages/AdminDashboard";
 import BrowseItems from "./pages/BrowseItems";
+import Events from "./pages/Events";
+import Sports from "./pages/Sports";
+import StudyMaterials from "./pages/StudyMaterials";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -182,15 +185,48 @@ function App() {
             }
           />
 
-          <Route 
-            path="/lost-and-found" 
+          <Route
+            path="/lost-and-found"
             element={
               <CollegeProtectedRoute>
                 <ProtectedRoute>
                   <LostAndFound />
                 </ProtectedRoute>
               </CollegeProtectedRoute>
-            } 
+            }
+          />
+
+          <Route
+            path="/events"
+            element={
+              <CollegeProtectedRoute>
+                <ProtectedRoute>
+                  <Events />
+                </ProtectedRoute>
+              </CollegeProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/sports"
+            element={
+              <CollegeProtectedRoute>
+                <ProtectedRoute>
+                  <Sports />
+                </ProtectedRoute>
+              </CollegeProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/study-materials"
+            element={
+              <CollegeProtectedRoute>
+                <ProtectedRoute>
+                  <StudyMaterials />
+                </ProtectedRoute>
+              </CollegeProtectedRoute>
+            }
           />
 
           <Route
