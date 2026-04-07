@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import API from '../api/axios'; // ✅ IMPORT YOUR AXIOS INSTANCE
+import API from '../api/axios';
 import { ToastContainer, toast } from 'react-toastify';
+import SEOHead from '../components/SEOHead';
+import { SEO } from '../utils/seoTemplates';
+import { useCollege } from '../context/CollegeContext';
 
 import {
   FaSearch,
@@ -18,6 +21,7 @@ import {
 } from 'react-icons/fa';
 
 const LostAndFound = () => {
+  const { selectedCollege } = useCollege();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('all'); 
@@ -149,6 +153,7 @@ const LostAndFound = () => {
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 font-sans transition-colors duration-300">
+      <SEOHead {...SEO.lostFound(selectedCollege)} />
       <Navbar />
       
       <ToastContainer 

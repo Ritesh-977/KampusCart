@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { FaEnvelope, FaComments } from 'react-icons/fa';
+import SEOHead from '../components/SEOHead';
+import { SEO } from '../utils/seoTemplates';
 
 const Contact = () => {
 
@@ -10,8 +12,8 @@ const Contact = () => {
   }, []);
 
   return (
-    // FIX 1: Main Background
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans transition-colors duration-200">
+      <SEOHead {...SEO.contact()} />
       <Navbar />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -42,16 +44,16 @@ const Contact = () => {
               Email Us
             </h3>
             <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">
-              For general inquiries and support.
+              For general inquiries, support, or to request account and data deletion, email us below.
             </p>
 
             <a
-              href="mailto:kampusCart@gmail.com"
+              href="mailto:support@kampuscart.site"
               // FIX 5: Button/Link Background & Text
               className="w-full block p-4 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-100 dark:border-gray-600 hover:border-indigo-200 dark:hover:border-indigo-500/50 hover:bg-indigo-50 dark:hover:bg-gray-600 transition"
             >
               <span className="font-medium text-gray-700 dark:text-gray-200 text-sm break-all">
-                kampuscart@gmail.com
+                support@kampuscart.site
               </span>
             </a>
           </div>

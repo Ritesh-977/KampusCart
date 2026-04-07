@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { FaGavel, FaFileContract, FaUserCheck, FaBan, FaHandshake, FaExclamationTriangle } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import SEOHead from '../components/SEOHead';
+import { SEO } from '../utils/seoTemplates';
 
 const Terms = () => {
 
@@ -11,8 +13,8 @@ const Terms = () => {
   }, []);
 
   return (
-    // FIX 1: Main Background
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans transition-colors duration-200">
+      <SEOHead {...SEO.terms()} />
       <Navbar />
 
       <div className="max-w-4xl mx-auto px-6 py-16">

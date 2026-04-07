@@ -58,9 +58,17 @@ const ForgotPassword = () => {
         <div className="text-center mb-8">
           <Link to="/" className="inline-block group">
             {/* FIX 2: Brand Text Color */}
-            <h1 className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 bg-clip-text hover:from-orange-700 hover:to-amber-700 transition-all duration-300">
-               Campus<span className="text-gray-800 dark:text-white">Mart</span>
-            </h1>
+             <div className="flex items-center text-xl sm:text-2xl font-black tracking-tight">
+              <img
+                src="/logo.png"
+                alt="KampusCart Logo"
+                className="h-10 w-10 sm:h-12 sm:w-12 mr-0.5 sm:mr-1 object-contain"
+              />
+
+              <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
+                kampusCart
+              </span>
+            </div>
           </Link>
         </div>
 

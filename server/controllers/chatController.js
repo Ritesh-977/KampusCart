@@ -1,5 +1,6 @@
 import Chat from '../models/Chat.js';
 import User from '../models/User.js';
+import Message from '../models/Message.js';
 
 // 1. Access or Create a 1-on-1 Chat
 export const accessChat = async (req, res) => {
@@ -80,6 +81,28 @@ export const fetchChats = async (req, res) => {
         res.status(200).send(validChats);
     } catch (error) {
         res.status(400);
+        throw new Error(error.message);
+    }
+};
+
+
+export const deleteMultipleChats = async (req, res) => {
+    const { chatIds } = req.body;
+
+    if (!chatIds || !Array.isArray(chatIds) || chatIds.length === 0) {
+        return res.status(400).json({ message: "No chat IDs provided" });
+    }
+
+    try {
+        // 1. First, delete all messages associated with these chats
+        await Message.deleteMany({ chat: { $in: chatIds } });
+
+        // 2. Then, delete the chat containers themselves
+        await Chat.deleteMany({ _id: { $in: chatIds } });
+        
+        res.status(200).json({ message: "Chats and messages deleted successfully" });
+    } catch (error) {
+        res.status(500);
         throw new Error(error.message);
     }
 };

@@ -51,8 +51,6 @@ app.use(express.json());
 app.use(cookieParser()); // 2. USE THIS (Must be before routes)
 app.use('/uploads', express.static('uploads')); 
 
-app.use('/.well-known', express.static(path.join(__dirname, '.well-known')));
-
 // Register Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/items', itemRoutes);
@@ -67,49 +65,55 @@ app.use('/api/materials', studyMaterialRoutes);
 app.use('/api/sports', sportRoutes);
 app.use('/api/feedback', feedbackRoutes);
 
-// ── App Link / Universal Link verification files ──────────────────────────────
-// Android verifies   GET https://kampuscart.site/.well-known/assetlinks.json
-// iOS     verifies   GET https://kampuscart.site/.well-known/apple-app-site-association
-//
-// Both MUST be served over HTTPS with the exact Content-Type shown below.
-// Both MUST be reachable without any redirect (no www→bare or bare→www redirect
-// on this specific path).
-// Fill in the placeholder values in the JSON files before your first Play Store
-// or App Store submission.
+// ── College slugs (mirrors client/src/data/colleges.js) ──────────────────────
+const COLLEGE_SLUGS = [
+  "iit-bombay","iit-delhi","iit-guwahati","iit-kanpur","iit-kharagpur",
+  "iit-madras","iit-roorkee","iit-hyderabad","iit-bhubaneswar","iit-gandhinagar",
+  "iit-jodhpur","iit-patna","iit-indore","iit-mandi","iit-bhu","iit-palakkad",
+  "iit-tirupati","iit-ism","iit-bhilai","iit-dharwad","iit-jammu","iit-goa","iit-ropar",
+  "mnnit-allahabad","nit-agartala","nit-andhra","nit-arunachal","nit-calicut",
+  "nit-delhi","nit-durgapur","nit-goa","nit-hamirpur","nit-jalandhar","nit-jamshedpur",
+  "nit-surathkal","nit-kurukshetra","nit-manipur","nit-meghalaya","nit-mizoram",
+  "nit-nagaland","nit-patna","nit-puducherry","nit-raipur","nit-rourkela","nit-silchar",
+  "nit-srinagar","nit-trichy","nit-uttarakhand","nit-warangal","mnit-jaipur",
+  "manit-bhopal","svnit-surat","vnit-nagpur","nit-sikkim",
+  "bits-pilani","bits-goa","bits-hyderabad","vit-vellore","srm","manipal","thapar"
+];
 
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+const BASE_URL = 'https://www.kampuscart.site';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+// Sitemap helpers
+const xmlUrl = (loc, priority = '0.5', changefreq = 'weekly') =>
+  `  <url>\n    <loc>${loc}</loc>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
 
-app.get('/.well-known/assetlinks.json', (_req, res) => {
-  try {
-    const file = readFileSync(
-      join(__dirname, '.well-known', 'assetlinks.json'),
-      'utf8'
-    );
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    res.send(file);
-  } catch {
-    res.status(404).json({ error: 'assetlinks.json not configured' });
-  }
-});
+app.get('/sitemap.xml', (req, res) => {
+  const today = new Date().toISOString().split('T')[0];
 
-app.get('/.well-known/apple-app-site-association', (_req, res) => {
-  try {
-    const file = readFileSync(
-      join(__dirname, '.well-known', 'apple-app-site-association'),
-      'utf8'
-    );
-    // Must be application/json — NOT application/pkcs7-mime
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    res.send(file);
-  } catch {
-    res.status(404).json({ error: 'apple-app-site-association not configured' });
-  }
+  const staticUrls = [
+    xmlUrl(`${BASE_URL}/`, '1.0', 'daily'),
+    xmlUrl(`${BASE_URL}/select-college`, '0.9', 'monthly'),
+    xmlUrl(`${BASE_URL}/about`, '0.6', 'monthly'),
+    xmlUrl(`${BASE_URL}/contact`, '0.5', 'monthly'),
+    xmlUrl(`${BASE_URL}/privacy`, '0.3', 'yearly'),
+    xmlUrl(`${BASE_URL}/terms`, '0.3', 'yearly'),
+  ];
+
+  // One campus landing page per college — targets "[College Name] marketplace" queries
+  const campusUrls = COLLEGE_SLUGS.map(slug =>
+    xmlUrl(`${BASE_URL}/?campus=${slug}`, '0.8', 'daily')
+  );
+
+  const xml = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...staticUrls,
+    ...campusUrls,
+    '</urlset>',
+  ].join('\n');
+
+  res.setHeader('Content-Type', 'application/xml');
+  res.setHeader('Cache-Control', 'public, max-age=86400'); // cache 24h
+  res.status(200).send(xml);
 });
 
 app.get("/health", (req, res) => {

@@ -28,6 +28,7 @@ import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
 import PublicProfile from "./pages/PublicProfile";
 import AdminDashboard from "./pages/AdminDashboard";
+import BrowseItems from "./pages/BrowseItems";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -190,6 +191,15 @@ function App() {
                 </ProtectedRoute>
               </CollegeProtectedRoute>
             } 
+          />
+
+          <Route
+            path="/browse"
+            element={
+              <CollegeProtectedRoute>
+                <BrowseItems />
+              </CollegeProtectedRoute>
+            }
           />
 
           <Route

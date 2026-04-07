@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from '../components/Navbar';
-import { FaUser, FaEnvelope, FaPhone, FaGraduationCap, FaEdit, FaSave, FaTimes, FaCamera, FaSpinner, FaCheck, FaImage } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaGraduationCap, FaEdit, FaSave, FaTimes, FaCamera, FaSpinner, FaCheck, FaImage, FaLock, FaEye, FaEyeSlash, FaKey, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import Cropper from 'react-easy-crop';
 import { toast } from 'react-toastify';
 import API from '../api/axios';
@@ -76,6 +77,15 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  // --- Change Password State ---
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordErrors, setPasswordErrors] = useState({});
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -208,6 +218,36 @@ const UserProfile = () => {
       setSaving(false);
     }
   };
+  const validatePasswordForm = () => {
+    const errs = {};
+    if (!passwordForm.currentPassword) errs.currentPassword = 'Current password is required';
+    if (!passwordForm.newPassword) errs.newPassword = 'New password is required';
+    else if (passwordForm.newPassword.length < 6) errs.newPassword = 'Must be at least 6 characters';
+    if (!passwordForm.confirmPassword) errs.confirmPassword = 'Please confirm your new password';
+    else if (passwordForm.newPassword !== passwordForm.confirmPassword) errs.confirmPassword = 'Passwords do not match';
+    return errs;
+  };
+
+  const handlePasswordSave = async () => {
+    const errs = validatePasswordForm();
+    if (Object.keys(errs).length) { setPasswordErrors(errs); return; }
+    setSavingPassword(true);
+    try {
+      await API.put('/users/change-password', {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+      toast.success('Password changed successfully!');
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setPasswordErrors({});
+      setShowPasswordSection(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to change password');
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center text-cyan-400 font-bold bg-slate-900 transition-colors">Loading Profile...</div>;
 
   return (
@@ -367,7 +407,7 @@ const UserProfile = () => {
                     disabled 
                     className="block w-full pl-10 py-3 rounded-lg border border-transparent bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 cursor-not-allowed" 
                   />
-                  <span className="text-xs text-gray-500 dark:text-gray-500 -mt-1 ml-2 flex items-center gap-1">
+                  <span className="text-xs text-gray-500 dark:text-gray-500 mt-1.5 ml-2 flex items-center gap-1">
                     <span role="img" aria-label="lock">🔒</span> Email cannot be changed</span>
                 </div>
               </div>
@@ -413,6 +453,134 @@ const UserProfile = () => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* --- CHANGE PASSWORD CARD --- */}
+      <div className="max-w-4xl mx-auto pb-10 px-4 sm:px-6 lg:px-8">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden transition-colors">
+          {/* Header / Toggle */}
+          <button
+            onClick={() => {
+              setShowPasswordSection(v => !v);
+              setPasswordErrors({});
+            }}
+            className="w-full flex items-center justify-between px-8 py-5 text-left group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow">
+                <FaKey className="text-white text-sm" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-800 dark:text-white text-sm sm:text-base">Change Password</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Update your account password</p>
+              </div>
+            </div>
+            {showPasswordSection
+              ? <FaChevronUp className="text-gray-400 dark:text-gray-500 group-hover:text-cyan-500 transition" />
+              : <FaChevronDown className="text-gray-400 dark:text-gray-500 group-hover:text-cyan-500 transition" />
+            }
+          </button>
+
+          {showPasswordSection && (
+            <div className="px-8 pb-8 border-t border-slate-100 dark:border-slate-700">
+              <div className="mt-6 grid grid-cols-1 gap-5 max-w-lg">
+
+                {/* Current Password */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">
+                    Current Password
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FaLock className="text-gray-400 dark:text-gray-500 text-sm" />
+                    </div>
+                    <input
+                      type={showCurrentPw ? 'text' : 'password'}
+                      value={passwordForm.currentPassword}
+                      onChange={e => { setPasswordForm(f => ({ ...f, currentPassword: e.target.value })); setPasswordErrors(er => ({ ...er, currentPassword: '' })); }}
+                      placeholder="Enter current password"
+                      className={`block w-full pl-10 pr-10 py-3 rounded-lg border transition-all bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none ${passwordErrors.currentPassword ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-600'}`}
+                    />
+                    <button type="button" onClick={() => setShowCurrentPw(v => !v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+                      {showCurrentPw ? <FaEyeSlash size={15} /> : <FaEye size={15} />}
+                    </button>
+                  </div>
+                  {passwordErrors.currentPassword && <p className="text-xs text-red-500 mt-1">{passwordErrors.currentPassword}</p>}
+                  {/* Forgot Password link */}
+                  <div className="mt-1.5 text-right">
+                    <Link to="/forgot-password" className="text-base text-cyan-500 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium transition">
+                      Forgot password?
+                    </Link>
+                  </div>
+                </div>
+
+                {/* New Password */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">
+                    New Password
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FaLock className="text-gray-400 dark:text-gray-500 text-sm" />
+                    </div>
+                    <input
+                      type={showNewPw ? 'text' : 'password'}
+                      value={passwordForm.newPassword}
+                      onChange={e => { setPasswordForm(f => ({ ...f, newPassword: e.target.value })); setPasswordErrors(er => ({ ...er, newPassword: '' })); }}
+                      placeholder="Minimum 6 characters"
+                      className={`block w-full pl-10 pr-10 py-3 rounded-lg border transition-all bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none ${passwordErrors.newPassword ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-600'}`}
+                    />
+                    <button type="button" onClick={() => setShowNewPw(v => !v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+                      {showNewPw ? <FaEyeSlash size={15} /> : <FaEye size={15} />}
+                    </button>
+                  </div>
+                  {passwordErrors.newPassword && <p className="text-xs text-red-500 mt-1">{passwordErrors.newPassword}</p>}
+                </div>
+
+                {/* Confirm New Password */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">
+                    Confirm New Password
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FaLock className="text-gray-400 dark:text-gray-500 text-sm" />
+                    </div>
+                    <input
+                      type={showConfirmPw ? 'text' : 'password'}
+                      value={passwordForm.confirmPassword}
+                      onChange={e => { setPasswordForm(f => ({ ...f, confirmPassword: e.target.value })); setPasswordErrors(er => ({ ...er, confirmPassword: '' })); }}
+                      placeholder="Re-enter new password"
+                      className={`block w-full pl-10 pr-10 py-3 rounded-lg border transition-all bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none ${passwordErrors.confirmPassword ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-600'}`}
+                    />
+                    <button type="button" onClick={() => setShowConfirmPw(v => !v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+                      {showConfirmPw ? <FaEyeSlash size={15} /> : <FaEye size={15} />}
+                    </button>
+                  </div>
+                  {passwordErrors.confirmPassword && <p className="text-xs text-red-500 mt-1">{passwordErrors.confirmPassword}</p>}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-3 pt-1">
+                  <button
+                    onClick={() => { setShowPasswordSection(false); setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); setPasswordErrors({}); }}
+                    disabled={savingPassword}
+                    className="px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition text-sm font-medium disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handlePasswordSave}
+                    disabled={savingPassword}
+                    className="flex items-center gap-2 px-6 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-sm font-medium hover:from-cyan-600 hover:to-teal-600 transition shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {savingPassword ? <><FaSpinner className="animate-spin" /> Saving…</> : <><FaSave /> Update Password</>}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

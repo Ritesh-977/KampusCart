@@ -21,7 +21,7 @@ const sendToken = (user, statusCode, res) => {
   httpOnly: true, // Prevents XSS attacks
   sameSite: 'lax', // Protects against CSRF attacks
   secure: true, // MUST be true in production (requires HTTPS)
- // domain: ".kampuscart.site", // Allows sharing between api. and www.
+  domain: ".kampuscart.site", // Allows sharing between api. and www.
   path: "/"
 };
 
