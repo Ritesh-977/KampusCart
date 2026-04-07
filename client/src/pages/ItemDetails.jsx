@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; 
-import API from '../api/axios'; 
+import { useParams, useNavigate } from 'react-router-dom';
+import API from '../api/axios';
 import Navbar from '../components/Navbar';
+import SEOHead from '../components/SEOHead';
+import { SEO } from '../utils/seoTemplates';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { 
@@ -190,8 +192,11 @@ useEffect(() => {
   const displayName = item ? (item.sellerName || item.seller.name) : '';
   const displayEmail = item ? (item.sellerEmail || item.seller.email) : '';
 
+  const seo = item ? SEO.item(item, null) : null;
+
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-200">
+      {seo && <SEOHead {...seo} />}
       <Navbar />
       <ToastContainer />
       

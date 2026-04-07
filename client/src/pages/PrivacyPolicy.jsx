@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { FaLock, FaUserShield, FaDatabase } from 'react-icons/fa';
+import SEOHead from '../components/SEOHead';
+import { SEO } from '../utils/seoTemplates';
 
 const PrivacyPolicy = () => {
 
@@ -10,8 +12,8 @@ const PrivacyPolicy = () => {
   }, []);
 
   return (
-    // FIX 1: Main Background
     <div className="min-h-screen bg-white dark:bg-gray-900 font-sans transition-colors duration-200">
+      <SEOHead {...SEO.privacy()} />
       <Navbar />
 
       <div className="max-w-3xl mx-auto px-6 py-16">

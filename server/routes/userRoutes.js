@@ -7,6 +7,7 @@ import {
     getWishlist,
     getUserById,
     getSellerProfile,
+    changePassword,
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -28,6 +29,9 @@ router.route('/profile')
     { name: 'profilePic', maxCount: 1 },
     { name: 'coverImage', maxCount: 1 }
 ]), updateUserProfile);
+
+// --- Change Password ---
+router.put('/change-password', protect, changePassword);
 
 // --- Wishlist Routes ---
 router.route('/wishlist')

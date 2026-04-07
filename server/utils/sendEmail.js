@@ -7,12 +7,12 @@ const generateVerificationTemplate = (otp, userName) => {
     return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;">
         <div style="background-color: #4A90E2; padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">CampusMart</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px;">KampusCart</h1>
         </div>
         <div style="padding: 30px; color: #333; line-height: 1.6;">
             <h2 style="color: #4A90E2;">Verify Your Account</h2>
             <p>Hi <strong>${userName || 'Student'}</strong>,</p>
-            <p>Thank you for joining CampusMart! To ensure a safe community, please use the code below to complete your registration:</p>
+            <p>Thank you for joining KampusCart! To ensure a safe community, please use the code below to complete your registration:</p>
             
             <div style="text-align: center; margin: 30px 0;">
                 <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #4A90E2; background: #f0f7ff; padding: 10px 20px; border-radius: 5px; border: 1px dashed #4A90E2;">
@@ -23,7 +23,7 @@ const generateVerificationTemplate = (otp, userName) => {
             <p style="font-size: 14px; color: #666;">This code is valid for <strong>20 minutes</strong>. If you did not request this, please ignore this email.</p>
         </div>
         <div style="background-color: #f9f9f9; padding: 15px; text-align: center; font-size: 12px; color: #999;">
-            <p>&copy; 2025 CampusMart Team</p>
+            <p>&copy; 2025 KampusCart Team</p>
         </div>
     </div>
     `;
@@ -34,7 +34,7 @@ const generateResetTemplate = (resetUrl, userName) => {
     return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;">
         <div style="background-color: #FF5722; padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">CampusMart</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px;">KampusCart</h1>
         </div>
         <div style="padding: 30px; color: #333; line-height: 1.6;">
             <h2 style="color: #FF5722;">Reset Your Password</h2>
@@ -51,7 +51,7 @@ const generateResetTemplate = (resetUrl, userName) => {
             <p style="font-size: 12px; color: #999; margin-top: 20px;">Button not working? Copy this link:<br><a href="${resetUrl}" style="color: #FF5722;">${resetUrl}</a></p>
         </div>
         <div style="background-color: #f9f9f9; padding: 15px; text-align: center; font-size: 12px; color: #999;">
-            <p>&copy; 2025 CampusMart Team</p>
+            <p>&copy; 2025 KampusCart Team</p>
         </div>
     </div>
     `;

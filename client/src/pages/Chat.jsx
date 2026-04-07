@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import EmojiPicker from 'emoji-picker-react';
 import io from 'socket.io-client';
 import API from '../api/axios';
 import { useLocation, useNavigate } from 'react-router-dom'; 
-import { 
-  FaSearch, FaPaperPlane, FaEllipsisV, FaSmile, FaPaperclip, 
-  FaArrowLeft, FaCheckDouble, FaCircle, FaTimes, FaChevronUp, FaChevronDown, FaImage
+import {
+  FaSearch, FaPaperPlane, FaEllipsisV, FaSmile, FaPaperclip,
+  FaArrowLeft, FaCheckDouble, FaCircle, FaTimes, FaChevronUp, FaChevronDown, FaImage, FaTrashAlt
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
@@ -15,7 +15,7 @@ const ENDPOINT = import.meta.env.VITE_SERVER_URL;
 const Chat = () => {
   const location = useLocation();
   const navigate = useNavigate();
-
+  
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -23,7 +23,7 @@ const Chat = () => {
   const [socketConnected, setSocketConnected] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState([]);
-
+  
   // UI States
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -32,16 +32,23 @@ const Chat = () => {
   const [showInChatSearch, setShowInChatSearch] = useState(false);
   const [searchMatches, setSearchMatches] = useState([]); 
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
-
+  
   // --- PREVIEW STATES ---
   const [imagePreview, setImagePreview] = useState(null);
   const [fileToUpload, setFileToUpload] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // --- DELETE UI STATES ---
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
+  const [chatsToDelete, setChatsToDelete] = useState([]);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   // Refs
   const socket = useRef(null);
   const selectedChatRef = useRef(null);
-  const messagesContainerRef = useRef(null); 
+  const messagesContainerRef = useRef(null);
+  const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
   const messageRefs = useRef({});
 
@@ -182,16 +189,27 @@ const Chat = () => {
     return () => clearTimeout(timer);
   };
 
-  const scrollToBottom = () => {
-    if (messagesContainerRef.current) {
-        const { scrollHeight, clientHeight } = messagesContainerRef.current;
-        messagesContainerRef.current.scrollTop = scrollHeight - clientHeight;
+  const initialScrollDone = useRef(false);
+
+  // Reset flag whenever the user switches to a different chat
+  useEffect(() => {
+    initialScrollDone.current = false;
+  }, [selectedChat]);
+
+  // Fires synchronously BEFORE the browser paints — user never sees the top
+  useLayoutEffect(() => {
+    if (!initialScrollDone.current && messages.length > 0) {
+      bottomRef.current?.scrollIntoView({ behavior: 'instant' });
+      initialScrollDone.current = true;
     }
-  };
-  
-  useEffect(() => { 
-      setTimeout(scrollToBottom, 100); 
-  }, [messages, showEmojiPicker, isTyping, selectedChat, imagePreview]);
+  }, [messages]);
+
+  // Smooth scroll for new messages after the initial load
+  useEffect(() => {
+    if (initialScrollDone.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isTyping]);
 
   const onEmojiClick = (emojiObject) => setNewMessage(prev => prev + emojiObject.emoji);
 
@@ -302,10 +320,46 @@ const Chat = () => {
     navigate(`/profile/view/${userId}`);
   };
 
+  // --- DELETE LOGIC ---
+  const toggleChatSelection = (chatId) => {
+      setChatsToDelete(prev => 
+          prev.includes(chatId) ? prev.filter(id => id !== chatId) : [...prev, chatId]
+      );
+  };
+
+  const cancelDeleteMode = () => {
+      setIsDeleteMode(false);
+      setChatsToDelete([]);
+      setShowDropdown(false);
+      setShowConfirmDelete(false); // Ensure modal closes if cancelled
+  };
+
+  const handleDeleteSelected = async () => {
+      if (chatsToDelete.length === 0) return;
+
+      try {
+          await API.post("/chat/delete-multiple", { chatIds: chatsToDelete });
+
+          setChats(prev => prev.filter(c => !chatsToDelete.includes(getUserId(c))));
+
+          if (selectedChat && chatsToDelete.includes(getUserId(selectedChat))) {
+              setSelectedChat(null);
+              selectedChatRef.current = null;
+              setIsMobileChatOpen(false);
+          }
+
+          toast.success("Chats deleted successfully!");
+          cancelDeleteMode(); // This already handles resetting states and closing UI
+      } catch (error) {
+          console.error("Error deleting chats:", error);
+          toast.error("Failed to delete chats.");
+          setShowConfirmDelete(false); // Close modal on error
+      }
+  };
+
   if (!user) return <div className="p-10 text-center text-red-500">Please Log In to Chat</div>;
 
   return (
-    // FIX 1: Root container uses 100dvh (Dynamic Viewport Height) for mobile browser support
     <div className="h-[100dvh] flex flex-col bg-slate-100 dark:bg-slate-900 font-sans overflow-hidden fixed inset-0">
       <div className="flex-none z-50 relative">
          <Navbar />
@@ -333,12 +387,79 @@ const Chat = () => {
             </div>
           )}
 
+          {/* --- DELETE CONFIRMATION MODAL --- */}
+          {showConfirmDelete && (
+            <div className="absolute inset-0 z-[60] bg-black/60 flex flex-col items-center justify-center p-4 backdrop-blur-sm"
+              style={{animation: 'fadeInBackdrop 0.2s ease-out both'}}>
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full flex flex-col items-center text-center overflow-hidden"
+                  style={{animation: 'modalPop 0.25s cubic-bezier(0.34,1.56,0.64,1) both'}}>
+
+                    {/* Red header strip */}
+                    <div className="w-full bg-gradient-to-br from-red-500 to-rose-600 pt-8 pb-10 flex flex-col items-center px-6">
+                        <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-3 shadow-lg ring-4 ring-white/30"
+                          style={{animation: 'trashWiggle 0.5s 0.25s ease-in-out both'}}>
+                            <FaTrashAlt className="text-2xl text-white" />
+                        </div>
+                        <h3 className="font-bold text-xl text-white">Delete {chatsToDelete.length} Chat{chatsToDelete.length !== 1 ? 's' : ''}?</h3>
+                    </div>
+
+                    {/* Body */}
+                    <div className="px-6 pt-5 pb-6 w-full -mt-4 bg-white dark:bg-slate-800 rounded-t-2xl">
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-1">
+                            All messages in {chatsToDelete.length === 1 ? 'this conversation' : 'these conversations'} will be permanently removed.
+                        </p>
+                        <p className="text-xs font-semibold text-red-500 dark:text-red-400 mb-6">This action cannot be undone.</p>
+
+                        <div className="flex gap-3 w-full">
+                            <button
+                                onClick={() => setShowConfirmDelete(false)}
+                                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 hover:shadow-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDeleteSelected}
+                                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white font-semibold hover:from-red-600 hover:to-rose-700 shadow-md hover:shadow-red-300 dark:hover:shadow-red-900 transition-all duration-200 flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0"
+                            >
+                                <FaTrashAlt className="text-xs" />
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          )}
+
           {/* --- SIDEBAR --- */}
           <div className={`${isMobileChatOpen ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 lg:w-1/4 flex-col border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 h-full`}>
-            {/* Sidebar content stays same, reusing existing classes */}
-            <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800 h-16 shrink-0">
+            
+            <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800 h-16 shrink-0 relative">
               <h2 className="text-xl font-bold text-slate-800 dark:text-white">Chats</h2>
-              <button className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition"><FaEllipsisV /></button>
+              
+              <button 
+                onClick={() => setShowDropdown(!showDropdown)} 
+                className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition relative"
+              >
+                <FaEllipsisV />
+              </button>
+
+              {showDropdown && (
+                <div className="absolute top-14 right-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl rounded-xl py-1.5 w-52 z-50 animate-fade-in origin-top-right"
+                  style={{animation: 'dropdownPop 0.18s cubic-bezier(0.34,1.56,0.64,1) both'}}>
+                    <button
+                        onClick={() => {
+                            setIsDeleteMode(true);
+                            setShowDropdown(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors rounded-lg mx-auto group"
+                    >
+                        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-red-100 dark:bg-red-900/30 group-hover:bg-red-200 dark:group-hover:bg-red-800/40 transition-colors">
+                            <FaTrashAlt className="text-xs text-red-500 dark:text-red-400" />
+                        </span>
+                        Delete Chats
+                    </button>
+                </div>
+              )}
             </div>
 
             <div className="p-4 shrink-0">
@@ -353,6 +474,41 @@ const Chat = () => {
                 />
               </div>
             </div>
+
+            {isDeleteMode && (
+              <div className="px-4 py-3 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/40 dark:to-rose-950/40 border-b border-red-200 dark:border-red-800/40 flex justify-between items-center shrink-0 shadow-sm"
+                style={{animation: 'slideDown 0.22s ease-out both'}}>
+                  <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center h-6 w-6 rounded-full bg-red-500 text-white text-xs font-bold shadow-sm transition-all duration-300"
+                        style={{transform: chatsToDelete.length > 0 ? 'scale(1.1)' : 'scale(1)'}}>
+                          {chatsToDelete.length}
+                      </span>
+                      <span className="text-sm font-semibold text-red-700 dark:text-red-400">
+                          {chatsToDelete.length === 1 ? 'chat selected' : 'chats selected'}
+                      </span>
+                  </div>
+                  <div className="flex gap-2">
+                      <button
+                          onClick={cancelDeleteMode}
+                          className="text-xs px-3.5 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm transition-all duration-200"
+                      >
+                          Cancel
+                      </button>
+                      <button
+                          onClick={() => setShowConfirmDelete(true)}
+                          disabled={chatsToDelete.length === 0}
+                          className={`text-xs px-3.5 py-1.5 rounded-full font-medium flex items-center gap-1.5 transition-all duration-200 ${
+                            chatsToDelete.length > 0
+                              ? 'bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-red-300 dark:hover:shadow-red-900 hover:-translate-y-0.5 active:translate-y-0'
+                              : 'bg-red-200 dark:bg-red-900/30 text-red-300 dark:text-red-600 cursor-not-allowed'
+                          }`}
+                      >
+                          <FaTrashAlt className="text-[10px]" />
+                          Delete
+                      </button>
+                  </div>
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               {chats
@@ -379,11 +535,23 @@ const Chat = () => {
                   return (
                   <div 
                     key={getUserId(chat)}
-                    onClick={() => handleSelectChat(chat)}
+                    onClick={() => isDeleteMode ? toggleChatSelection(getUserId(chat)) : handleSelectChat(chat)}
                     className={`flex items-center p-4 cursor-pointer transition-colors border-b border-slate-100 dark:border-slate-700 
                       ${isUnread ? 'bg-white dark:bg-slate-700 border-l-4 border-green-500' : 'bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700'} 
-                      ${isActive ? 'bg-cyan-50 dark:bg-cyan-900/20 border-l-4 border-cyan-600' : ''}`}
+                      ${isActive && !isDeleteMode ? 'bg-cyan-50 dark:bg-cyan-900/20 border-l-4 border-cyan-600' : ''}
+                      ${chatsToDelete.includes(getUserId(chat)) ? 'bg-red-50 dark:bg-red-900/20' : ''}`}
                   >
+                    {isDeleteMode && (
+                        <div className="mr-3 flex-shrink-0">
+                            <input 
+                                type="checkbox"
+                                checked={chatsToDelete.includes(getUserId(chat))}
+                                readOnly
+                                className="h-5 w-5 rounded border-gray-300 text-red-500 focus:ring-red-500 cursor-pointer pointer-events-none"
+                            />
+                        </div>
+                    )}
+
                     <div className="relative flex-shrink-0">
                       <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-500 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
                         {partner.profilePic || partner.pic ? <img src={partner.profilePic || partner.pic} className="h-full w-full object-cover" alt="" /> : partner.name.charAt(0)}
@@ -394,14 +562,14 @@ const Chat = () => {
                     </div>
                     <div className="ml-4 flex-1 min-w-0">
                       <div className="flex justify-between items-baseline mb-1">
-                        <h3 className={`text-sm truncate ${isUnread ? 'font-extrabold text-black dark:text-white' : 'font-medium text-slate-700 dark:text-slate-200'} ${isActive ? 'text-cyan-900 dark:text-cyan-400' : ''}`}>
+                        <h3 className={`text-sm truncate ${isUnread ? 'font-extrabold text-black dark:text-white' : 'font-medium text-slate-700 dark:text-slate-200'} ${isActive && !isDeleteMode ? 'text-cyan-900 dark:text-cyan-400' : ''}`}>
                             {partner.name}
                         </h3>
                         <span className={`text-xs ${isUnread ? 'font-bold text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-slate-500'}`}>
                             {latestMsg ? new Date(latestMsg.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ""}
                         </span>
                       </div>
-                      <p className={`text-sm truncate ${isUnread ? 'font-bold text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'} ${isActive ? 'text-cyan-700 dark:text-cyan-300' : ''}`}>
+                      <p className={`text-sm truncate ${isUnread ? 'font-bold text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'} ${isActive && !isDeleteMode ? 'text-cyan-700 dark:text-cyan-300' : ''}`}>
                           {isLatestMsgImage ? <span className="flex items-center gap-1 italic text-slate-400"><FaImage /> Photo</span> : latestMsg.content}
                       </p>
                     </div>
@@ -411,12 +579,10 @@ const Chat = () => {
           </div>
 
           {/* --- MAIN CHAT WINDOW --- */}
-          {/* FIX 2: Added Flex layout to main chat area to support Flex Input */}
           <div className={`${!isMobileChatOpen ? 'hidden md:flex' : 'flex'} flex-1 flex-col bg-[#f0f2f5] dark:bg-slate-900 relative h-full`}>
             {selectedChat ? (
               <>
                 <div className="flex-none p-3 sm:p-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center shadow-sm z-20 h-16 transition-colors">
-                  {/* Header Content */}
                   <div className="flex items-center">
                     <button onClick={() => setIsMobileChatOpen(false)} className="md:hidden mr-3 text-gray-500 dark:text-gray-400 hover:text-indigo-600"><FaArrowLeft className="text-xl" /></button>
                     <div 
@@ -452,11 +618,11 @@ const Chat = () => {
                   </div>
                 </div>
 
-                {/* FIX 3: Messages container now flex-1 (takes remaining space) and NO bottom padding needed */}
-                <div 
-                  ref={messagesContainerRef} 
-                  className="flex-1 overflow-y-auto p-4 space-y-4 bg-chat-pattern custom-scrollbar sm:pb-4"
+                <div
+                  ref={messagesContainerRef}
+                  className="flex-1 overflow-y-auto p-4 bg-chat-pattern custom-scrollbar sm:pb-4"
                 >
+                  <div className="flex flex-col justify-end min-h-full space-y-4">
                   {messages.map((msg, index) => {
                     const isMe = String(getUserId(msg.sender)) === String(loggedInUserId);
                     const isCurrentMatch = searchMatches.length > 0 && searchMatches[currentMatchIndex] === index;
@@ -482,9 +648,10 @@ const Chat = () => {
                         <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">Typing...</span>
                     </div>
                   )}
+                  <div ref={bottomRef} />
+                  </div>
                 </div>
 
-                {/* FIX 4: Input container is now Flex-None (not absolute) so it stays visible when keyboard opens */}
                 <div className="flex-none p-3 sm:p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-30 transition-colors">
                   {showEmojiPicker && (
                       <div className="absolute bottom-20 left-4 z-30 shadow-2xl">

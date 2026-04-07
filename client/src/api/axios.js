@@ -3,6 +3,7 @@ import axios from 'axios';
 const API = axios.create({
     baseURL: `${import.meta.env.VITE_SERVER_URL}/api`,
     withCredentials: true, // 👈 Critical for cookies
+    timeout: 15000, // 15s — prevents infinite hang on Render cold starts
 });
 
 // 2. RESPONSE Interceptor

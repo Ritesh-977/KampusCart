@@ -1,8 +1,14 @@
 import redis from "../config/redis.js"; // Note the .js extension!
 
+const redisGetWithTimeout = (key, ms = 3000) =>
+    Promise.race([
+        redis.get(key),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Redis timeout')), ms)),
+    ]);
+
 const getOrSetCache = async (key, cb) => {
     try {
-        const data = await redis.get(key);
+        const data = await redisGetWithTimeout(key);
         if (data) {
             const parsed = JSON.parse(data);
             // Don't serve empty arrays from cache — re-fetch so stale empty results don't persist

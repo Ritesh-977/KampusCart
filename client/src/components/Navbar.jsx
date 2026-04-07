@@ -107,12 +107,11 @@ const Navbar = () => {
     if (e) e.preventDefault();
     if (searchTerm.trim()) {
       saveHistory(searchTerm.trim());
-      navigate(`/?search=${searchTerm.trim()}`);
+      navigate(`/browse?search=${encodeURIComponent(searchTerm.trim())}`);
       setShowDropdown(false);
     } else {
       setSearchTerm('');
-      navigate('/');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      navigate('/browse');
       setShowDropdown(false);
     }
   };
@@ -168,26 +167,26 @@ const Navbar = () => {
                 saveHistory(item.title);
                 navigate(`/item/${item._id}`);
               }}
-              className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-start transition border-b border-gray-100 dark:border-gray-700 last:border-none"
+              className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center transition border-b border-gray-100 dark:border-gray-700 last:border-none"
             >
-              <div className="h-10 w-10 rounded-md bg-gray-100 dark:bg-gray-700 overflow-hidden flex-shrink-0 mr-3 border border-gray-200 dark:border-gray-600">
+              <div className="h-14 w-14 rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden flex-shrink-0 mr-4 border border-gray-200 dark:border-gray-600">
                 {item.images && item.images[0] ? (
                   <img src={item.images[0]} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <img src="/logo.png" alt="fallback" className="h-full w-full p-2 object-contain opacity-50 grayscale" />
                 )}
               </div>
-              <div>
-                <p className="text-sm text-gray-800 dark:text-gray-200 font-medium line-clamp-1">{item.title}</p>
+              <div className="min-w-0">
+                <p className="text-base text-gray-800 dark:text-gray-200 font-semibold line-clamp-1">{item.title}</p>
                 {item.category && (
-                  <p className="text-xs text-indigo-500 dark:text-indigo-400">in {item.category}</p>
+                  <p className="text-sm text-indigo-500 dark:text-indigo-400 mt-0.5">in {item.category}</p>
                 )}
               </div>
             </button>
           ))}
           <button
             onMouseDown={handleFullSearch}
-            className="w-full text-center py-2.5 text-sm text-indigo-700 dark:text-indigo-400 font-bold hover:bg-indigo-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 block bg-gray-50 dark:bg-gray-800"
+            className="w-full text-center py-3 text-base text-indigo-700 dark:text-indigo-400 font-bold hover:bg-indigo-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 block bg-gray-50 dark:bg-gray-800"
           >
             See all results for "{searchTerm}"
           </button>
@@ -200,7 +199,7 @@ const Navbar = () => {
               <button
                 onMouseDown={() => {
                   setSearchTerm(term);
-                  navigate(`/?search=${term}`);
+                  navigate(`/browse?search=${encodeURIComponent(term)}`);
                 }}
                 className="flex-grow text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 flex items-center"
               >
@@ -234,14 +233,16 @@ const Navbar = () => {
 
           {/* Logo + College Badge */}
           <div className="flex-shrink-0 flex items-center gap-3 cursor-pointer min-w-fit" onClick={() => navigate('/')}>
-            <div className="flex items-center text-xl sm:text-2xl font-black text-cyan-400 tracking-tight">
+            <div className="flex items-center text-xl sm:text-2xl font-black tracking-tight">
               <img
                 src="/logo.png"
                 alt="KampusCart Logo"
-                // Reduced the mr (margin-right) classes here:
                 className="h-10 w-10 sm:h-12 sm:w-12 mr-0.5 sm:mr-1 object-contain"
               />
-              <span className="dark:text-white">kampus<span className="text-slate-300 dark:text-slate-400">Cart</span></span>
+
+              <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
+                kampusCart
+              </span>
             </div>
             {selectedCollege && (
               <button
@@ -260,7 +261,7 @@ const Navbar = () => {
           </div>
 
           {/* --- MIDDLE: SEARCH BAR (Hidden on Mobile) --- */}
-          <div className="flex-1 max-w-2xl mx-4 lg:mx-8 hidden md:block relative">
+          <div className="flex-1 mx-2 lg:mx-4 hidden md:block relative">
             <form onSubmit={handleFullSearch}>
               <div className="relative z-50">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

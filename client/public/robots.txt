@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# Block auth, private, and admin routes
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /passwordreset/
+Disallow: /admin
+Disallow: /chats
+Disallow: /settings
+Disallow: /sell
+Disallow: /edit-item/
+Disallow: /my-listings
+Disallow: /wishlist
+Disallow: /profile
+
+# Sitemap
+Sitemap: https://www.kampuscart.site/sitemap.xml
