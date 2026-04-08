@@ -1,8 +1,7 @@
 import Message from '../models/Message.js';
 import User from '../models/User.js';
 import Chat from '../models/Chat.js';
-import { sendPushToUser }    from '../utils/expoPush.js';
-import { sendWebPushToUser } from '../utils/webPushService.js';
+import { sendPushToUser } from '../utils/expoPush.js';
 
 export const sendMessage = async (req, res) => {
     const { content, chatId } = req.body;
@@ -62,8 +61,6 @@ export const sendMessage = async (req, res) => {
             // 2. Mobile Expo push (backgrounded / killed)
             sendPushToUser({ userId: recipientId, prefKey: 'messages', title: senderName, body: preview, data: notifData });
 
-            // 3. Web browser push (backgrounded tab)
-            sendWebPushToUser({ userId: recipientId, prefKey: 'messages', title: senderName, body: preview, url: '/chats' });
           }
         }
 

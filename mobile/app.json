@@ -2,7 +2,7 @@
   "expo": {
     "name": "KampusCart",
     "slug": "kampuscart",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "backgroundColor": "#0f172a", 
     "userInterfaceStyle": "dark",
@@ -44,7 +44,7 @@
       "package": "com.ritesh977.kampuscart",
 
 
-      "versionCode": 2,
+      "versionCode": 4,
 
       "intentFilters": [
         {
