@@ -20,7 +20,7 @@ const CATEGORY_COLORS = {
   'Book':       { bg: 'bg-blue-100 dark:bg-blue-900/30',  text: 'text-blue-700 dark:text-blue-400',  border: 'border-blue-200 dark:border-blue-800' },
 };
 
-const BLANK_FORM = { title: '', subjectName: '', semester: '', category: 'Note', file: null };
+const BLANK_FORM = { subjectName: '', semester: '', category: 'Note', file: null };
 
 const StudyMaterials = () => {
   const { selectedCollege } = useCollege();
@@ -91,7 +91,6 @@ const StudyMaterials = () => {
     setSubmitting(true);
     try {
       const fd = new FormData();
-      fd.append('title', form.title);
       fd.append('subjectName', form.subjectName);
       fd.append('semester', form.semester);
       fd.append('category', form.category);
@@ -112,7 +111,7 @@ const StudyMaterials = () => {
   };
 
   const handleDelete = async (mat) => {
-    if (!window.confirm(`Delete "${mat.title}"?`)) return;
+    if (!window.confirm(`Delete "${mat.subjectName}"?`)) return;
     try {
       await API.delete(`/materials/${mat._id}`);
       setMaterials(prev => prev.filter(m => m._id !== mat._id));
@@ -154,7 +153,7 @@ const StudyMaterials = () => {
             onChange={e => setSearchInput(e.target.value)}
             className="block w-full pl-10 pr-24 py-3 rounded-full border-none shadow-xl focus:ring-2 focus:ring-teal-400 focus:outline-none text-gray-800 dark:text-white dark:bg-slate-800 placeholder-gray-500 dark:placeholder-slate-400"
           />
-          <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-sm font-bold rounded-full transition">
+          <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-teal-800 hover:bg-teal-900 text-white text-sm font-bold rounded-full transition">
             Search
           </button>
         </form>
@@ -178,7 +177,7 @@ const StudyMaterials = () => {
           </div>
           {/* Category filter */}
           <div className="flex gap-1.5">
-            <button onClick={() => setFilterCat('')} className={`px-3 py-1 rounded-full text-sm font-semibold transition ${filterCat === '' ? 'bg-teal-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}`}>All</button>
+            <button onClick={() => setFilterCat('')} className={`px-3 py-1 rounded-full text-sm font-semibold transition ${filterCat === '' ? 'bg-teal-800 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}`}>All</button>
             {CATEGORIES.map(c => {
               const col = CATEGORY_COLORS[c];
               return (
@@ -196,7 +195,7 @@ const StudyMaterials = () => {
         </div>
         <button
           onClick={() => { setIsModalOpen(true); setForm(BLANK_FORM); setFilePreview(null); }}
-          className="flex items-center px-6 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white rounded-full font-bold shadow-md transition transform hover:-translate-y-0.5 flex-shrink-0"
+          className="flex items-center px-6 py-2.5 bg-gradient-to-r from-teal-800 to-emerald-800 hover:from-teal-900 hover:to-emerald-900 text-white rounded-full font-bold shadow-md transition transform hover:-translate-y-0.5 flex-shrink-0"
         >
           <FaPlus className="mr-2" /> Upload Material
         </button>
@@ -238,8 +237,7 @@ const StudyMaterials = () => {
                         </div>
                       </div>
 
-                      <h3 className="text-base font-bold text-gray-900 dark:text-white leading-snug mb-1">{mat.title}</h3>
-                      <p className="text-sm text-teal-600 dark:text-teal-400 font-medium mb-1">{mat.subjectName}</p>
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white leading-snug mb-1">{mat.subjectName}</h3>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Semester {mat.semester}</p>
 
                       <div className="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
@@ -250,7 +248,7 @@ const StudyMaterials = () => {
                           href={mat.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-xs font-bold rounded-full transition"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold rounded-full transition"
                         >
                           <FaDownload size={10} /> View
                         </a>
@@ -288,11 +286,6 @@ const StudyMaterials = () => {
             </div>
 
             <form onSubmit={handleUpload} className="p-6 space-y-4">
-              <div>
-                <label className={LABEL}>Title *</label>
-                <input required type="text" name="title" value={form.title} onChange={handleChange} placeholder="e.g. Data Structures End Sem 2023" className={INPUT} />
-              </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={LABEL}>Subject Name *</label>
@@ -341,7 +334,7 @@ const StudyMaterials = () => {
                 </div>
               </div>
 
-              <button type="submit" disabled={submitting} className="w-full py-3 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg font-bold shadow-md hover:from-teal-600 hover:to-emerald-600 transition flex items-center justify-center">
+              <button type="submit" disabled={submitting} className="w-full py-3 bg-gradient-to-r from-teal-800 to-emerald-800 text-white rounded-lg font-bold shadow-md hover:from-teal-900 hover:to-emerald-900 transition flex items-center justify-center">
                 {submitting ? <><FaSpinner className="animate-spin mr-2" /> Uploading...</> : 'Upload Material'}
               </button>
             </form>

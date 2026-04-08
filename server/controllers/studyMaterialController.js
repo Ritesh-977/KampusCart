@@ -18,7 +18,7 @@ export const uploadMaterial = async (req, res) => {
     const { title, subjectName, semester, category } = req.body;
 
     // Manual field validation (avoids extra dependency)
-    if (!title?.trim())       return err(res, 'Title is required.', 400);
+    // Title is now optional, so the validation check has been removed.
     if (!subjectName?.trim()) return err(res, 'Subject name is required.', 400);
     if (!semester)            return err(res, 'Semester is required.', 400);
     if (!category)            return err(res, 'Category is required.', 400);
@@ -34,7 +34,7 @@ export const uploadMaterial = async (req, res) => {
     const isImage = req.file.mimetype.startsWith('image/');
 
     const material = await StudyMaterial.create({
-      title:       title.trim(),
+      title:       title ? title.trim() : '', // Handles optional title securely
       subjectName: subjectName.trim(),
       semester:    semNum,
       category,
