@@ -146,7 +146,7 @@ const BrowseItems = () => {
         <Navbar />
 
         {/* Page Header */}
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-teal-700/30 pt-24 pb-8 px-4">
+        <div className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-teal-700/30 py-8 px-4">
           <div className="max-w-7xl mx-auto">
             <Link
               to="/"
