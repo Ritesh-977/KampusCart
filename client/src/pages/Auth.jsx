@@ -93,6 +93,7 @@ const Auth = () => {
           emailDomain: signupCollege?.emailDomain,
         });
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        subscribeUserToPush().catch(() => {});
         toast.success('Account created with Google!');
         navigate('/');
       } catch (err) {
@@ -116,6 +117,7 @@ const Auth = () => {
           access_token: tokenResponse.access_token,
         });
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        subscribeUserToPush().catch(() => {});
         toast.success('Signed in with Google successfully!');
         navigate('/');
       } catch (err) {
@@ -205,17 +207,10 @@ const Auth = () => {
         setLoading(false);
         toast.success('Logged in successfully!');
 
-      const currentUserId = response.data.user.id; 
-
-      if (!currentUserId) {
-          console.error("CRITICAL: The user ID is missing from the login response!");
-      } else {
-          try {
-              await subscribeUserToPush(currentUserId);
-          } catch (err) {
-              console.log("Push subscription skipped or denied.");
-          }
-      }
+      // Register web push subscription (auth cookie is already set)
+      subscribeUserToPush().catch(() => {
+        console.log('[Push] Subscription skipped or permission denied.');
+      });
 
 
         navigate('/'); 

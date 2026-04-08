@@ -1,5 +1,6 @@
 import LostItem from '../models/LostItem.js';
-import { sendPushToCollege } from '../utils/expoPush.js';
+import { sendPushToCollege }    from '../utils/expoPush.js';
+import { sendWebPushToCollege } from '../utils/webPushService.js';
 
 //Report a Lost or Found item
 // @route   POST /api/lost-found
@@ -19,14 +20,21 @@ export const reportItem = async (req, res) => {
             campus: req.user.college
         });
 
-        sendPushToCollege({
-            college: req.user.college,
-            excludeUserId: req.user.id,
-            prefKey: 'lostFound',
-            title: `${type === 'found' ? 'Found' : 'Lost'} item reported 📢`,
-            body: `${title} · ${location}`,
-            data: { type: 'lostFound' },
-        });
+        const college       = req.user.college;
+        const excludeUserId = req.user.id;
+        const notifTitle    = `${type === 'Found' ? 'Found' : 'Lost'} item reported 📢`;
+        const notifBody     = `${title} · ${location}`;
+        const notifData     = { type: 'lostFound' };
+
+        // Mobile Expo push
+        sendPushToCollege({ college, excludeUserId, prefKey: 'lostFound', title: notifTitle, body: notifBody, data: notifData });
+
+        // Web browser push
+        sendWebPushToCollege({ college, excludeUserId, prefKey: 'lostFound', title: notifTitle, body: notifBody, url: '/lost-and-found' });
+
+        // Socket.io in-app banner
+        const io = req.app.get('io');
+        if (io) io.to(`college:${college}`).emit('campus_notification', { title: notifTitle, body: notifBody, data: notifData });
 
         res.status(201).json(newItem);
     } catch (error) {

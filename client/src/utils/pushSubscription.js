@@ -1,60 +1,91 @@
-// A standard helper function required by the Web Push API to format your public key
+/**
+ * pushSubscription.js — Web Push (VAPID) registration helpers
+ *
+ * Uses the authenticated axios instance so the JWT cookie is sent
+ * automatically, matching the `protect` middleware on /api/users/subscribe.
+ *
+ * Call subscribeUserToPush() right after login / on the Settings page.
+ * Call unsubscribeFromPush()  right before / after logout.
+ */
+
+import API from '../api/axios';
+
+// Convert the VAPID public key from base64url to a Uint8Array
 function urlBase64ToUint8Array(base64String) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding)
-    .replace(/\-/g, "+")
-    .replace(/_/g, "/");
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
+  const output  = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) output[i] = rawData.charCodeAt(i);
+  return output;
 }
 
-export const subscribeUserToPush = async (userId) => {
-  // 1. Check if the browser actually supports Service Workers and Push
-  if ("serviceWorker" in navigator && "PushManager" in window) {
-    try {
-      // 2. Register the service worker file we created in the public folder
-      const registration = await navigator.serviceWorker.register("/sw.js");
-      console.log("Service Worker registered successfully");
+/**
+ * Request push permission, register the service worker, subscribe with VAPID,
+ * and persist the subscription to the backend via PUT /api/users/subscribe.
+ *
+ * Safe to call multiple times — the server uses $pull + $push to deduplicate.
+ */
+export const subscribeUserToPush = async () => {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.warn('[Push] Web Push is not supported in this browser.');
+    return null;
+  }
 
-      // 3. Ask the user for permission to send notifications
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        console.log("Push notification permission denied.");
-        return;
-      }
+  try {
+    // 1. Register (or reuse) the service worker
+    const registration = await navigator.serviceWorker.register('/sw.js');
+    await navigator.serviceWorker.ready; // Wait until SW is active
 
-      // 4. Generate the subscription object using your VAPID public key
-      // Use VITE_ or REACT_APP_ depending on your build tool
-      const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-      const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
-
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true, // Required for security
-        applicationServerKey: convertedVapidKey,
-      });
-
-      // 5. Send the subscription to your backend route
-      await fetch(`${import.meta.env.VITE_SERVER_URL}/api/users/subscribe`, {
-        method: "POST",
-        body: JSON.stringify({
-          userId: userId,
-          subscription: subscription,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log("User successfully subscribed to push notifications!");
-    } catch (error) {
-      console.error("Error subscribing to push notifications:", error);
-      console.error("Detailed Push Error:", error.message, error);
+    // 2. Request notification permission
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      console.log('[Push] Notification permission denied.');
+      return null;
     }
-  } else {
-    console.warn("Push messaging is not supported in this browser.");
+
+    // 3. Subscribe with VAPID public key
+    const publicVapidKey    = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
+
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly:      true,
+      applicationServerKey: convertedVapidKey,
+    });
+
+    // 4. Send the subscription object to the backend (authenticated)
+    await API.post('/users/subscribe', { subscription });
+
+    // 5. Persist the endpoint locally for logout cleanup
+    localStorage.setItem('webPushEndpoint', subscription.endpoint);
+
+    console.log('[Push] Web push subscription registered.');
+    return subscription;
+  } catch (error) {
+    console.error('[Push] Subscription error:', error);
+    return null;
+  }
+};
+
+/**
+ * Unsubscribe from the browser's push manager and remove the subscription
+ * from the backend. Call this on logout.
+ */
+export const unsubscribeFromPush = async () => {
+  try {
+    const endpoint = localStorage.getItem('webPushEndpoint');
+    if (endpoint) {
+      await API.delete('/users/subscribe', { data: { endpoint } });
+      localStorage.removeItem('webPushEndpoint');
+    }
+
+    // Also unsubscribe at the browser level
+    const registration  = await navigator.serviceWorker.getRegistration('/sw.js');
+    const subscription  = await registration?.pushManager.getSubscription();
+    if (subscription) await subscription.unsubscribe();
+
+    console.log('[Push] Web push subscription removed.');
+  } catch (error) {
+    console.warn('[Push] Unsubscribe error:', error);
   }
 };

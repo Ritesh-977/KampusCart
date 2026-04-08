@@ -1,6 +1,7 @@
 import Sport from '../models/Sport.js';
 import SportRegistration from '../models/SportRegistration.js';
 import { sendPushToCollege, sendPushToUser } from '../utils/expoPush.js';
+import { sendWebPushToCollege, sendWebPushToUser } from '../utils/webPushService.js';
 
 const ok  = (res, data, status = 200) => res.status(status).json({ success: true, ...data });
 const err = (res, message, status = 500) => res.status(status).json({ success: false, message });
@@ -109,14 +110,21 @@ export const createSport = async (req, res) => {
       college: req.user.college,
     });
 
-    sendPushToCollege({
-      college: req.user.college,
-      excludeUserId: req.user._id || req.user.id,
-      prefKey: 'sports',
-      title: 'New sports event on campus 🏆',
-      body: `${sport.title} · Register before ${new Date(sport.lastRegistrationDate).toLocaleDateString('en-IN')}`,
-      data: { type: 'sport', sportId: String(sport._id) },
-    });
+    const college       = req.user.college;
+    const excludeUserId = req.user._id || req.user.id;
+    const notifTitle    = 'New sports event on campus 🏆';
+    const notifBody     = `${sport.title} · Register before ${new Date(sport.lastRegistrationDate).toLocaleDateString('en-IN')}`;
+    const notifData     = { type: 'sport', sportId: String(sport._id) };
+
+    // Mobile Expo push
+    sendPushToCollege({ college, excludeUserId, prefKey: 'sports', title: notifTitle, body: notifBody, data: notifData });
+
+    // Web browser push
+    sendWebPushToCollege({ college, excludeUserId, prefKey: 'sports', title: notifTitle, body: notifBody, url: '/sports' });
+
+    // Socket.io in-app banner
+    const io = req.app.get('io');
+    if (io) io.to(`college:${college}`).emit('campus_notification', { title: notifTitle, body: notifBody, data: notifData });
 
     return ok(res, { message: 'Sport event created.', data: sport }, 201);
   } catch (error) {

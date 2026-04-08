@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
+import Toast from 'react-native-toast-message';
 import { AuthContext } from './AuthContext';
 
 const SOCKET_URL = 'https://api.kampuscart.site';
@@ -54,6 +55,31 @@ export const SocketProvider = ({ children }) => {
       console.log('[SocketContext] online_users received:', userIds);
       setOnlineUsers(new Set(userIds.map(String)));
     });
+
+    // ── In-app notification banners (foreground only) ─────────────────────
+    // When the app is foregrounded, Socket.io delivers real-time events and
+    // we show a Toast banner.
+    // When the app is backgrounded/killed, Socket.io is disconnected and the
+    // server falls back to Expo push → FCM, which delivers a real OS push
+    // notification (handled by usePushNotifications.js).
+    const showToast = ({ title, body }) => {
+      Toast.show({
+        type:   'info',
+        text1:  title,
+        text2:  body,
+        position:         'top',
+        visibilityTime:   5000,
+        autoHide:         true,
+        topOffset:        50,
+      });
+    };
+
+    // Direct notification (e.g. new chat message while the chat isn't open)
+    socket.on('notification', showToast);
+
+    // Campus-wide broadcast (new item, event, sport, lost & found)
+    socket.on('campus_notification', showToast);
+    // ──────────────────────────────────────────────────────────────────────
 
     socket.on('disconnect', (reason) => {
       console.log('[SocketContext] Socket disconnected:', reason);

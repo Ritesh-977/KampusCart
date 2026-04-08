@@ -1,5 +1,6 @@
 import Event from '../models/Event.js';
-import { sendPushToCollege } from '../utils/expoPush.js';
+import { sendPushToCollege }    from '../utils/expoPush.js';
+import { sendWebPushToCollege } from '../utils/webPushService.js';
 
 // GET /api/events?college=...
 // Returns upcoming events (events that ended less than 1 hour ago are still shown)
@@ -39,14 +40,21 @@ export const createEvent = async (req, res) => {
       college: req.user.college,
       color:   color || '#6366f1',
     });
-    sendPushToCollege({
-      college: req.user.college,
-      excludeUserId: req.user._id,
-      prefKey: 'events',
-      title: 'New campus event 🎉',
-      body: `${title} · ${location}`,
-      data: { type: 'event', eventId: String(event._id) },
-    });
+    const college       = req.user.college;
+    const excludeUserId = req.user._id;
+    const notifTitle    = 'New campus event 🎉';
+    const notifBody     = `${title} · ${location}`;
+    const notifData     = { type: 'event', eventId: String(event._id) };
+
+    // Mobile Expo push
+    sendPushToCollege({ college, excludeUserId, prefKey: 'events', title: notifTitle, body: notifBody, data: notifData });
+
+    // Web browser push
+    sendWebPushToCollege({ college, excludeUserId, prefKey: 'events', title: notifTitle, body: notifBody, url: '/events' });
+
+    // Socket.io in-app banner
+    const io = req.app.get('io');
+    if (io) io.to(`college:${college}`).emit('campus_notification', { title: notifTitle, body: notifBody, data: notifData });
 
     res.status(201).json(event);
   } catch (err) {

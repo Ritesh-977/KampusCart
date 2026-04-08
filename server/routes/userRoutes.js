@@ -38,36 +38,67 @@ router.route('/wishlist')
     .post(protect, toggleWishlist)
     .get(protect, getWishlist);
 
-// Save Expo push token for the logged-in user
+// Save Expo push token for the logged-in user (addToSet — never overwrites other devices)
 router.put('/push-token', protect, async (req, res) => {
   try {
     const { token } = req.body;
     if (!token) return res.status(400).json({ error: 'Token required' });
-    await User.findByIdAndUpdate(req.user._id, { pushSubscription: [token] });
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { pushSubscription: token },
+    });
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post('/subscribe', async (req, res) => {
-    try {
-        // req.user.id would come from your auth middleware
-        const userId = req.body.userId; // Or req.user._id if using middleware
-        const subscription = req.body.subscription;
+// Remove Expo push token on logout / token rotation
+router.delete('/push-token', protect, async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ error: 'Token required' });
+    await User.findByIdAndUpdate(req.user._id, {
+      $pull: { pushSubscription: token },
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-        if (!userId || !subscription) {
-            return res.status(400).json({ error: "Missing user ID or subscription object" });
-        }
-
-        // Save the subscription object to the user's database record
-        await User.findByIdAndUpdate(userId, { pushSubscription: subscription });
-
-        res.status(201).json({ message: "Push subscription saved successfully." });
-    } catch (error) {
-        console.error("Error saving subscription:", error);
-        res.status(500).json({ error: "Server error saving subscription" });
+// Save Web Push (VAPID) subscription object — requires auth, uses addToSet
+router.post('/subscribe', protect, async (req, res) => {
+  try {
+    const subscription = req.body.subscription;
+    if (!subscription?.endpoint) {
+      return res.status(400).json({ error: 'Valid subscription object required' });
     }
+    // Remove any stale entry for the same endpoint before adding the fresh one
+    await User.findByIdAndUpdate(req.user._id, {
+      $pull: { pushSubscription: { endpoint: subscription.endpoint } },
+    });
+    await User.findByIdAndUpdate(req.user._id, {
+      $push: { pushSubscription: subscription },
+    });
+    res.status(201).json({ message: 'Push subscription saved successfully.' });
+  } catch (error) {
+    console.error('Error saving subscription:', error);
+    res.status(500).json({ error: 'Server error saving subscription' });
+  }
+});
+
+// Remove Web Push subscription on unsubscribe / logout
+router.delete('/subscribe', protect, async (req, res) => {
+  try {
+    const { endpoint } = req.body;
+    if (!endpoint) return res.status(400).json({ error: 'endpoint required' });
+    await User.findByIdAndUpdate(req.user._id, {
+      $pull: { pushSubscription: { endpoint } },
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Public stats endpoint for HeroSection
