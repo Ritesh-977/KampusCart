@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { unsubscribeFromPush } from '../utils/pushSubscription';
 import {
   FaSearch, FaUserCircle, FaHistory, FaTrashAlt,
   FaHeart, FaPlus, FaSignOutAlt, FaUser, FaList, FaBullhorn,
@@ -82,6 +83,28 @@ const Navbar = () => {
     const socket = io(ENDPOINT);
     socket.emit('setup', user);
     socket.on('message received', fetchUnreadCount);
+
+    // ── In-app notification banners ──────────────────────────────────────────
+    // Direct notifications (e.g. new chat message while tab is active)
+    socket.on('notification', ({ title, body }) => {
+      toast.info(`${title}: ${body}`, {
+        position: 'top-right',
+        autoClose: 5000,
+        toastId: `notif-${Date.now()}`,
+      });
+      fetchUnreadCount();
+    });
+
+    // Campus-wide broadcasts (new listing, event, sport, lost & found)
+    socket.on('campus_notification', ({ title, body }) => {
+      toast.info(`${title}: ${body}`, {
+        position: 'top-right',
+        autoClose: 5000,
+        toastId: `campus-${Date.now()}`,
+      });
+    });
+    // ─────────────────────────────────────────────────────────────────────────
+
     const handleChatRead = () => fetchUnreadCount();
     window.addEventListener('chatRead', handleChatRead);
     return () => { socket.disconnect(); window.removeEventListener('chatRead', handleChatRead); };
@@ -104,6 +127,7 @@ const Navbar = () => {
   }, [searchTerm, selectedCollege]);
 
   const handleLogout = async () => {
+    unsubscribeFromPush().catch(() => {});
     try {
       await API.get('/auth/logout');
     } catch { /* ignore */ } finally {

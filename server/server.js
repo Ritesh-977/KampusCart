@@ -4,9 +4,10 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser'; // 1. IMPORT THIS
-import { createServer } from 'http'; 
-import { Server } from 'socket.io';  
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import connectDB from './config/db.js';
+import User from './models/User.js';
 
 // Import Routes
 import authRoutes from './routes/authRoutes.js';
@@ -139,18 +140,29 @@ const io = new Server(httpServer, {
     }
 });
 
-const onlineUsers = new Map(); 
+// Expose io to all controllers via req.app.get('io')
+app.set('io', io);
+
+const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
-   
-    // A. User Setup
-    socket.on('setup', (userData) => {
+
+    // A. User Setup — join personal room + college broadcast room
+    socket.on('setup', async (userData) => {
         const userId = userData._id || userData.id || userData;
         if (!userId) return console.log("⚠️ Setup failed: No User ID provided");
-        
-        socket.join(userId);
-        onlineUsers.set(userId, socket.id);
-    
+
+        socket.join(String(userId));
+        onlineUsers.set(String(userId), socket.id);
+
+        // Join college room so controllers can broadcast to `college:<name>`
+        try {
+            const user = await User.findById(userId).select('college');
+            if (user?.college) {
+                socket.join(`college:${user.college}`);
+            }
+        } catch { /* non-critical — socket still works without college room */ }
+
         socket.emit('connected');
         io.emit('online_users', Array.from(onlineUsers.keys()));
     });
@@ -172,8 +184,8 @@ io.on('connection', (socket) => {
             const senderId = newMessageReceived.sender._id || newMessageReceived.sender.id;
 
             if (String(userId) === String(senderId)) return;
-            
-            socket.in(userId).emit('message received', newMessageReceived);
+
+            socket.in(String(userId)).emit('message received', newMessageReceived);
         });
     });
 

@@ -2,9 +2,9 @@ import Item from '../models/Item.js';
 import asyncHandler from 'express-async-handler';
 import getOrSetCache from '../utils/cacheResponse.js';
 import redis from '../config/redis.js';
-import webpush from '../utils/webPush.js';
 import User from '../models/User.js';
-import { sendPushToCollege } from '../utils/expoPush.js';
+import { sendPushToCollege }      from '../utils/expoPush.js';
+import { sendWebPushToCollege }   from '../utils/webPushService.js';
 
 // --- HELPER TO CLEAR CACHE (Updated for Multi-College) ---
 const clearItemCache = async (college) => {
@@ -46,67 +46,33 @@ export const createItem = async (req, res) => {
         // 🧹 CLEAR CACHE only for this user's college
         await clearItemCache(req.user.college);
 
-        // 👇 --- NEW: MULTI-DEVICE BROADCAST --- 👇
-        const sendPushNotifications = async () => {
-            try {
-                const frontendUrl = 'https://www.kampuscart.site'; // Change to your actual frontend URL
-                const payload = JSON.stringify({
-                    title: 'New Deal on KampusCart! 🛒',
-                    body: `${title} was just listed for ₹${price} in ${category}.`,
-                    url: `${frontendUrl}/item/${newItem._id}`,
-                    icon: imageUrls[0],
-                    image: imageUrls[0]
-                });
+        const college       = req.user.college;
+        const excludeUserId = req.user._id || req.user.id;
+        const notifTitle    = 'New listing on campus 🛒';
+        const notifBody     = `${title} listed for ₹${price} · ${category}`;
+        const notifData     = { type: 'item', itemId: String(newItem._id) };
+        const itemUrl       = `/item/${newItem._id}`;
 
-                const currentUserId = req.user._id || req.user.id;
-
-                // 1. Find users who have AT LEAST one device subscribed
-                const subscribedUsers = await User.find({
-                    pushSubscriptions: { $exists: true, $not: { $size: 0 } },
-                    _id: { $ne: currentUserId } 
-                });
-
-                const pushPromises = [];
-
-                // 2. Loop through every user...
-                subscribedUsers.forEach(user => {
-                    // ...and loop through every device they own!
-                    user.pushSubscriptions.forEach(sub => {
-                        const promise = webpush.sendNotification(sub, payload)
-                            .catch(async (error) => {
-                                // If a user uninstalls the browser on one device, remove JUST that device
-                                if (error.statusCode === 410 || error.statusCode === 404) {
-                                    console.log(`Cleaning up dead device for user: ${user.email}`);
-                                    await User.findByIdAndUpdate(user._id, { 
-                                        $pull: { pushSubscriptions: sub } 
-                                    });
-                                } else {
-                                    console.error(`Push error for ${user.email}:`, error);
-                                }
-                            });
-                        pushPromises.push(promise);
-                    });
-                });
-
-                // Fire them all at once
-                await Promise.all(pushPromises);
-                console.log(`Successfully broadcasted push alerts to ${pushPromises.length} devices.`);
-            } catch (pushError) {
-                console.error("Fatal error broadcasting push notifications:", pushError);
-            }
-        };
-
-        sendPushNotifications();
-
-        // Mobile Expo push
+        // 1. Mobile Expo push (backgrounded/killed app)
         sendPushToCollege({
-            college: req.user.college,
-            excludeUserId: req.user._id || req.user.id,
-            prefKey: 'items',
-            title: 'New listing on campus 🛒',
-            body: `${title} listed for ₹${price} · ${category}`,
-            data: { type: 'item', itemId: String(newItem._id) },
+            college, excludeUserId, prefKey: 'items',
+            title: notifTitle, body: notifBody, data: notifData,
         });
+
+        // 2. Web browser push (backgrounded tab / OS notification)
+        sendWebPushToCollege({
+            college, excludeUserId, prefKey: 'items',
+            title: notifTitle, body: notifBody,
+            url: itemUrl, icon: imageUrls[0],
+        });
+
+        // 3. Socket.io in-app banner (active tab / active app screen)
+        const io = req.app.get('io');
+        if (io) {
+            io.to(`college:${college}`).emit('campus_notification', {
+                title: notifTitle, body: notifBody, data: notifData,
+            });
+        }
 
         res.status(201).json(newItem);
     } catch (error) {

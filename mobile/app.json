@@ -36,10 +36,13 @@
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#0B0C10"
       },
+      "googleServicesFile": "./android/app/google-services.json",
+      
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
       "package": "com.ritesh977.kampuscart",
+
 
       "versionCode": 2,
 
