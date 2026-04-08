@@ -85,15 +85,8 @@ const Navbar = () => {
     socket.on('message received', fetchUnreadCount);
 
     // ── In-app notification banners ──────────────────────────────────────────
-    // Direct notifications (e.g. new chat message while tab is active)
-    socket.on('notification', ({ title, body }) => {
-      toast.info(`${title}: ${body}`, {
-        position: 'top-right',
-        autoClose: 5000,
-        toastId: `notif-${Date.now()}`,
-      });
-      fetchUnreadCount();
-    });
+    // Direct message notifications removed (handled by unread badge only)
+    socket.on('notification', fetchUnreadCount);
 
     // Campus-wide broadcasts (new listing, event, sport, lost & found)
     socket.on('campus_notification', ({ title, body }) => {
