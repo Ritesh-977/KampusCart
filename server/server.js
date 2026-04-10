@@ -22,6 +22,7 @@ import eventRoutes from './routes/eventRoutes.js';
 import studyMaterialRoutes from './routes/studyMaterialRoutes.js';
 import sportRoutes from './routes/sportRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
+import { idempotencyCheck } from './middleware/idempotencyMiddleware.js';
 import { startCronJobs } from './utils/cronJobs.js';
 
 // Connect to Database
@@ -52,6 +53,9 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser()); // 2. USE THIS (Must be before routes)
 app.use('/uploads', express.static('uploads')); 
+
+// Apply Circuit Breaker Idempotency guard globally
+app.use('/api', idempotencyCheck);
 
 // Register Routes
 app.use('/api/auth', authRoutes);
