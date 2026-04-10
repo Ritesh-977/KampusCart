@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const [activeItemsCount, setActiveItemsCount] = useState(1);
   const [targetItemsCount, setTargetItemsCount] = useState(1);
   const [usersCount, setUsersCount] = useState(1);
   const [targetUsersCount, setTargetUsersCount] = useState(1);
 
   const handleStartBrowsing = () => {
-    window.scrollTo({
-      top: 600, 
-      behavior: 'smooth'
-    });
+    navigate('/browse');
   };
 
   useEffect(() => {
@@ -80,19 +78,19 @@ const HeroSection = () => {
   return (
     // Dark Navy/Slate with Cyan Accents
     <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-hidden min-h-[500px] lg:h-[550px] flex items-center transition-colors duration-300">
-      
+
       {/* Animated Background Effects */}
       <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none">
         {/* Floating Blob 1 - Cyan */}
         <div className="absolute -top-[30%] -right-[10%] w-[500px] h-[500px] bg-cyan-500 dark:bg-cyan-400 rounded-full blur-3xl opacity-20 dark:opacity-10 float-animation"></div>
-        
+
         {/* Floating Blob 2 - Teal */}
         <div className="absolute top-[20%] -left-[20%] w-[400px] h-[400px] bg-teal-500 dark:bg-teal-400 rounded-full blur-3xl opacity-15 dark:opacity-10 float-animation" style={{ animationDelay: '1s' }}></div>
-        
+
         {/* Animated Geometric Shapes */}
         <div className="absolute top-1/4 right-1/4 w-64 h-64 border-2 border-cyan-500/20 rounded-3xl animate-spin" style={{ animationDuration: '20s' }}></div>
         <div className="absolute bottom-1/3 left-1/3 w-96 h-96 border border-teal-500/15 rounded-full animate-pulse" style={{ animationDuration: '4s' }}></div>
-        
+
         {/* Animated Lines */}
         <div className="absolute inset-0">
           <svg className="w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
@@ -106,14 +104,14 @@ const HeroSection = () => {
             <line x1="100%" y1="0" x2="0" y2="100%" stroke="url(#lineGrad)" strokeWidth="2" />
           </svg>
         </div>
-        
+
         {/* Grid Pattern Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent dark:from-white/3 dark:to-transparent"></div>
       </div>
 
       <div className="max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8 w-full z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          
+
           {/* --- LEFT SIDE: CONTENT --- */}
           <div className="text-center lg:text-left mb-8 lg:mb-0 py-8 lg:py-0 z-20 relative">
             <h1 className="text-3xl sm:text-4xl lg:text-6xl font-black text-white leading-tight tracking-tight mb-4 slide-in-blur">
@@ -122,21 +120,21 @@ const HeroSection = () => {
                 Marketplace
               </span>
             </h1>
-            
+
             <p className="text-base sm:text-lg text-slate-300 dark:text-slate-300 mb-8 max-w-lg mx-auto lg:mx-0 font-medium leading-relaxed slide-in-blur" style={{ '--animation-delay': '0.2s' }}>
               Buy, sell, and find everything you need for college life right here within your campus community.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start slide-in-blur" style={{ '--animation-delay': '0.4s' }}>
-              <button 
+              <button
                 onClick={handleStartBrowsing}
                 className="px-8 py-3.5 bg-white dark:bg-white text-slate-900 dark:text-slate-900 font-bold rounded-xl shadow-xl hover:shadow-2xl hover:scale-110 transition-all transform duration-300 text-base sm:text-lg relative overflow-hidden group"
               >
                 <span className="relative z-10">Start Browsing</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-100 to-slate-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </button>
-              
-              <Link 
+
+              <Link
                 to="/sell"
                 className="px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-teal-500 dark:from-cyan-500 dark:to-teal-500 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl hover:scale-110 transition-all transform duration-300 flex items-center justify-center text-base sm:text-lg border border-cyan-400/30 group"
               >

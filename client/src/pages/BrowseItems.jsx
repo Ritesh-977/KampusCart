@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import ItemCard from '../components/ItemCard';
-import API from '../api/axios.js';
+import { apiCall } from '../api/apiWithFallback.js';
 import { toast } from 'react-toastify';
 import { useCollege } from '../context/CollegeContext';
 import SEOHead from '../components/SEOHead';
@@ -52,7 +52,7 @@ const BrowseItems = () => {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const response = await API.get('/items', {
+      const response = await apiCall.get('/items', {
         params: {
           search: searchQuery,
           category: selectedCategory,
@@ -77,7 +77,7 @@ const BrowseItems = () => {
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user) return;
     try {
-      const response = await API.get('/users/wishlist');
+      const response = await apiCall.get('/users/wishlist');
       setWishlist(response.data.map((item) => item._id));
     } catch (error) {
       console.error('Error fetching wishlist:', error);
@@ -98,7 +98,7 @@ const BrowseItems = () => {
       } else {
         setWishlist((prev) => [...prev, itemId]);
       }
-      await API.post('/users/wishlist', { itemId });
+      await apiCall.post('/users/wishlist', { itemId });
     } catch (error) {
       console.error('Failed to update wishlist', error);
     }
