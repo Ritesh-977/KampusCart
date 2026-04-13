@@ -338,11 +338,10 @@ const Navbar = () => {
           <div className="flex-shrink-0 flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
             <img src="/logo.png" alt="KampusCart" className="h-9 w-9 object-contain" />
             <span className="text-lg font-black tracking-tight bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent hidden sm:block">
-              kampusCart
+              KampusCart
             </span>
             {selectedCollege && (
               <button
-                onClick={e => { e.stopPropagation(); handleSwitchCampus(); }}
                 className="hidden md:flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border transition-all hover:opacity-75"
                 style={{
                   background: `${selectedCollege.theme.primary}18`,
@@ -521,15 +520,21 @@ const Navbar = () => {
             className="flex items-center justify-center w-full py-3 border-2 border-slate-700 hover:border-indigo-500 text-slate-200 font-bold rounded-xl text-sm transition-colors">
             Log in
           </Link>
-          <button onClick={() => { setIsMobileMenuOpen(false); handleSwitchCampus(); }}
-            className="flex items-center justify-center gap-2 w-full py-3 text-slate-400 hover:text-indigo-400 font-medium rounded-xl text-sm transition-colors">
-            <FaExchangeAlt className="text-xs" />
+         <button onClick={() => { setIsMobileMenuOpen(false); handleSwitchCampus(); }}
+            className="relative flex items-center justify-center w-full py-3 border border-slate-700 hover:border-indigo-500 text-slate-300 hover:text-indigo-400 font-semibold rounded-xl text-sm transition-colors">
+            
             Switch Campus
-            {selectedCollege && (
-              <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${selectedCollege.theme.primary}20`, color: selectedCollege.theme.primary }}>
-                {selectedCollege.shortName}
-              </span>
-            )}
+            
+            {/* Anchored to the right side with a small gap (right-4) */}
+            <div className="absolute right-4 flex items-center gap-2">
+              {selectedCollege && (
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${selectedCollege.theme.primary}20`, color: selectedCollege.theme.primary }}>
+                  {selectedCollege.shortName}
+                </span>
+              )}
+              <FaExchangeAlt className="text-xs opacity-70" />
+            </div>
+            
           </button>
         </div>
       )}
