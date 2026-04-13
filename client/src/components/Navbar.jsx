@@ -235,10 +235,11 @@ const Navbar = () => {
   );
 
   // Waffle / Campus Menu popup
+  // Waffle / Campus Menu popup
   const CampusMenu = () => {
     const visibleFeatures = CAMPUS_FEATURES.filter(f => !f.authOnly || isLoggedIn);
     return (
-      <div className="absolute right-0 top-full mt-3 w-72 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+      <div className="fixed top-[4.5rem] left-1/2 -translate-x-1/2 sm:absolute sm:top-full sm:left-auto sm:translate-x-0 sm:right-0 sm:mt-3 w-[92vw] sm:w-72 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
         {/* Header */}
         <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900">
           <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Campus Features</p>
