@@ -32,6 +32,7 @@ import BrowseItems from "./pages/BrowseItems";
 import Events from "./pages/Events";
 import Sports from "./pages/Sports";
 import StudyMaterials from "./pages/StudyMaterials";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -224,6 +225,17 @@ function App() {
               <CollegeProtectedRoute>
                 <ProtectedRoute>
                   <StudyMaterials />
+                </ProtectedRoute>
+              </CollegeProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/notifications"
+            element={
+              <CollegeProtectedRoute>
+                <ProtectedRoute>
+                  <Notifications />
                 </ProtectedRoute>
               </CollegeProtectedRoute>
             }

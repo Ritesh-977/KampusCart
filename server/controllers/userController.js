@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import Item from '../models/Item.js';
 import bcrypt from 'bcryptjs';
+import { createNotification, NOTIFICATION_TYPES } from '../utils/notificationHelper.js';
 
 //Get user profile
 // @route   GET /api/users/profile
@@ -132,6 +133,19 @@ export const toggleWishlist = async (req, res) => {
             // Add
             user.wishlist.push(itemId);
             await user.save();
+
+            // Notify seller that someone added their item to wishlist
+            const item = await Item.findById(itemId).populate('seller', '_id name');
+            if (item && item.seller._id.toString() !== req.user.id) {
+                const io = req.app.get('io');
+                await createNotification(io, item.seller._id, {
+                    title: 'Item Added to Wishlist ❤️',
+                    message: `${user.name} added "${item.title}" to their wishlist`,
+                    type: NOTIFICATION_TYPES.ITEM,
+                    link: `/item/${itemId}`
+                });
+            }
+
             res.status(200).json({ message: 'Added to wishlist', wishlist: user.wishlist });
         }
     } catch (error) {

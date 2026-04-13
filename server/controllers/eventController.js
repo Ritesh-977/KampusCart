@@ -1,6 +1,8 @@
 import Event from '../models/Event.js';
+import User from '../models/User.js';
 import { sendPushToCollege }    from '../utils/expoPush.js';
 import { sendWebPushToCollege } from '../utils/webPushService.js';
+import { createNotification, NOTIFICATION_TYPES } from '../utils/notificationHelper.js';
 
 // GET /api/events?college=...
 // Returns upcoming events (events that ended less than 1 hour ago are still shown)
@@ -56,6 +58,17 @@ export const createEvent = async (req, res) => {
     const io = req.app.get('io');
     if (io) io.to(`college:${college}`).emit('campus_notification', { title: notifTitle, body: notifBody, data: notifData });
 
+    // Create in-app notifications for all college users (except the creator)
+    const users = await User.find({ college, _id: { $ne: excludeUserId } }).select('_id');
+    for (const user of users) {
+      await createNotification(io, user._id, {
+        title: notifTitle,
+        message: notifBody,
+        type: NOTIFICATION_TYPES.EVENT,
+        link: '/events'
+      });
+    }
+
     res.status(201).json(event);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -79,6 +92,22 @@ export const updateEvent = async (req, res) => {
     if (duration)    event.duration    = Number(duration);
     if (color)       event.color       = color;
     await event.save();
+
+    // Notify all college users about event update (except the organizer)
+    const io = req.app.get('io');
+    const notifTitle = 'Event Updated 📅';
+    const notifBody = `${event.title} has been updated`;
+    
+    const users = await User.find({ college: event.college, _id: { $ne: req.user._id } }).select('_id');
+    for (const user of users) {
+      await createNotification(io, user._id, {
+        title: notifTitle,
+        message: notifBody,
+        type: NOTIFICATION_TYPES.EVENT,
+        link: '/events'
+      });
+    }
+
     res.json(event);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -94,6 +123,22 @@ export const deleteEvent = async (req, res) => {
     if (!isOwner && !req.user.isAdmin) {
       return res.status(403).json({ message: 'Not authorized' });
     }
+
+    // Notify all college users about event cancellation (except the organizer)
+    const io = req.app.get('io');
+    const notifTitle = 'Event Cancelled ⚠️';
+    const notifBody = `${event.title} has been cancelled`;
+    
+    const users = await User.find({ college: event.college, _id: { $ne: req.user._id } }).select('_id');
+    for (const user of users) {
+      await createNotification(io, user._id, {
+        title: notifTitle,
+        message: notifBody,
+        type: NOTIFICATION_TYPES.ALERT,
+        link: '/events'
+      });
+    }
+
     await event.deleteOne();
     res.json({ message: 'Event deleted' });
   } catch (err) {
