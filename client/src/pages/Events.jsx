@@ -32,7 +32,7 @@ const Events = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [editTarget, setEditTarget] = useState(null); // event being edited
+  const [editTarget, setEditTarget] = useState(null);
   const [form, setForm] = useState(BLANK_FORM);
 
   useEffect(() => { fetchEvents(); }, []);
@@ -158,61 +158,101 @@ const Events = () => {
             {events.map(ev => (
               <div
                 key={ev._id}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col"
+                className="group relative bg-white dark:bg-slate-900 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col hover:-translate-y-1"
               >
-                {/* Color bar */}
-                <div className="h-1.5 w-full" style={{ background: ev.color || '#6366f1' }} />
+                {/* Colored Top Bar */}
+                <div 
+                  className="h-2 w-full transition-opacity duration-300 group-hover:opacity-100" 
+                  style={{ backgroundColor: ev.color || '#6366f1', boxShadow: `0 0 12px ${ev.color || '#6366f1'}80` }} 
+                />
 
-                <div className="p-5 flex-1 flex flex-col">
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-snug">{ev.title}</h3>
+                <div className="p-6 flex-1 flex flex-col relative">
+                  {/* Header & Controls */}
+                  <div className="relative z-10 flex items-start justify-between gap-4 mb-4">
+                    <h3 
+                      className="text-xl font-extrabold leading-tight transition-colors"
+                      style={{ color: ev.color || '#6366f1' }}
+                    >
+                      {ev.title}
+                    </h3>
                     {canManage(ev) && (
-                      <div className="flex gap-1 flex-shrink-0">
+                      <div className="flex gap-1 flex-shrink-0 bg-slate-50 dark:bg-slate-800 p-1 rounded-xl border border-slate-100 dark:border-slate-700">
                         <button
                           onClick={() => openEdit(ev)}
-                          className="p-1.5 text-gray-400 hover:text-indigo-500 transition rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                          className="p-1.5 text-slate-400 hover:text-indigo-500 transition rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
                           title="Edit"
                         >
-                          <FaEdit size={13} />
+                          <FaEdit size={14} />
                         </button>
                         <button
                           onClick={() => handleDelete(ev)}
-                          className="p-1.5 text-gray-400 hover:text-red-500 transition rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
+                          className="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30"
                           title="Delete"
                         >
-                          <FaTrashAlt size={13} />
+                          <FaTrashAlt size={14} />
                         </button>
                       </div>
                     )}
                   </div>
 
                   {ev.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{ev.description}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-5 line-clamp-2 relative z-10">
+                      {ev.description}
+                    </p>
                   )}
 
-                  <div className="space-y-1.5 text-sm text-gray-600 dark:text-gray-400 mt-auto">
-                    <div className="flex items-center gap-2">
-                      <FaMapMarkerAlt className="text-indigo-500 flex-shrink-0" />
-                      <span>{ev.location}</span>
+                  {/* Enhanced Info Blocks */}
+                  <div className="mt-auto grid grid-cols-1 gap-3 relative z-10">
+                    
+                    {/* Location Badge */}
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: `${ev.color}15`, color: ev.color }}>
+                        <FaMapMarkerAlt />
+                      </div>
+                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{ev.location}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <FaCalendarAlt className="text-indigo-500 flex-shrink-0" />
-                      <span>{formatDate(ev.startTime)}</span>
+
+                    {/* Date & Time Row */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: `${ev.color}15`, color: ev.color }}>
+                          <FaCalendarAlt />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">When</span>
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{formatDate(ev.startTime)}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: `${ev.color}15`, color: ev.color }}>
+                          <FaClock />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Duration</span>
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{ev.duration} min</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <FaClock className="text-indigo-500 flex-shrink-0" />
-                      <span>{ev.duration} min</span>
-                    </div>
+
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      By <span className="font-semibold text-gray-700 dark:text-gray-300">{ev.organizer?.name}</span>
-                    </span>
+                  {/* Organizer Footer */}
+                  <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center text-slate-700 dark:text-white text-xs font-bold shadow-sm">
+                        {ev.organizer?.name ? ev.organizer.name[0].toUpperCase() : 'U'}
+                      </div>
+                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                        {ev.organizer?.name}
+                      </span>
+                    </div>
+                    
                     {ev.organizer?.phone && (
                       <a
                         href={`tel:${ev.organizer.phone}`}
-                        className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
+                        className="text-xs font-bold px-3 py-1.5 rounded-full transition-colors hover:opacity-80 border"
+                        style={{ backgroundColor: `${ev.color}15`, color: ev.color, borderColor: `${ev.color}30` }}
                       >
                         {ev.organizer.phone}
                       </a>
