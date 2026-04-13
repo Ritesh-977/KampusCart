@@ -5,12 +5,14 @@ import {
   FaSearch, FaUserCircle, FaHistory, FaTrashAlt,
   FaHeart, FaPlus, FaSignOutAlt, FaUser, FaList, FaBullhorn,
   FaCommentDots, FaTimes, FaUserShield, FaUniversity, FaExchangeAlt, FaBars,
-  FaCalendarCheck, FaTrophy, FaBook, FaStore, FaThLarge, FaChevronDown,
+  FaCalendarCheck, FaTrophy, FaBook, FaStore, FaThLarge, FaChevronDown, FaBell,
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import API from '../api/axios';
 import io from 'socket.io-client';
 import { useCollege } from '../context/CollegeContext';
+import { useNotifications } from '../context/NotificationContext';
+import NotificationDropdown from './NotificationDropdown';
 
 const ENDPOINT = import.meta.env.VITE_SERVER_URL;
 
@@ -27,6 +29,7 @@ const Navbar = () => {
   const [isProfileOpen, setIsProfileOpen]   = useState(false);
   const [isCampusMenuOpen, setIsCampusMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   const [searchTerm, setSearchTerm]   = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -40,15 +43,18 @@ const Navbar = () => {
 
   const profileRef    = useRef(null);
   const campusMenuRef = useRef(null);
+  const notificationRef = useRef(null);
 
   const user       = JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('userInfo'));
   const isLoggedIn = !!user;
+  const { unreadCount } = useNotifications();
 
   // Close menus on route change
   useEffect(() => {
     setIsProfileOpen(false);
     setIsCampusMenuOpen(false);
     setIsMobileMenuOpen(false);
+    setIsNotificationOpen(false);
   }, [location.pathname]);
 
   // Close on outside click
@@ -56,6 +62,7 @@ const Navbar = () => {
     const handler = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target))   setIsProfileOpen(false);
       if (campusMenuRef.current && !campusMenuRef.current.contains(e.target)) setIsCampusMenuOpen(false);
+      if (notificationRef.current && !notificationRef.current.contains(e.target)) setIsNotificationOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -418,6 +425,25 @@ const Navbar = () => {
               </button>
               {isCampusMenuOpen && <CampusMenu />}
             </div>
+
+            {/* Notifications Bell */}
+            {isLoggedIn && (
+              <div className="relative" ref={notificationRef}>
+                <button
+                  onClick={() => { setIsNotificationOpen(p => !p); setIsProfileOpen(false); setIsCampusMenuOpen(false); }}
+                  className="relative p-2 sm:p-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-all group"
+                  title="Notifications"
+                >
+                  <FaBell className="text-lg group-hover:scale-110 transition-transform" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0.5 right-0.5 h-4 w-4 flex items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-slate-900">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                {isNotificationOpen && <NotificationDropdown onClose={() => setIsNotificationOpen(false)} />}
+              </div>
+            )}
 
             {/* ── AUTH ── */}
             {isLoggedIn ? (

@@ -5,6 +5,7 @@ import redis from '../config/redis.js';
 import User from '../models/User.js';
 import { sendPushToCollege }      from '../utils/expoPush.js';
 import { sendWebPushToCollege }   from '../utils/webPushService.js';
+import { createNotification, NOTIFICATION_TYPES } from '../utils/notificationHelper.js';
 
 // --- HELPER TO CLEAR CACHE (Updated for Multi-College) ---
 const clearItemCache = async (college) => {
@@ -71,6 +72,17 @@ export const createItem = async (req, res) => {
         if (io) {
             io.to(`college:${college}`).emit('campus_notification', {
                 title: notifTitle, body: notifBody, data: notifData,
+            });
+        }
+
+        // 4. Create in-app notifications for all college users (except the seller)
+        const users = await User.find({ college, _id: { $ne: excludeUserId } }).select('_id');
+        for (const user of users) {
+            await createNotification(io, user._id, {
+                title: notifTitle,
+                message: notifBody,
+                type: NOTIFICATION_TYPES.ITEM,
+                link: itemUrl
             });
         }
 
@@ -253,15 +265,30 @@ export const getMyListings = async (req, res) => {
 
 export const toggleSoldStatus = async (req, res) => {
     try {
-        const item = await Item.findById(req.params.id);
+        const item = await Item.findById(req.params.id).populate('seller', 'name');
         if (!item) return res.status(404).json({ message: "Item not found" });
-        if (item.seller.toString() !== req.user.id) return res.status(401).json({ message: "Not authorized" });
+        if (item.seller._id.toString() !== req.user.id) return res.status(401).json({ message: "Not authorized" });
 
         item.isSold = !item.isSold;
         await item.save();
 
         // 🧹 CLEAR CACHE
         await clearItemCache(req.user.college);
+
+        // Notify users who have this item in wishlist
+        if (item.isSold) {
+            const io = req.app.get('io');
+            const usersWithWishlist = await User.find({ wishlist: item._id }).select('_id');
+            
+            for (const user of usersWithWishlist) {
+                await createNotification(io, user._id, {
+                    title: 'Wishlist Item Sold 🛍️',
+                    message: `"${item.title}" has been marked as sold`,
+                    type: NOTIFICATION_TYPES.ITEM,
+                    link: `/item/${item._id}`
+                });
+            }
+        }
 
         res.status(200).json(item);
     } catch (error) {

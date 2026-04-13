@@ -22,6 +22,8 @@ import eventRoutes from './routes/eventRoutes.js';
 import studyMaterialRoutes from './routes/studyMaterialRoutes.js';
 import sportRoutes from './routes/sportRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import debugRoutes from './routes/debugRoutes.js';
 import { idempotencyCheck } from './middleware/idempotencyMiddleware.js';
 import { startCronJobs } from './utils/cronJobs.js';
 
@@ -70,6 +72,8 @@ app.use('/api/events', eventRoutes);
 app.use('/api/materials', studyMaterialRoutes);
 app.use('/api/sports', sportRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/debug', debugRoutes);
 
 // ── College slugs (mirrors client/src/data/colleges.js) ──────────────────────
 const COLLEGE_SLUGS = [
