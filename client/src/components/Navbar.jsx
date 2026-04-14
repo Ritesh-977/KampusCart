@@ -134,6 +134,10 @@ const Navbar = () => {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('userInfo');
+      
+      // Dispatch custom event to notify NotificationContext
+      window.dispatchEvent(new Event('user-logout'));
+      
       toast.success('Logged out successfully!');
       navigate('/login');
     }

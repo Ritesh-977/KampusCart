@@ -93,6 +93,7 @@ const Auth = () => {
           emailDomain: signupCollege?.emailDomain,
         });
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        window.dispatchEvent(new Event('user-login'));
         subscribeUserToPush().catch(() => { });
         toast.success('Account created with Google!');
         navigate('/');
@@ -117,6 +118,7 @@ const Auth = () => {
           access_token: tokenResponse.access_token,
         });
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        window.dispatchEvent(new Event('user-login'));
         subscribeUserToPush().catch(() => { });
         // toast.success('Signed in with Google successfully!');
         navigate('/');
@@ -203,6 +205,7 @@ const Auth = () => {
 
         // Store user info (Cookie handles the token automatically)
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        window.dispatchEvent(new Event('user-login'));
 
         setLoading(false);
         // toast.success('Logged in successfully!');
