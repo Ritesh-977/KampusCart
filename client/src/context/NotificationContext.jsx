@@ -33,7 +33,6 @@ export const NotificationProvider = ({ children }) => {
 
   const fetchNotifications = useCallback(async () => {
     const user = getUser();
-    console.log('[NotificationContext] fetchNotifications called, user:', user?._id || user?.id);
     if (!user) {
       setNotifications([]);
       setUnreadCount(0);
@@ -42,7 +41,6 @@ export const NotificationProvider = ({ children }) => {
     try {
       setLoading(true);
       const { data } = await apiCall.get('/notifications');
-      console.log('[NotificationContext] Fetched notifications:', data.notifications?.length);
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount || 0);
     } catch (error) {
@@ -90,7 +88,6 @@ export const NotificationProvider = ({ children }) => {
   // Initial fetch on mount
   useEffect(() => {
     const userId = getUserId();
-    console.log('[NotificationContext] Initial mount, userId:', userId);
     if (userId) {
       fetchNotifications();
     }
@@ -99,18 +96,15 @@ export const NotificationProvider = ({ children }) => {
   // Monitor userId changes and initial mount
   useEffect(() => {
     const newUserId = getUserId();
-    console.log('[NotificationContext] Checking userId change. Current:', currentUserId, 'New:', newUserId);
     
     // If userId changed (logout or different user), clear and refetch
     if (newUserId !== currentUserId) {
-      console.log('[NotificationContext] UserId changed! Updating...');
       setCurrentUserId(newUserId);
       setNotifications([]);
       setUnreadCount(0);
       
       if (newUserId) {
         // New user logged in, fetch their notifications
-        console.log('[NotificationContext] Fetching notifications for new user');
         fetchNotifications();
       }
     }
@@ -133,7 +127,6 @@ export const NotificationProvider = ({ children }) => {
 
     const handleLogin = () => {
       const newUserId = getUserId();
-      console.log('[NotificationContext] user-login event fired. UserId:', newUserId, 'Current:', currentUserId);
       if (newUserId) {
         setCurrentUserId(newUserId);
         setNotifications([]);
