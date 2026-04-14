@@ -57,7 +57,9 @@ const userSchema = new mongoose.Schema({
     college: {
         type: String,
         default: "MNNIT Allahabad"
-    }
+    },
+
+    lastReminderSentAt: { type: Date, default: null }
 
 
 }, { timestamps: true });
