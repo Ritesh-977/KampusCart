@@ -1,6 +1,8 @@
 // src/context/CollegeContext.jsx
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
-import { findCollegeByName } from '../data/colleges';
+import { findCollegeByName, findCollegeById } from '../data/colleges';
+
+const DEFAULT_COLLEGE_ID = 'mnnit-allahabad';
 
 const CollegeContext = createContext();
 
@@ -11,9 +13,9 @@ export const CollegeProvider = ({ children }) => {
   const [selectedCollege, setSelectedCollegeState] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : null;
+      return saved ? JSON.parse(saved) : findCollegeById(DEFAULT_COLLEGE_ID);
     } catch {
-      return null;
+      return findCollegeById(DEFAULT_COLLEGE_ID);
     }
   });
 
