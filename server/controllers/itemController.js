@@ -176,27 +176,41 @@ export const getItems = async (req, res) => {
             const collegeFilter = { college: college };
             let query = { ...collegeFilter };
 
+            const standardCategories = ['Books & Notes', 'Electronics', 'Hostel Essentials', 'Cycles', 'Stationery'];
+            const categoryFilter = category
+                ? category === 'Others'
+                    ? { category: { $nin: standardCategories } }
+                    : { category }
+                : null;
+
+            // Category aliases: map search terms to matching category names
+            const categoryAliases = [
+                { pattern: /\bbooks?\b|\bnotes?\b/i, category: 'Books & Notes' },
+                { pattern: /\belectronics?\b|\blaptops?\b|\bphones?\b/i, category: 'Electronics' },
+                { pattern: /\bcycles?\b|\bbicycles?\b/i, category: 'Cycles' },
+                { pattern: /\bhostel\b|\bessentials?\b/i, category: 'Hostel Essentials' },
+                { pattern: /\bstationery\b|\bpens?\b|\bpencils?\b/i, category: 'Stationery' },
+            ];
+
             if (search) {
-                // Combine filters: Must match college, MUST NOT be sold, and must match search regex
+                const matchedCategory = categoryAliases.find(a => a.pattern.test(search))?.category;
+                const searchOr = [
+                    { title: { $regex: search, $options: 'i' } },
+                    { description: { $regex: search, $options: 'i' } },
+                    { category: { $regex: search, $options: 'i' } },
+                ];
+                if (matchedCategory) searchOr.push({ category: matchedCategory });
+
                 query = {
                     $and: [
                         collegeFilter,
-                        { isSold: { $ne: true } }, // 🛑 Hide sold items from search results
-                        { $or: [
-                            { title: { $regex: search, $options: 'i' } },
-                            { description: { $regex: search, $options: 'i' } }
-                        ]}
+                        { isSold: { $ne: true } },
+                        { $or: searchOr },
+                        ...(categoryFilter ? [categoryFilter] : []),
                     ]
                 };
-            }
-
-            if (category) {
-                const standardCategories = ['Books & Notes', 'Electronics', 'Hostel Essentials', 'Cycles', 'Stationery'];
-                if (category === 'Others') {
-                    query.category = { $nin: standardCategories };
-                } else {
-                    query.category = category;
-                }
+            } else if (categoryFilter) {
+                query = { ...collegeFilter, ...categoryFilter };
             }
 
             if (minPrice || maxPrice) {
@@ -331,12 +345,22 @@ export const suggestItems = async (req, res) => {
         // Fallback to prefix regex when $text returns nothing
         // (handles partial words like "Cyc" → "Cycle")
         if (items.length === 0) {
+            const categoryAliases = [
+                { pattern: /\bbooks?\b|\bnotes?\b/i, category: 'Books & Notes' },
+                { pattern: /\belectronics?\b|\blaptops?\b|\bphones?\b/i, category: 'Electronics' },
+                { pattern: /\bcycles?\b|\bbicycles?\b/i, category: 'Cycles' },
+                { pattern: /\bhostel\b|\bessentials?\b/i, category: 'Hostel Essentials' },
+                { pattern: /\bstationery\b|\bpens?\b|\bpencils?\b/i, category: 'Stationery' },
+            ];
+            const matchedCategory = categoryAliases.find(a => a.pattern.test(trimmed))?.category;
+            const orConditions = [
+                { title: { $regex: trimmed, $options: 'i' } },
+                { category: { $regex: trimmed, $options: 'i' } },
+            ];
+            if (matchedCategory) orConditions.push({ category: matchedCategory });
+
             items = await Item.find(
-                {
-                    college,
-                    isSold: { $ne: true },
-                    title: { $regex: trimmed, $options: 'i' },
-                },
+                { college, isSold: { $ne: true }, $or: orConditions },
                 { title: 1, category: 1, images: 1, price: 1 }
             )
                 .limit(6)
