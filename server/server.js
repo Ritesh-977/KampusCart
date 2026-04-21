@@ -6,7 +6,10 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser'; // 1. IMPORT THIS
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import rateLimit from 'express-rate-limit';
 import connectDB from './config/db.js';
+import redis from './config/redis.js';
 import User from './models/User.js';
 
 // Import Routes
@@ -59,14 +62,31 @@ app.use('/uploads', express.static('uploads'));
 // Apply Circuit Breaker Idempotency guard globally
 app.use('/api', idempotencyCheck);
 
+// Rate Limiters
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    message: { message: 'Too many requests, please try again after 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const uploadLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    message: { message: 'Upload limit reached, please try again after a minute.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 // Register Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/lost-found', lostFoundRoutes);
 app.use('/api/chat', chatRoutes); 
 app.use('/api/message', messageRoutes); 
-app.use('/api/upload', uploadRoutes);
+app.use('/api/upload', uploadLimiter, uploadRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/materials', studyMaterialRoutes);
@@ -149,10 +169,14 @@ const io = new Server(httpServer, {
     }
 });
 
+// Redis adapter for horizontal scaling (multi-instance Socket.io)
+const subClient = redis.duplicate();
+io.adapter(createAdapter(redis, subClient));
+
 // Expose io to all controllers via req.app.get('io')
 app.set('io', io);
 
-const onlineUsers = new Map();
+// onlineUsers is now tracked via Redis adapter rooms — no local Map needed
 
 io.on('connection', (socket) => {
 
@@ -162,7 +186,9 @@ io.on('connection', (socket) => {
         if (!userId) return console.log("⚠️ Setup failed: No User ID provided");
 
         socket.join(String(userId));
-        onlineUsers.set(String(userId), socket.id);
+        // Track online users in Redis so all instances share the same state
+        await redis.sadd('online_users', String(userId));
+        socket.data.userId = String(userId);
 
         // Join college room so controllers can broadcast to `college:<name>`
         try {
@@ -173,7 +199,8 @@ io.on('connection', (socket) => {
         } catch { /* non-critical — socket still works without college room */ }
 
         socket.emit('connected');
-        io.emit('online_users', Array.from(onlineUsers.keys()));
+        const onlineList = await redis.smembers('online_users');
+        io.emit('online_users', onlineList);
     });
 
     // B. Join Chat
@@ -203,14 +230,12 @@ io.on('connection', (socket) => {
     socket.on('stop typing', (room) => socket.in(room).emit('stop typing'));
 
     // E. Disconnect
-    socket.on('disconnect', () => {
-        for (let [key, value] of onlineUsers.entries()) {
-            if (value === socket.id) {
-                onlineUsers.delete(key);
-                break;
-            }
+    socket.on('disconnect', async () => {
+        if (socket.data.userId) {
+            await redis.srem('online_users', socket.data.userId);
+            const onlineList = await redis.smembers('online_users');
+            io.emit('online_users', onlineList);
         }
-        io.emit('online_users', Array.from(onlineUsers.keys()));
     });
 });
 
