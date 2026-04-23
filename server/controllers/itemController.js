@@ -68,15 +68,8 @@ export const createItem = async (req, res) => {
             url: itemUrl, icon: imageUrls[0],
         });
 
-        // 3. Socket.io in-app banner (active tab / active app screen)
+        // 3. Bulk-insert in-app notifications for all college users (single DB write)
         const io = req.app.get('io');
-        if (io) {
-            io.to(`college:${college}`).emit('campus_notification', {
-                title: notifTitle, body: notifBody, data: notifData,
-            });
-        }
-
-        // 4. Bulk-insert in-app notifications for all college users (single DB write)
         const users = await User.find({ college, _id: { $ne: excludeUserId } }).select('_id');
         if (users.length > 0) {
             const notifications = users.map(user => ({
