@@ -96,7 +96,7 @@ const Footer = () => {
               Get Our App
             </h3>
             <a 
-              href="#" 
+              href="https://play.google.com/store/apps/details?id=com.ritesh977.kampuscart" 
               target="_blank" 
               rel="noreferrer"
               className="inline-flex items-center gap-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-cyan-500/50 transition-all rounded-xl px-4 py-2 group shadow-sm w-fit"

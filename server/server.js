@@ -25,6 +25,7 @@ import eventRoutes from './routes/eventRoutes.js';
 import studyMaterialRoutes from './routes/studyMaterialRoutes.js';
 import sportRoutes from './routes/sportRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
+import clubRoutes from './routes/clubRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import debugRoutes from './routes/debugRoutes.js';
 import { idempotencyCheck } from './middleware/idempotencyMiddleware.js';
@@ -92,6 +93,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/materials', studyMaterialRoutes);
 app.use('/api/sports', sportRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/clubs',    clubRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/debug', debugRoutes);
 
