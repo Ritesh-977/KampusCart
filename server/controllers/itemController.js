@@ -150,24 +150,23 @@ export const updateItem = async (req, res) => {
 
 export const getItems = async (req, res) => {
     try {
-        // ⚡ EXTRACT COLLEGE FROM QUERY (URL) NOT FROM LOGGED IN USER
-        const { search, category, minPrice, maxPrice, sortBy, college } = req.query;
+        const { search, category, minPrice, maxPrice, sortBy, college, page = 1, limit = 12 } = req.query;
 
-        // 🛡️ SAFETY CHECK: Ensure the frontend actually requested a college
         if (!college) {
             return res.status(400).json({ message: "Please select a college to view items." });
         }
 
-        // 🔑 Generate Cache Key tied specifically to the requested college
+        const pageNum  = Math.max(1, parseInt(page));
+        const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
+        const skip     = (pageNum - 1) * limitNum;
+
         const queryString = JSON.stringify(req.query);
         const cacheKey = `items:${college}:${queryString}`;
 
-        // ⚡ WRAP DB QUERY IN CACHE HELPER
-        const items = await getOrSetCache(cacheKey, async () => {
+        const result = await getOrSetCache(cacheKey, async () => {
 
-            // --- STRICT DATA ISOLATION: ONLY match the exact requested college ---
-            const collegeFilter = { college: college };
-            let query = { ...collegeFilter };
+            const collegeFilter = { college };
+            let dbQuery = { ...collegeFilter };
 
             const standardCategories = ['Books & Notes', 'Electronics', 'Hostel Essentials', 'Cycles', 'Stationery'];
             const categoryFilter = category
@@ -176,7 +175,6 @@ export const getItems = async (req, res) => {
                     : { category }
                 : null;
 
-            // Category aliases: map search terms to matching category names
             const categoryAliases = [
                 { pattern: /\bbooks?\b|\bnotes?\b/i, category: 'Books & Notes' },
                 { pattern: /\belectronics?\b|\blaptops?\b|\bphones?\b/i, category: 'Electronics' },
@@ -193,8 +191,7 @@ export const getItems = async (req, res) => {
                     { category: { $regex: search, $options: 'i' } },
                 ];
                 if (matchedCategory) searchOr.push({ category: matchedCategory });
-
-                query = {
+                dbQuery = {
                     $and: [
                         collegeFilter,
                         { isSold: { $ne: true } },
@@ -203,26 +200,28 @@ export const getItems = async (req, res) => {
                     ]
                 };
             } else if (categoryFilter) {
-                query = { ...collegeFilter, ...categoryFilter };
+                dbQuery = { ...collegeFilter, ...categoryFilter };
             }
 
             if (minPrice || maxPrice) {
-                query.price = {};
-                if (minPrice) query.price.$gte = Number(minPrice);
-                if (maxPrice) query.price.$lte = Number(maxPrice);
+                dbQuery.price = {};
+                if (minPrice) dbQuery.price.$gte = Number(minPrice);
+                if (maxPrice) dbQuery.price.$lte = Number(maxPrice);
             }
 
-            // 👇 Sort: isSold=false (0) comes before isSold=true (1)
-            let sortOptions = { isSold: 1, createdAt: -1 }; 
-            if (sortBy === 'priceLow') sortOptions = { isSold: 1, price: 1 };
+            let sortOptions = { isSold: 1, createdAt: -1 };
+            if (sortBy === 'priceLow')  sortOptions = { isSold: 1, price:  1 };
             if (sortBy === 'priceHigh') sortOptions = { isSold: 1, price: -1 };
 
-            return await Item.find(query)
-                .populate('seller', 'name email')
-                .sort(sortOptions);
+            const [items, total] = await Promise.all([
+                Item.find(dbQuery).populate('seller', 'name email').sort(sortOptions).skip(skip).limit(limitNum),
+                Item.countDocuments(dbQuery),
+            ]);
+
+            return { items, total, page: pageNum, limit: limitNum, hasMore: skip + items.length < total };
         });
 
-        res.status(200).json(items);
+        res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

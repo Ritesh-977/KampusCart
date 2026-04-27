@@ -50,10 +50,7 @@ const ItemCard = ({ item, isWishlisted, onToggleWishlist }) => {
   
   return (
     // FIX 3: Card Background & Border with smooth fade-up animation
-    <div className="item-card-animate group relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 ease-in-out opacity-0" style={{ 
-      animation: 'fadeUpIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-      animationDelay: 'var(--animation-delay, 0s)'
-    }}>
+    <div className="group relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex flex-col overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 ease-out">
       
       {/* Image Container */}
       <div className="aspect-w-1 aspect-h-1 bg-gray-200 dark:bg-gray-700 group-hover:opacity-90 h-56 relative">
