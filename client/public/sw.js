@@ -1,22 +1,25 @@
 self.addEventListener('push', function (event) {
-    if (!event.data) return;
+    if (event.data) {
+        const data = event.data.json();
 
-    const data = event.data.json();
+        const options = {
+            body: data.body,
+            icon: data.icon,   // The small logo
+            image: data.image, // The large hero image of the item
+            vibrate: [200, 100, 200], // Makes phones vibrate!
+            data: {
+                url: data.url  // Hidden data so the click event knows where to go
+            },
+            // Adds native clickable buttons to the bottom
+            actions: [
+                { action: 'open_url', title: 'View Item' }
+            ]
+        };
 
-    const options = {
-        body: data.body,
-        icon: data.icon,
-        image: data.image,
-        vibrate: [200, 100, 200],
-        data: { url: data.url },
-        actions: [
-            { action: 'open_url', title: 'View Item' }
-        ]
-    };
-
-    event.waitUntil(
-        self.registration.showNotification(data.title, options)
-    );
+        event.waitUntil(
+            self.registration.showNotification(data.title, options)
+        );
+    }
 });
 
 // 👇 This ensures that clicking ANYWHERE on the notification opens the item!

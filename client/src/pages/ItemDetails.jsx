@@ -438,8 +438,8 @@ useEffect(() => {
                     className="bg-gradient-to-r from-white via-cyan-50/20 to-teal-50/20 dark:from-slate-800 dark:via-slate-900/50 dark:to-slate-800 p-4 rounded-2xl border border-cyan-200 dark:border-cyan-700/50 shadow-md hover:shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.02]"
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 min-w-0"> {/* Added min-w-0 here if needed, but definitely on the next flex-1 */}
-                        <div className="relative flex-shrink-0"> {/* Added flex-shrink-0 to prevent the avatar from squishing */}
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
                           <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center text-white font-bold text-xl overflow-hidden shadow-md">
                             {item.seller.profilePic ? (
                               <img src={item.seller.profilePic} className="h-full w-full object-cover" alt="" />
@@ -452,17 +452,12 @@ useEffect(() => {
                           </div>
                         </div>
                         
-                        {/* FIX APPLIED HERE: Added min-w-0 to the container and truncate to the text */}
-                        <div className="flex-1 min-w-0"> 
-                          <h4 className="font-bold text-base text-slate-800 dark:text-white mb-0.5 truncate" title={displayName}>
-                            {displayName}
-                          </h4>
-                          <p className="text-slate-500 dark:text-slate-400 text-xs truncate" title={displayEmail}>
-                            {displayEmail}
-                          </p>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-base text-slate-800 dark:text-white mb-0.5">{displayName}</h4>
+                          <p className="text-slate-500 dark:text-slate-400 text-xs">{displayEmail}</p>
                         </div>
                       </div>
-                      <div className="text-cyan-500 dark:text-cyan-400 flex-shrink-0 ml-2"> {/* Added flex-shrink-0 and margin */}
+                      <div className="text-cyan-500 dark:text-cyan-400">
                         <FaChevronRight className="text-xl" />
                       </div>
                     </div>

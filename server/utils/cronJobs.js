@@ -55,6 +55,7 @@ export const startCronJobs = () => {
             console.error('Error running monthly digest cron job:', error);
         }
     }, {
+        // 👇 INDIA TIMEZONE CONFIGURATION ADDED HERE
         scheduled: true,
         timezone: "Asia/Kolkata"
     });
@@ -83,13 +84,9 @@ export const startCronJobs = () => {
             for (const user of users) {
                 try {
                     await sendReminderEmail({ email: user.email, name: user.name });
-                    // Update timestamp on success
                     await User.findByIdAndUpdate(user._id, { lastReminderSentAt: new Date() });
                 } catch (err) {
                     console.error(`Failed to send reminder to ${user.email}:`, err.message);
-                    
-                    // THE FIX: Update timestamp even on failure so fake emails are skipped for the next 30 days!
-                    await User.findByIdAndUpdate(user._id, { lastReminderSentAt: new Date() });
                 }
             }
 

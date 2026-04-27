@@ -114,7 +114,7 @@ const Chat = () => {
   const fetchChats = async () => {
     try {
       const { data } = await API.get("/chat");
-      setChats(data.chats ?? data);
+      setChats(data);
     } catch (error) { console.error("Error fetching chats:", error); }
   };
 
