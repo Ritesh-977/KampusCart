@@ -73,13 +73,21 @@ router.post('/subscribe', protect, async (req, res) => {
     if (!subscription?.endpoint) {
       return res.status(400).json({ error: 'Valid subscription object required' });
     }
-    // Remove any stale entry for the same endpoint before adding the fresh one
-    await User.findByIdAndUpdate(req.user._id, {
-      $pull: { pushSubscription: { endpoint: subscription.endpoint } },
-    });
-    await User.findByIdAndUpdate(req.user._id, {
-      $push: { pushSubscription: subscription },
-    });
+
+    // Fetch the user, strip ALL entries sharing this endpoint in JS (handles
+    // partial-match edge cases with nested keys that $pull can miss), then
+    // push the single fresh subscription and save — one round-trip, no race.
+    const user = await User.findById(req.user._id).select('pushSubscription');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    user.pushSubscription = [
+      ...user.pushSubscription.filter(
+        (s) => !s?.endpoint || s.endpoint !== subscription.endpoint
+      ),
+      subscription,
+    ];
+
+    await user.save();
     res.status(201).json({ message: 'Push subscription saved successfully.' });
   } catch (error) {
     console.error('Error saving subscription:', error);

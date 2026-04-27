@@ -321,7 +321,7 @@ export const suggestItems = async (req, res) => {
     try {
         const { q, college } = req.query;
 
-        if (!q || q.trim().length < 3) return res.status(200).json([]);
+        if (!q || q.trim().length === 0) return res.status(200).json([]);
         if (!college) return res.status(400).json({ message: 'college query param is required' });
 
         const trimmed = q.trim();

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaHistory, FaTrashAlt, FaTimes, FaImage } from 'react-icons/fa';
 import { useSearchSuggestions } from '../hooks/useSearchSuggestions';
@@ -19,8 +19,7 @@ const SearchBar = ({ college, onSearch, placeholder = 'Search for items...', cla
     JSON.parse(localStorage.getItem('searchHistory') || '[]')
   );
 
-  const navigate    = useNavigate();
-  const debounceRef = useRef(null); // used only to cancel pending timer on explicit search
+  const navigate = useNavigate();
 
   const { suggestions, isLoading, clearSuggestions } = useSearchSuggestions(query, college);
 
@@ -28,9 +27,6 @@ const SearchBar = ({ college, onSearch, placeholder = 'Search for items...', cla
   const executeSearch = (term) => {
     const q = (term ?? query).trim();
 
-    // Kill any pending debounce timer so the hook's next effect
-    // sees the query change AFTER we've already navigated
-    clearTimeout(debounceRef.current);
     clearSuggestions();
     setShowDropdown(false);
 
@@ -91,7 +87,7 @@ const SearchBar = ({ college, onSearch, placeholder = 'Search for items...', cla
   };
 
   // ── Dropdown content decision ─────────────────────────────────────────────
-  const showSuggestions = query.trim().length >= 3 && suggestions.length > 0;
+  const showSuggestions = query.trim().length > 0 && suggestions.length > 0;
   const showHistory     = query.trim().length === 0 && history.length > 0;
   const dropdownVisible = showDropdown && (showSuggestions || showHistory || isLoading);
 
@@ -190,37 +186,46 @@ const SearchBar = ({ college, onSearch, placeholder = 'Search for items...', cla
           {/* Search history */}
           {showHistory && (
             <div className="py-2">
-              <p className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                Recent
-              </p>
-              {history.map((term, i) => (
-                <div
-                  key={i}
-                  className="flex items-center hover:bg-gray-50 dark:hover:bg-gray-700 group border-b border-gray-50 dark:border-gray-700 last:border-none"
-                >
-                  <button
-                    onMouseDown={() => { setQuery(term); executeSearch(term); }}
-                    className="flex-grow text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-300 flex items-center gap-3"
-                  >
-                    <FaHistory className="text-gray-300 text-xs group-hover:text-indigo-400 transition-colors flex-shrink-0" />
-                    {term}
-                  </button>
-                  <button
-                    onMouseDown={e => deleteHistoryItem(e, term)}
-                    className="px-3 py-2 text-gray-300 hover:text-red-500 transition-colors"
-                  >
-                    <FaTimes size={11} />
-                  </button>
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 pt-1 pb-2">
+                <div className="flex items-center gap-2">
+                  <FaHistory className="text-teal-400 text-xs" />
+                  <span className="text-xs font-bold text-gray-400 dark:text-slate-400 uppercase tracking-widest">
+                    Recent Searches
+                  </span>
                 </div>
-              ))}
-              <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                <span className="text-xs text-gray-400 italic">Saved locally</span>
                 <button
                   onMouseDown={clearAllHistory}
-                  className="text-[10px] font-bold text-gray-500 hover:text-red-600 flex items-center gap-1 uppercase tracking-wide"
+                  className="flex items-center gap-1 text-[10px] font-semibold text-gray-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 transition-colors px-2 py-0.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
-                  <FaTrashAlt /> Clear
+                  <FaTrashAlt size={9} /> Clear all
                 </button>
+              </div>
+
+              {/* History items */}
+              <div className="px-2 space-y-0.5">
+                {history.map((term, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/60 group transition-colors"
+                  >
+                    <button
+                      onMouseDown={() => { setQuery(term); executeSearch(term); }}
+                      className="flex-grow text-left px-3 py-2.5 text-sm text-gray-700 dark:text-slate-300 flex items-center gap-3 min-w-0"
+                    >
+                      <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
+                        <FaHistory className="text-gray-400 dark:text-slate-400 text-[10px] group-hover:text-teal-500 transition-colors" />
+                      </span>
+                      <span className="truncate font-medium">{term}</span>
+                    </button>
+                    <button
+                      onMouseDown={e => deleteHistoryItem(e, term)}
+                      className="flex-shrink-0 mr-2 w-6 h-6 rounded-full flex items-center justify-center text-gray-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <FaTimes size={10} />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           )}
