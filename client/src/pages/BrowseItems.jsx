@@ -194,7 +194,7 @@ const BrowseItems = () => {
         </div>
 
         {/* Filter & Sort Bar */}
-        <section className="bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 py-3 shadow-md border-b border-teal-200 dark:border-teal-700/30 sticky top-16 z-40 backdrop-blur-sm">
+        <section className="bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 py-3 shadow-md border-b border-teal-200 dark:border-teal-700/30 sticky top-[116px] md:top-16 z-40 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
               <div className="flex-1 overflow-hidden">
