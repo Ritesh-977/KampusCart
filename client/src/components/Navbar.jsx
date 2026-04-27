@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { unsubscribeFromPush } from '../utils/pushSubscription';
 import {
-  FaUserCircle, FaHeart, FaPlus, FaSignOutAlt, FaUser, FaList, FaBullhorn,
+  FaSearch, FaUserCircle, FaHistory, FaTrashAlt,
+  FaHeart, FaPlus, FaSignOutAlt, FaUser, FaList, FaBullhorn,
   FaCommentDots, FaTimes, FaUserShield, FaUniversity, FaExchangeAlt, FaBars,
   FaCalendarCheck, FaTrophy, FaBook, FaStore, FaThLarge, FaChevronDown, FaBell,
 } from 'react-icons/fa';
-import SearchBar from './SearchBar';
 import { toast } from 'react-toastify';
 import API from '../api/axios';
 import io from 'socket.io-client';
@@ -31,6 +31,10 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
+  const [searchTerm, setSearchTerm]   = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [history, setHistory] = useState([]);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
 
   const { selectedCollege, clearCollege } = useCollege();
@@ -70,9 +74,8 @@ const Navbar = () => {
     const fetchUnreadCount = async () => {
       try {
         const { data } = await API.get('/chat');
-        const chats = data.chats ?? data;
         const currentUserId = user._id || user.id;
-        const count = chats.reduce((acc, chat) => {
+        const count = data.reduce((acc, chat) => {
           if (!chat.latestMessage) return acc;
           const senderId = chat.latestMessage.sender._id || chat.latestMessage.sender;
           if (String(senderId) === String(currentUserId)) return acc;
@@ -107,7 +110,21 @@ const Navbar = () => {
     return () => { socket.disconnect(); window.removeEventListener('chatRead', handleChatRead); };
   }, [user && (user._id || user.id)]);
 
-
+  // Live search
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      if (searchTerm.trim().length > 0) {
+        try {
+          const params = { search: searchTerm };
+          if (selectedCollege?.name) params.college = selectedCollege.name;
+          const { data } = await API.get('/items', { params });
+          setSuggestions(Array.isArray(data) ? data.slice(0, 6) : []);
+          setShowDropdown(true);
+        } catch { setSuggestions([]); }
+      } else { setSuggestions([]); }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchTerm, selectedCollege]);
 
   const handleLogout = async () => {
     unsubscribeFromPush().catch(() => {});
@@ -132,9 +149,94 @@ const Navbar = () => {
     navigate('/select-college');
   };
 
+  const handleFullSearch = (e) => {
+    if (e) e.preventDefault();
+    if (searchTerm.trim()) {
+      saveHistory(searchTerm.trim());
+      navigate(`/browse?search=${encodeURIComponent(searchTerm.trim())}`);
+    } else {
+      navigate('/browse');
+    }
+    setShowDropdown(false);
+  };
 
+  const saveHistory = (term) => {
+    const existing = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+    const updated  = [term, ...existing.filter(t => t !== term)].slice(0, 5);
+    localStorage.setItem('searchHistory', JSON.stringify(updated));
+    setHistory(updated);
+  };
+
+  const handleDeleteHistoryItem = (e, term) => {
+    e.preventDefault(); e.stopPropagation();
+    const updated = history.filter(t => t !== term);
+    localStorage.setItem('searchHistory', JSON.stringify(updated));
+    setHistory(updated);
+  };
+
+  const handleClearAllHistory = (e) => {
+    e.preventDefault();
+    localStorage.removeItem('searchHistory');
+    setHistory([]);
+  };
+
+  const handleFocus = () => {
+    const saved = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+    setHistory(saved);
+    setShowDropdown(true);
+  };
 
   // ── SUB-COMPONENTS ──────────────────────────────────────────────────────────
+
+  const SearchDropdown = () => (
+    <div className="absolute top-full left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[100] overflow-hidden">
+      {searchTerm.trim().length > 0 && suggestions.length > 0 ? (
+        <div className="py-2">
+          {suggestions.map(item => (
+            <button key={item._id}
+              onMouseDown={() => { saveHistory(item.title); navigate(`/item/${item._id}`); }}
+              className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center transition border-b border-gray-100 dark:border-gray-700 last:border-none"
+            >
+              <div className="h-12 w-12 rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden flex-shrink-0 mr-3 border border-gray-200 dark:border-gray-600">
+                {item.images?.[0]
+                  ? <img src={item.images[0]} alt="" className="h-full w-full object-cover" />
+                  : <img src="/logo.png" alt="" className="h-full w-full p-2 object-contain opacity-40 grayscale" />
+                }
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm text-gray-800 dark:text-gray-200 font-semibold line-clamp-1">{item.title}</p>
+                {item.category && <p className="text-xs text-indigo-500 dark:text-indigo-400 mt-0.5">in {item.category}</p>}
+              </div>
+            </button>
+          ))}
+          <button onMouseDown={handleFullSearch} className="w-full text-center py-2.5 text-sm text-indigo-700 dark:text-indigo-400 font-bold hover:bg-indigo-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            See all results for "{searchTerm}"
+          </button>
+        </div>
+      ) : history.length > 0 && searchTerm.trim().length === 0 ? (
+        <div className="py-2">
+          <p className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Recent</p>
+          {history.map((term, i) => (
+            <div key={i} className="flex items-center hover:bg-gray-50 dark:hover:bg-gray-700 group border-b border-gray-50 dark:border-gray-700 last:border-none">
+              <button onMouseDown={() => { setSearchTerm(term); navigate(`/browse?search=${encodeURIComponent(term)}`); }}
+                className="flex-grow text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-300 flex items-center">
+                <FaHistory className="mr-3 text-gray-300 text-xs group-hover:text-indigo-400 transition-colors" />{term}
+              </button>
+              <button onMouseDown={e => handleDeleteHistoryItem(e, term)} className="px-3 py-2 text-gray-300 hover:text-red-500 transition-colors">
+                <FaTimes size={11} />
+              </button>
+            </div>
+          ))}
+          <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
+            <span className="text-xs text-gray-400 italic">Saved locally</span>
+            <button onMouseDown={handleClearAllHistory} className="text-[10px] font-bold text-gray-500 hover:text-red-600 flex items-center uppercase tracking-wide">
+              <FaTrashAlt className="mr-1" /> Clear
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
 
   // Waffle / Campus Menu popup
   // Waffle / Campus Menu popup
@@ -260,8 +362,26 @@ const Navbar = () => {
           </div>
 
           {/* ── SEARCH BAR (desktop) ── */}
-          <div className="flex-1 mx-3 hidden md:block max-w-sm">
-            <SearchBar college={selectedCollege?.name} />
+          <div className="flex-1 mx-3 hidden md:block relative max-w-sm">
+            <form onSubmit={handleFullSearch} className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaSearch className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                value={searchTerm}
+                onFocus={handleFocus}
+                onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                onChange={e => setSearchTerm(e.target.value)}
+                placeholder="Search for items..."
+                autoComplete="off"
+                className="block w-full pl-10 pr-24 py-2.5 bg-white rounded-full border-none shadow-xl focus:ring-2 focus:ring-teal-400 focus:outline-none text-gray-800 dark:text-white dark:bg-slate-800 placeholder-gray-500 dark:placeholder-slate-400 text-sm transition-all"
+              />
+              <button type="submit" className="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-sm font-bold rounded-full transition">
+                Search
+              </button>
+            </form>
+            {showDropdown && <SearchDropdown />}
           </div>
 
 
@@ -373,8 +493,25 @@ const Navbar = () => {
       </div>
 
       {/* ── MOBILE SEARCH BAR ── */}
-      <div className="md:hidden px-4 pb-3 pt-1">
-        <SearchBar college={selectedCollege?.name} placeholder="Search items..." />
+      <div className="md:hidden px-4 pb-3 pt-1 relative">
+        <form onSubmit={handleFullSearch} className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FaSearch className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            value={searchTerm}
+            onFocus={handleFocus}
+            onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder="Search items..."
+            className="block w-full pl-10 pr-24 py-3 bg-white rounded-full border-none shadow-xl focus:ring-2 focus:ring-teal-400 focus:outline-none text-gray-800 dark:text-white dark:bg-slate-800 placeholder-gray-500 dark:placeholder-slate-400 text-sm transition-all"
+          />
+          <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-sm font-bold rounded-full transition">
+            Search
+          </button>
+        </form>
+        {showDropdown && <SearchDropdown />}
       </div>
 
       {/* ── UNAUTHENTICATED MOBILE MENU ── */}

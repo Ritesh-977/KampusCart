@@ -1,7 +1,7 @@
 import express from 'express';
 import { upload } from '../middleware/multer.js';
 import { protect } from '../middleware/authMiddleware.js';
-import { createItem, deleteItem, getItemById, getItems, getItemsByUser, getMyItems, getMyListings, reportItem, suggestItems, toggleSoldStatus, updateItem} from '../controllers/itemController.js';
+import { createItem, deleteItem, getItemById, getItems, getItemsByUser, getMyItems, getMyListings, reportItem, toggleSoldStatus, updateItem} from '../controllers/itemController.js';
 
 
 
@@ -13,9 +13,6 @@ router.post('/', protect, upload.array('images', 3), createItem);
 
 // 2. Get all items (Public: Anyone can browse the marketplace)
 router.get('/', getItems);
-
-// Autocomplete suggestions — must be before /:id to avoid ObjectId cast error
-router.get('/suggest', suggestItems);
 
 // Get only my items
 router.get('/my-items', protect, getMyItems);

@@ -32,10 +32,8 @@ function callInstance(instance, method, path, data, config) {
 }
 
 function isFallbackWorthy(error) {
-  // Aborted requests (AbortController / axios cancel) are not server failures
-  if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') return false;
   if (!error.response) return true; // Network/DNS/Timeout
-  return error.response.status >= 500;
+  return error.response.status >= 500; // Server crash
 }
 
 function shouldRetestPrimary() {
