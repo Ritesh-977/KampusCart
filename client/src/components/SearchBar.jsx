@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FaSearch, FaHistory, FaTrashAlt, FaTimes, FaImage } from 'react-icons/fa';
 import { useSearchSuggestions } from '../hooks/useSearchSuggestions';
 
@@ -13,13 +13,15 @@ import { useSearchSuggestions } from '../hooks/useSearchSuggestions';
  *   className    {string}   - wrapper class overrides
  */
 const SearchBar = ({ college, onSearch, placeholder = 'Search for items...', className = '' }) => {
-  const [query, setQuery]               = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [history, setHistory]           = useState(() =>
     JSON.parse(localStorage.getItem('searchHistory') || '[]')
   );
 
   const navigate = useNavigate();
+  const location  = useLocation();
+
+  const [query, setQuery] = useState(() => new URLSearchParams(location.search).get('search') || '');
 
   const { suggestions, isLoading, clearSuggestions } = useSearchSuggestions(query, college);
 
