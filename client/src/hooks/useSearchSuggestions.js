@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 const BASE_URL = import.meta.env.VITE_SERVER_URL;
-const MIN_CHARS = 3;
-const DEBOUNCE_MS = 300;
+
 
 /**
  * useSearchSuggestions
@@ -28,8 +27,8 @@ export function useSearchSuggestions(query, college) {
   useEffect(() => {
     const trimmed = query.trim();
 
-    // ── 1. Below threshold: clear immediately, zero network ──────────────────
-    if (trimmed.length < MIN_CHARS) {
+    // ── 1. Empty query: clear immediately, zero network ──────────────────────
+    if (trimmed.length === 0) {
       setSuggestions([]);
       setIsLoading(false);
       return;
@@ -46,45 +45,42 @@ export function useSearchSuggestions(query, college) {
 
     setIsLoading(true);
 
-    // ── 3. Debounce + AbortController ────────────────────────────────────────
+    // ── 3. AbortController ───────────────────────────────────────────────────
     const controller = new AbortController();
     controllerRef.current = controller;
 
-    const timerId = setTimeout(() => {
-      const params = new URLSearchParams({ q: trimmed });
-      if (college) params.set('college', college);
+    const params = new URLSearchParams({ q: trimmed });
+    if (college) params.set('college', college);
 
-      fetch(`${BASE_URL}/api/items/suggest?${params}`, {
-        signal:      controller.signal,
-        credentials: 'include',
+    fetch(`${BASE_URL}/api/items/suggest?${params}`, {
+      signal:      controller.signal,
+      credentials: 'include',
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`Suggest API ${res.status}`);
+        return res.json();
       })
-        .then(res => {
-          if (!res.ok) throw new Error(`Suggest API ${res.status}`);
-          return res.json();
-        })
-        .then(data => {
-          const results = Array.isArray(data) ? data.slice(0, 6) : [];
-          // Only cache non-empty results — empty arrays are falsy-equivalent
-          // for cache purposes; we want to retry on the next keystroke
-          if (results.length > 0) {
-            cacheRef.current[cacheKey] = results;
-          }
-          setSuggestions(results);
-          setIsLoading(false);
-        })
-        .catch(err => {
-          if (err.name === 'AbortError') return; // expected — swallow silently
-          console.error('[useSearchSuggestions]', err);
-          setSuggestions([]);
-          setIsLoading(false);
-        });
-    }, DEBOUNCE_MS);
+      .then(data => {
+        const results = Array.isArray(data) ? data.slice(0, 6) : [];
+        if (results.length > 0) {
+          cacheRef.current[cacheKey] = results;
+        }
+        setSuggestions(results);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        if (err.name === 'AbortError') return;
+        console.error('[useSearchSuggestions]', err);
+        setSuggestions([]);
+        setIsLoading(false);
+      });
 
-    // ── Cleanup: fires before next effect run AND on unmount ─────────────────
-    // clearTimeout first: if the 300ms hasn't elapsed, the fetch never starts.
-    // abort() second: if the fetch already started, cancel the in-flight request.
     return () => {
-      clearTimeout(timerId);
+      controller.abort();
+    };
+
+    // ── Cleanup: cancel in-flight request on re-run or unmount ───────────────
+    return () => {
       controller.abort();
     };
   }, [query, college]);
