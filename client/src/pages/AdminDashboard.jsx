@@ -17,6 +17,7 @@ const AdminDashboard = () => {
     const [reportedItems, setReportedItems] = useState([]);
     const [activeTab, setActiveTab] = useState('stats');
     const [loading, setLoading] = useState(true);
+    const [userSearch, setUserSearch] = useState('');
 
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
@@ -165,6 +166,15 @@ const AdminDashboard = () => {
                         {/* --- USERS TAB --- */}
                         {activeTab === 'users' && (
                             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
+                                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                                    <input
+                                        type="text"
+                                        placeholder="Search by name or email..."
+                                        value={userSearch}
+                                        onChange={e => setUserSearch(e.target.value)}
+                                        className="w-full sm:w-80 px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    />
+                                </div>
                                 <div className="overflow-x-auto">
                                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                         <thead className="bg-gray-50 dark:bg-gray-700">
@@ -176,15 +186,21 @@ const AdminDashboard = () => {
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                            {users.map(u => (
+                                            {users.filter(u =>
+                                                u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
+                                                u.email.toLowerCase().includes(userSearch.toLowerCase())
+                                            ).map(u => (
                                                 <tr key={u._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="flex items-center">
+                                                        <div
+                                                            className="flex items-center cursor-pointer group"
+                                                            onClick={() => navigate(`/profile/view/${u._id}`)}
+                                                        >
                                                             <div className="flex-shrink-0 h-10 w-10 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold">
                                                                 {u.name.charAt(0).toUpperCase()}
                                                             </div>
                                                             <div className="ml-4">
-                                                                <div className="text-sm font-bold text-gray-900 dark:text-white">{u.name}</div>
+                                                                <div className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">{u.name}</div>
                                                                 <div className="text-sm text-gray-500 dark:text-gray-400">{u.email}</div>
                                                             </div>
                                                         </div>
