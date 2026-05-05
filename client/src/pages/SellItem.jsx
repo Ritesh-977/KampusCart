@@ -25,6 +25,7 @@ const SellItem = () => {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const submittingRef = React.useRef(false);
 
   useEffect(() => {
     // Pre-fill user details for UI convenience (Auth is handled by cookie)
@@ -60,12 +61,20 @@ const SellItem = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent duplicate submissions
+    if (submittingRef.current) {
+      return;
+    }
+    
     setLoading(true);
+    submittingRef.current = true;
     setError('');
 
     if (imageFiles.length === 0) {
       setError('Please upload at least one image.');
       setLoading(false);
+      submittingRef.current = false;
       return;
     }
 
@@ -73,6 +82,7 @@ const SellItem = () => {
     if (rawPhone.length !== 10) {
       setError('Please enter a valid 10-digit phone number.');
       setLoading(false);
+      submittingRef.current = false;
       return;
     }
 
@@ -106,6 +116,7 @@ const SellItem = () => {
       setError(err.response?.data?.message || 'Failed to create item');
     } finally {
       setLoading(false);
+      submittingRef.current = false;
     }
   };
 
