@@ -95,7 +95,7 @@ const Footer = () => {
               Campus
             </h3>
             <ul className="space-y-2 text-sm">
-              <li><a href="https://www.mnnit.ac.in" target="_blank" rel="noreferrer" className={linkClass}>Campus</a></li>
+              <li><a href="https://www.mnnit.ac.in" target="_blank" rel="noreferrer" className={linkClass}>MNNIT</a></li>
               <li><a href="https://www.academics.mnnit.ac.in/new" target="_blank" rel="noreferrer" className={linkClass}>Academic Portal</a></li>
             </ul>
           </div>
