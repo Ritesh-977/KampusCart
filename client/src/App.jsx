@@ -10,7 +10,7 @@ import Auth from "./pages/Auth";
 import Home from "./pages/Home";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CollegeProtectedRoute from "./components/CollegeProtectedRoute";
-import CollegeSelection from "./pages/CollegeSelection";
+// import CollegeSelection from "./pages/CollegeSelection";
 import ItemDetails from "./pages/ItemDetails";
 import MyListings from "./pages/MyListings";
 import EditItem from "./pages/EditItem";
@@ -64,7 +64,7 @@ function App() {
       <div className="flex-grow">
         <Routes>
           {/* === COLLEGE SELECTION (exempt from college guard) === */}
-          <Route path="/select-college" element={<CollegeSelection />} />
+          {/* <Route path="/select-college" element={<CollegeSelection />} /> */}
 
           {/* === PUBLIC PAGES (exempt from college check) === */}
           <Route path="/login" element={<Auth />} />

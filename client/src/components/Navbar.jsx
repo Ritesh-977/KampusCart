@@ -4,7 +4,7 @@ import { unsubscribeFromPush } from '../utils/pushSubscription';
 import {
   FaSearch, FaUserCircle, FaHistory, FaTrashAlt,
   FaHeart, FaPlus, FaSignOutAlt, FaUser, FaList, FaBullhorn,
-  FaCommentDots, FaTimes, FaUserShield, FaUniversity, FaExchangeAlt, FaBars,
+  FaCommentDots, FaTimes, FaUserShield, FaUniversity, FaBars,
   FaCalendarCheck, FaTrophy, FaBook, FaStore, FaThLarge, FaChevronDown, FaBell,
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
@@ -37,7 +37,7 @@ const Navbar = () => {
   const [history, setHistory] = useState([]);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
 
-  const { selectedCollege, clearCollege } = useCollege();
+  const { selectedCollege } = useCollege();
   const navigate  = useNavigate();
   const location  = useLocation();
 
@@ -143,11 +143,11 @@ const Navbar = () => {
     }
   };
 
-  const handleSwitchCampus = () => {
-    setIsProfileOpen(false);
-    clearCollege();
-    navigate('/select-college');
-  };
+  // const handleSwitchCampus = () => {
+  //   setIsProfileOpen(false);
+  //   clearCollege();
+  //   navigate('/select-college');
+  // };
 
   const handleFullSearch = (e) => {
     if (e) e.preventDefault();
@@ -314,14 +314,15 @@ const Navbar = () => {
           </Link>
         )}
 
-        <button onClick={handleSwitchCampus}
+        {/* Switch Campus button commented out */}
+        {/* <button onClick={handleSwitchCampus}
           className="w-full text-left group flex items-center px-5 py-2.5 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
           <FaExchangeAlt className="mr-3 text-indigo-400 text-sm" />
           Switch Campus
           {selectedCollege && (
             <span className="ml-auto text-[10px] font-bold text-gray-400 dark:text-gray-500 truncate max-w-[60px]">{selectedCollege.shortName}</span>
           )}
-        </button>
+        </button> */}
 
         <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
 
@@ -345,7 +346,8 @@ const Navbar = () => {
             <span className="text-lg font-black tracking-tight bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent hidden sm:block">
               KampusCart
             </span>
-            {selectedCollege && (
+            {/* College badge commented out */}
+            {/* {selectedCollege && (
               <button
                 className="hidden md:flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border transition-all hover:opacity-75"
                 style={{
@@ -358,7 +360,7 @@ const Navbar = () => {
                 <FaUniversity className="text-[9px]" />
                 <span className="max-w-[72px] truncate">{selectedCollege.shortName}</span>
               </button>
-            )}
+            )} */}
           </div>
 
           {/* ── SEARCH BAR (desktop) ── */}
@@ -525,12 +527,12 @@ const Navbar = () => {
             className="flex items-center justify-center w-full py-3 border-2 border-slate-700 hover:border-indigo-500 text-slate-200 font-bold rounded-xl text-sm transition-colors">
             Log in
           </Link>
-         <button onClick={() => { setIsMobileMenuOpen(false); handleSwitchCampus(); }}
+         {/* Switch Campus button commented out */}
+         {/* <button onClick={() => { setIsMobileMenuOpen(false); handleSwitchCampus(); }}
             className="relative flex items-center justify-center w-full py-3 border border-slate-700 hover:border-indigo-500 text-slate-300 hover:text-indigo-400 font-semibold rounded-xl text-sm transition-colors">
             
             Switch Campus
             
-            {/* Anchored to the right side with a small gap (right-4) */}
             <div className="absolute right-4 flex items-center gap-2">
               {selectedCollege && (
                 <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${selectedCollege.theme.primary}20`, color: selectedCollege.theme.primary }}>
@@ -540,7 +542,7 @@ const Navbar = () => {
               <FaExchangeAlt className="text-xs opacity-70" />
             </div>
             
-          </button>
+          </button> */}
         </div>
       )}
     </nav>

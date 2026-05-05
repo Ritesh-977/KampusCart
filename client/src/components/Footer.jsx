@@ -32,8 +32,7 @@ const Footer = () => {
     <footer className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-300 pt-8 pb-4 mt-auto border-t border-cyan-700/30 shadow-lg shadow-cyan-500/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* GRID UPDATE: Changed to lg:grid-cols-4 to make room for the App column */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-8 mb-6">
 
           {/* COLUMN 1: BRAND SECTION */}
           <div className="col-span-2 lg:col-span-1">
@@ -90,7 +89,18 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* COLUMN 4: APP DOWNLOAD SECTION */}
+          {/* COLUMN 4: CAMPUS SECTION */}
+          <div>
+            <h3 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-3 mt-2 lg:mt-0">
+              Campus
+            </h3>
+            <ul className="space-y-2 text-sm">
+              <li><a href="https://www.mnnit.ac.in" target="_blank" rel="noreferrer" className={linkClass}>Campus</a></li>
+              <li><a href="https://www.academics.mnnit.ac.in/new" target="_blank" rel="noreferrer" className={linkClass}>Academic Portal</a></li>
+            </ul>
+          </div>
+
+          {/* COLUMN 5: APP DOWNLOAD SECTION */}
           <div className="col-span-2 lg:col-span-1">
             <h3 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-3 mt-2 lg:mt-0">
               Get Our App
@@ -118,6 +128,12 @@ const Footer = () => {
         {/* Bottom */}
         <div className="border-t border-slate-800 pt-4 mt-2 text-xs text-slate-500 flex flex-col md:flex-row justify-between items-center gap-2 text-center md:text-left">
           <p>© {new Date().getFullYear()} kampusCart. All rights reserved.</p>
+          <div className="flex items-center gap-1.5">
+            <div>
+              <p className="text-slate-400 font-medium">MNNIT Allahabad</p>
+              <p>Prayagraj, Uttar Pradesh</p>
+            </div>
+          </div>
         </div>
 
       </div>
