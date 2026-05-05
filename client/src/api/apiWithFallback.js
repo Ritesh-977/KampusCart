@@ -1,5 +1,6 @@
 /**
  * apiWithFallback.js — Production circuit-breaker wrapper for KampusCart API.
+ * NOTE: Maintenance page logic has been moved to a background poller.
  */
 import axios from 'axios';
 import API, { applyInterceptors } from './baseAxios.js';
@@ -49,7 +50,6 @@ export async function apiCall(method, path, data = null, config = {}) {
   const hasFallback = !!fallbackAPI;
   const lowerMethod = method.toLowerCase();
   
-  // Guard DB modifications when retrying on Fallback
   if (['post', 'put', 'patch', 'delete'].includes(lowerMethod)) {
     if (!config.headers) config.headers = {};
     if (!config.headers['X-Idempotency-Key']) {
@@ -73,15 +73,14 @@ export async function apiCall(method, path, data = null, config = {}) {
   // 2. Normal path: Try primary first
   try {
     const result = await callInstance(API, method, path, data, config);
-    if (primaryCircuitOpen) primaryCircuitOpen = false; // Close circuit on success
+    if (primaryCircuitOpen) primaryCircuitOpen = false; 
     return result;
   } catch (primaryError) {
     if (!isFallbackWorthy(primaryError)) {
-      throw primaryError; // Rethrow 4xx client errors immediately
+      throw primaryError; // Rethrow 400/401 immediately
     }
 
     if (!hasFallback) {
-      // Primary is down and we don't have a fallback configured
       throw buildExhaustedError(null, primaryError);
     }
 
@@ -94,7 +93,6 @@ export async function apiCall(method, path, data = null, config = {}) {
     } catch (fallbackError) {
       throw buildExhaustedError(fallbackError, primaryError);
     }
-    
   }
 }
 
@@ -103,14 +101,11 @@ function buildExhaustedError(fallbackError, primaryError) {
   err.isFallbackExhausted = true;
   err.code = 'SERVICE_UNAVAILABLE';
   err.response = fallbackError?.response ?? primaryError?.response ?? null;
-  
-  // TRIGGER GLOBAL MAINTENANCE STATE
-  window.dispatchEvent(new CustomEvent('kampuscart-api-exhausted'));
-  
+  // We no longer dispatch the maintenance event here. 
+  // We just return the error so the UI can stop loading spinners or show a toast.
   return err;
 }
 
-// Convenience methods
 apiCall.get = (path, config) => apiCall('get', path, null, config);
 apiCall.post = (path, data, config) => apiCall('post', path, data, config);
 apiCall.put = (path, data, config) => apiCall('put', path, data, config);

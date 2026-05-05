@@ -47,17 +47,15 @@ export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // 1. Multi-College Domain Extraction
     const emailDomain = email.split('@')[1];
 
-    // 2. Check if the college is supported
-    if (!supportedColleges[emailDomain]) {
+    if (emailDomain !== 'mnnit.ac.in') {
       return res.status(403).json({
-        message: "Please use an official college domain email to access the marketplace.",
+        message: "Use your college email (@mnnit.ac.in).",
       });
 }
 
-    const collegeName = supportedColleges[emailDomain];
+    const collegeName = 'MNNIT Allahabad';
 
     const userExists = await User.findOne({ email });
 
@@ -319,9 +317,9 @@ export const googleLogin = async (req, res) => {
     }
 
     const emailDomain = email.split('@')[1];
-    if (!supportedColleges[emailDomain]) {
+    if (emailDomain !== 'mnnit.ac.in') {
       return res.status(403).json({
-        message: "Please use an official college domain email to access the marketplace.",
+        message: "Use your college email (@mnnit.ac.in).",
       });
 }
 
@@ -354,10 +352,10 @@ export const googleLogin = async (req, res) => {
 // --- GOOGLE SIGNUP / LOGIN ---
 export const googleSignup = async (req, res) => {
   try {
-    const { access_token, emailDomain } = req.body;
+    const { access_token } = req.body;
 
-    if (!access_token || !emailDomain) {
-      return res.status(400).json({ message: 'Missing access_token or emailDomain.' });
+    if (!access_token) {
+      return res.status(400).json({ message: 'Missing access_token.' });
     }
 
     // 1. Fetch the user profile from Google using the access token
@@ -376,22 +374,14 @@ export const googleSignup = async (req, res) => {
       return res.status(401).json({ message: 'Google account email is not verified.' });
     }
 
-    // 2. Security check: the user's actual email domain must match the selected campus
     const userEmailDomain = email.split('@')[1];
-    if (userEmailDomain !== emailDomain) {
+    if (userEmailDomain !== 'mnnit.ac.in') {
       return res.status(403).json({
-        message: 'Access denied. Please use your official email ID for the selected campus.',
-      });
-    }
-
-    // 3. Validate that the domain is supported by KampusCart
-   if (!supportedColleges[emailDomain]) {
-      return res.status(403).json({
-        message: "Please use an official college domain email to access the marketplace.",
+        message: "Use your college email (@mnnit.ac.in).",
       });
 }
 
-    const collegeName = supportedColleges[emailDomain];
+    const collegeName = 'MNNIT Allahabad';
 
     // 4. Find or create the user
     let user = await User.findOne({ email: email.toLowerCase() });

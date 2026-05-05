@@ -7,13 +7,11 @@ import { sendPushToCollege }      from '../utils/expoPush.js';
 import { sendWebPushToCollege }   from '../utils/webPushService.js';
 import { createNotification, NOTIFICATION_TYPES } from '../utils/notificationHelper.js';
 
-// --- HELPER TO CLEAR CACHE (Updated for Multi-College) ---
 const clearItemCache = async (college) => {
     try {
         const keys = await redis.keys(`items:${college}:*`);
         if (keys.length > 0) {
             await redis.del(keys);
-            // console.log(`🧹 Item Cache Cleared for ${college}!`);
         }
     } catch (error) {
         console.error("Cache Clear Error:", error);
@@ -31,65 +29,84 @@ export const createItem = async (req, res) => {
         const imageUrls = req.files.map(file => file.path);
 
         const newItem = await Item.create({
-            title,
-            description,
-            location,
-            price: Number(price),
-            category,
-            contactNumber,
-            sellerEmail,
-            sellerName,
+            title, description, location, price: Number(price),
+            category, contactNumber, sellerEmail, sellerName,
             images: imageUrls,
             seller: req.user.id,
-            college: req.user.college // <--- Secured: Tied to the logged-in seller's college
+            college: req.user.college
         });
 
-        // 🧹 CLEAR CACHE only for this user's college
+        // 🧹 CLEAR CACHE
         await clearItemCache(req.user.college);
 
-        const college       = req.user.college;
-        const excludeUserId = req.user._id || req.user.id;
-        const notifTitle    = 'New listing on campus 🛒';
-        const notifBody     = `${title} listed for ₹${price} · ${category}`;
-        const notifData     = { type: 'item', itemId: String(newItem._id) };
-        const itemUrl       = `/item/${newItem._id}`;
-
-        // 1. Mobile Expo push (backgrounded/killed app)
-        sendPushToCollege({
-            college, excludeUserId, prefKey: 'items',
-            title: notifTitle, body: notifBody, data: notifData,
-        });
-
-        // 2. Web browser push (backgrounded tab / OS notification)
-        sendWebPushToCollege({
-            college, excludeUserId, prefKey: 'items',
-            title: notifTitle, body: notifBody,
-            url: itemUrl, icon: imageUrls[0],
-        });
-
-        // 3. Socket.io in-app banner (active tab / active app screen)
-        const io = req.app.get('io');
-        if (io) {
-            io.to(`college:${college}`).emit('campus_notification', {
-                title: notifTitle, body: notifBody, data: notifData,
-            });
-        }
-
-        // 4. Create in-app notifications for all college users (except the seller)
-        const users = await User.find({ college, _id: { $ne: excludeUserId } }).select('_id');
-        for (const user of users) {
-            await createNotification(io, user._id, {
-                title: notifTitle,
-                message: notifBody,
-                type: NOTIFICATION_TYPES.ITEM,
-                link: itemUrl
-            });
-        }
-
+        // ✅ 1. SEND SUCCESS RESPONSE IMMEDIATELY
+        // This prevents the frontend from timing out and throwing a 404
         res.status(201).json(newItem);
+
+        // 🚀 2. PROCESS NOTIFICATIONS IN THE BACKGROUND
+        const college = req.user.college;
+        const excludeUserId = req.user._id || req.user.id;
+        const notifTitle = 'New listing on campus 🛒';
+        const notifBody = `${title} listed for ₹${price} · ${category}`;
+        const notifData = { type: 'item', itemId: String(newItem._id) };
+        const itemUrl = `/item/${newItem._id}`;
+        const io = req.app.get('io');
+
+        // Fire and forget background tasks
+        (async () => {
+            try {
+                // 1. Mobile Expo push
+                sendPushToCollege({
+                    college, excludeUserId, prefKey: 'items',
+                    title: notifTitle, body: notifBody, data: notifData,
+                });
+
+                // 2. Web browser push
+                sendWebPushToCollege({
+                    college, excludeUserId, prefKey: 'items',
+                    title: notifTitle, body: notifBody,
+                    url: itemUrl, icon: imageUrls[0],
+                });
+
+                // 3. Socket.io in-app banner
+                if (io) {
+                    io.to(`college:${college}`).emit('campus_notification', {
+                        title: notifTitle, body: notifBody, data: notifData,
+                    });
+                }
+
+                // 4. Create in-app notifications (Optimized with Batching)
+                const users = await User.find({ college, _id: { $ne: excludeUserId } }).select('_id');
+                
+                // Process in chunks of 100 to prevent database connection pool exhaustion
+                const BATCH_SIZE = 100;
+                for (let i = 0; i < users.length; i += BATCH_SIZE) {
+                    const batch = users.slice(i, i + BATCH_SIZE);
+                    
+                    const notificationPromises = batch.map(user => 
+                        createNotification(io, user._id, {
+                            title: notifTitle,
+                            message: notifBody,
+                            type: NOTIFICATION_TYPES.ITEM,
+                            link: itemUrl
+                        })
+                    );
+                    
+                    // Wait for this batch of 100 to finish before moving to the next
+                    await Promise.all(notificationPromises);
+                }
+
+            } catch (backgroundError) {
+                console.error("Background Notification Error:", backgroundError);
+            }
+        })();
+
     } catch (error) {
         console.error("CREATE ERROR:", error);
-        res.status(500).json({ message: "Server Error", error: error.message });
+        // Only trigger this if the actual item creation fails (prevents headers error)
+        if (!res.headersSent) {
+            res.status(500).json({ message: "Server Error", error: error.message });
+        }
     }
 };
 

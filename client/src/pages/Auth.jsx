@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import API from '../api/axios'; // ✅ Using configured Axios instance
 import { toast } from 'react-toastify';
-import { colleges } from '../data/colleges';
 import { useGoogleLogin } from '@react-oauth/google';
 
 // --- IMPORTS FOR PARTICLES ---
@@ -60,7 +59,8 @@ const Auth = () => {
   const [signupStep, setSignupStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [agree, setAgree] = useState(false);
-  const [signupCollege, setSignupCollege] = useState(null);
+  const MNNIT = { id: 'mnnit-allahabad', name: 'MNNIT Allahabad', emailDomain: 'mnnit.ac.in' };
+  const signupCollege = MNNIT;
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -73,24 +73,14 @@ const Auth = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // --- GOOGLE SIGNUP STATES (COMMENTED OUT) ---
-
-  const [isCampusModalOpen, setIsCampusModalOpen] = useState(false);
-  const [modalCollege, setModalCollege] = useState(null);
-  const [pendingGoogleLogin, setPendingGoogleLogin] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-
-  // --- GOOGLE HOOKS AND LOGIC (COMMENTED OUT) ---
-
-  // Re-configured on every render so hosted_domain always reflects current signupCollege
   const googleSignupHook = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setGoogleLoading(true);
       try {
         const response = await API.post('/auth/google-signup', {
           access_token: tokenResponse.access_token,
-          emailDomain: signupCollege?.emailDomain,
         });
         localStorage.setItem('user', JSON.stringify(response.data.user));
         window.dispatchEvent(new Event('user-login'));
@@ -106,10 +96,9 @@ const Auth = () => {
     onError: () => {
       toast.error('Google sign-up was cancelled or failed.');
     },
-    hosted_domain: signupCollege?.emailDomain || undefined,
+    // hosted_domain: 'mnnit.ac.in',
   });
 
-  // --- GOOGLE LOGIN HOOK (login tab — no domain filter) ---
   const googleSigninHook = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setGoogleLoading(true);
@@ -133,35 +122,7 @@ const Auth = () => {
     },
   });
 
-  // Ref so the useEffect can always call the latest version of googleSignupHook
-  const googleSignupRef = useRef(googleSignupHook);
-  useEffect(() => { googleSignupRef.current = googleSignupHook; });
-
-  // Trigger Google signup after college is set from the modal (state has settled)
-  useEffect(() => {
-    if (pendingGoogleLogin && signupCollege) {
-      setPendingGoogleLogin(false);
-      googleSignupRef.current();
-    }
-  }, [pendingGoogleLogin, signupCollege]);
-
-  const handleGoogleSignupClick = () => {
-    if (!signupCollege) {
-      setIsCampusModalOpen(true);
-    } else {
-      googleSignupHook();
-    }
-  };
-
-  const handleModalConfirm = () => {
-    if (!modalCollege) {
-      toast.error('Please select a college to continue.');
-      return;
-    }
-    setSignupCollege(modalCollege);
-    setPendingGoogleLogin(true);
-    setIsCampusModalOpen(false);
-  };
+  const handleGoogleSignupClick = () => googleSignupHook();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -220,11 +181,6 @@ const Auth = () => {
       }
 
       else if (signupStep === 1) {
-        if (!signupCollege) {
-          setError('Please select your college.');
-          setLoading(false);
-          return;
-        }
         if (!validateEmail(formData.email)) {
           const domainHint = signupCollege.emailDomain ? `@${signupCollege.emailDomain}` : 'your college email';
           setError(`Please use your ${signupCollege.name} institutional email (${domainHint}).`);
@@ -336,33 +292,6 @@ const Auth = () => {
                 </div>
               )}
 
-              {!isLogin && signupStep === 1 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Your College</label>
-                  <div className="mt-1">
-                    <select
-                      value={signupCollege?.id || ''}
-                      onChange={(e) => {
-                        const found = colleges.find(c => c.id === e.target.value);
-                        setSignupCollege(found || null);
-                        setError('');
-                      }}
-                      required
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
-                    >
-                      <option value="">— Select your college —</option>
-                      {colleges.filter(c => c.id !== 'other').map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  {signupCollege?.emailDomain && (
-                    <p className="mt-1 text-xs text-indigo-600 dark:text-indigo-400">
-                      Use your institutional email ending with <strong>@{signupCollege.emailDomain}</strong>
-                    </p>
-                  )}
-                </div>
-              )}
 
               {signupStep === 1 && (
                 <div>
@@ -374,7 +303,7 @@ const Auth = () => {
                       name="email"
                       type="email"
                       required
-                      placeholder={!isLogin && signupCollege?.emailDomain ? `yourname@${signupCollege.emailDomain}` : 'your.email@college.ac.in'}
+                      placeholder={!isLogin ? 'yourname@mnnit.ac.in' : 'your.email@mnnit.ac.in'}
                       value={formData.email}
                       onChange={handleChange}
                       className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
@@ -589,7 +518,6 @@ const Auth = () => {
                     setIsLogin(!isLogin);
                     setSignupStep(1);
                     setError('');
-                    setSignupCollege(null);
                   }}
                   className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-[#5dbd62] hover:bg-[#51a956] dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white text-sm font-medium transition-colors"
                 >
@@ -602,59 +530,6 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Campus Selection Modal (COMMENTED OUT) */}
-      {isCampusModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setIsCampusModalOpen(false)}
-          />
-          <div className="relative z-10 w-full max-w-md bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-1">Select Your Campus</h3>
-            <p className="text-sm text-gray-400 mb-5">
-              We need to verify your campus before connecting with Google.
-            </p>
-
-            <label className="block text-sm font-medium text-gray-300 mb-1">Your College</label>
-            <select
-              value={modalCollege?.id || ''}
-              onChange={(e) => {
-                const found = colleges.find(c => c.id === e.target.value);
-                setModalCollege(found || null);
-              }}
-              className="w-full px-3 py-2.5 border border-gray-600 rounded-md bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
-            >
-              <option value="">— Select your college —</option>
-              {colleges.filter(c => c.id !== 'other').map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-
-            {modalCollege?.emailDomain && (
-              <p className="mt-2 text-xs text-indigo-400">
-                Google will filter accounts ending with <strong>@{modalCollege.emailDomain}</strong>
-              </p>
-            )}
-
-            <div className="flex gap-3 mt-6">
-              <button
-                type="button"
-                onClick={() => { setIsCampusModalOpen(false); setModalCollege(null); }}
-                className="flex-1 py-2 px-4 border border-gray-600 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleModalConfirm}
-                className="flex-1 py-2 px-4 bg-indigo-600 hover:bg-indigo-500 rounded-md text-sm font-medium text-white transition-colors"
-              >
-                Continue with Google
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
