@@ -39,7 +39,13 @@ const itemSchema = new mongoose.Schema({
         type: String,
         required: true,
         index: true // Add an index because we will filter by this a lot!
-    }
+    },
+    
+    idempotencyKey: {
+    type: String,
+    unique: true,
+    sparse: true // This is crucial! It allows old items without this key to still exist
+}
 
 }, { timestamps: true });
 

@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar'; 
 import { FaCloudUploadAlt, FaRupeeSign, FaMapMarkerAlt, FaTag, FaCamera, FaUser, FaPhone, FaEnvelope, FaTimesCircle } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import API from '../api/axios'; // ✅ IMPORT AXIOS INSTANCE
+
+// ✅ FIX: Use the custom apiCall wrapper instead of raw Axios!
+import { apiCall } from '../api/apiWithFallback'; 
 
 const SellItem = () => {
   const navigate = useNavigate();
@@ -103,10 +105,9 @@ const SellItem = () => {
         data.append('images', file); 
       });
 
-      // ✅ FIX: Use API.post
-      // - No token needed (Cookie sent automatically)
-      // - Axios handles 'Content-Type: multipart/form-data' automatically
-      await API.post('/items', data);
+      // ✅ FIX: Use apiCall so it automatically generates the Idempotency Key
+      // Added a 60 second timeout to ensure large image uploads on slow Wi-Fi don't fail prematurely.
+      await apiCall.post('/items', data, { timeout: 60000 });
 
       toast.success('Item posted successfully!');
       navigate('/'); 

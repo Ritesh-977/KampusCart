@@ -1,53 +1,10 @@
 /**
- * apiWithFallback.js — Production circuit-breaker wrapper for KampusCart API.
- * NOTE: Maintenance page logic has been moved to a background poller.
+ * apiWithFallback.js — Simplified wrapper for KampusCart API.
+ * NOTE: Fallback and circuit-breaker logic has been removed.
  */
-import axios from 'axios';
-import API, { applyInterceptors } from './baseAxios.js';
-
-const REQUEST_TIMEOUT = 15_000; 
-const CIRCUIT_COOLDOWN_MS = 30_000; 
-let primaryCircuitOpen = false;
-let circuitOpenedAt = 0;
-
-const FALLBACK_URL = import.meta.env.VITE_FALLBACK_SERVER_URL;
-
-const fallbackAPI = FALLBACK_URL
-  ? axios.create({
-      baseURL: `${FALLBACK_URL}/api`,
-      withCredentials: true, 
-      timeout: REQUEST_TIMEOUT,
-    })
-  : null;
-
-if (fallbackAPI) {
-  applyInterceptors(fallbackAPI);
-}
-
-function callInstance(instance, method, path, data, config) {
-  const lowerMethod = method.toLowerCase();
-  if (['post', 'put', 'patch'].includes(lowerMethod)) {
-    return instance[lowerMethod](path, data, config);
-  }
-  return instance[lowerMethod](path, config);
-}
-
-function isFallbackWorthy(error) {
-  if (!error.response) return true; // Network/DNS/Timeout
-  return error.response.status >= 500; // Server crash
-}
-
-function shouldRetestPrimary() {
-  if (!primaryCircuitOpen) return true;
-  if (Date.now() - circuitOpenedAt > CIRCUIT_COOLDOWN_MS) {
-    primaryCircuitOpen = false;
-    return true;
-  }
-  return false;
-}
+import API from './baseAxios.js';
 
 export async function apiCall(method, path, data = null, config = {}) {
-  const hasFallback = !!fallbackAPI;
   const lowerMethod = method.toLowerCase();
   
   if (['post', 'put', 'patch', 'delete'].includes(lowerMethod)) {
@@ -61,49 +18,10 @@ export async function apiCall(method, path, data = null, config = {}) {
     }
   }
 
-  // 1. Fast-path: Circuit is open, go straight to fallback
-  if (primaryCircuitOpen && hasFallback && !shouldRetestPrimary()) {
-    try {
-      return await callInstance(fallbackAPI, method, path, data, config);
-    } catch (fallbackError) {
-      throw buildExhaustedError(fallbackError, null);
-    }
+  if (['post', 'put', 'patch'].includes(lowerMethod)) {
+    return API[lowerMethod](path, data, config);
   }
-
-  // 2. Normal path: Try primary first
-  try {
-    const result = await callInstance(API, method, path, data, config);
-    if (primaryCircuitOpen) primaryCircuitOpen = false; 
-    return result;
-  } catch (primaryError) {
-    if (!isFallbackWorthy(primaryError)) {
-      throw primaryError; // Rethrow 400/401 immediately
-    }
-
-    if (!hasFallback) {
-      throw buildExhaustedError(null, primaryError);
-    }
-
-    primaryCircuitOpen = true;
-    circuitOpenedAt = Date.now();
-    console.warn(`[KampusCart] Primary API down. Switching to fallback…`);
-
-    try {
-      return await callInstance(fallbackAPI, method, path, data, config);
-    } catch (fallbackError) {
-      throw buildExhaustedError(fallbackError, primaryError);
-    }
-  }
-}
-
-function buildExhaustedError(fallbackError, primaryError) {
-  const err = new Error('Service is temporarily unavailable.');
-  err.isFallbackExhausted = true;
-  err.code = 'SERVICE_UNAVAILABLE';
-  err.response = fallbackError?.response ?? primaryError?.response ?? null;
-  // We no longer dispatch the maintenance event here. 
-  // We just return the error so the UI can stop loading spinners or show a toast.
-  return err;
+  return API[lowerMethod](path, config);
 }
 
 apiCall.get = (path, config) => apiCall('get', path, null, config);

@@ -22,36 +22,40 @@ export const createItem = async (req, res) => {
     try {
         const { title, description, price, category, contactNumber, location, sellerEmail, sellerName } = req.body;
 
+        // 🛡️ 1. GRAB IDEMPOTENCY KEY FROM FRONTEND HEADERS
+        const idempotencyKey = req.headers['x-idempotency-key'];
+
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ message: "Please upload at least one image of the item" });
         }
 
         const imageUrls = req.files.map(file => file.path);
 
+        // 💾 2. SAVE ITEM (INCLUDING IDEMPOTENCY KEY)
         const newItem = await Item.create({
             title, description, location, price: Number(price),
             category, contactNumber, sellerEmail, sellerName,
             images: imageUrls,
             seller: req.user.id,
-            college: req.user.college
+            college: req.user.college,
+            idempotencyKey // <--- This prevents the ghost duplicate bug!
         });
 
-        // 🧹 CLEAR CACHE
+        // 🧹 3. CLEAR CACHE
         await clearItemCache(req.user.college);
 
-        // ✅ 1. SEND SUCCESS RESPONSE IMMEDIATELY
+        // ✅ 4. SEND SUCCESS RESPONSE IMMEDIATELY
         // This prevents the frontend from timing out and throwing a 404
         res.status(201).json(newItem);
 
-        // 🛑 NEW: TEST ACCOUNT GUARD 🛑
-        // If the logged-in user matches your test email, stop execution here.
-        // Make sure your JWT middleware actually attaches 'email' to req.user!
+        // 🛑 5. TEST ACCOUNT GUARD 
+        // Stops notifications if you are testing the app
         if (req.user.email === 'admin@kampuscart.com') {
             console.log("🤫 Test account detected. Skipping notifications.");
             return; 
         }
 
-        // 🚀 2. PROCESS NOTIFICATIONS IN THE BACKGROUND
+        // 🚀 6. PROCESS NOTIFICATIONS IN THE BACKGROUND
         const college = req.user.college;
         const excludeUserId = req.user._id || req.user.id;
         const notifTitle = 'New listing on campus 🛒';
@@ -110,8 +114,19 @@ export const createItem = async (req, res) => {
         })();
 
     } catch (error) {
+        // 🛑 DUPLICATE KEY ERROR CATCHER (Idempotency Guard)
+        // If the fallback API retries the request, MongoDB will throw an 11000 error here.
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.idempotencyKey) {
+            console.warn("[KampusCart] Duplicate request caught and blocked by Idempotency Key.");
+            // Return 200 because the item was successfully created on the *first* attempt
+            if (!res.headersSent) {
+                return res.status(200).json({ message: "Item already created" });
+            }
+            return;
+        }
+
         console.error("CREATE ERROR:", error);
-        // Only trigger this if the actual item creation fails (prevents headers error)
+        // Only trigger this if the actual item creation fails for a different reason
         if (!res.headersSent) {
             res.status(500).json({ message: "Server Error", error: error.message });
         }

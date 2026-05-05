@@ -22,37 +22,29 @@ const useServerHealth = () => {
       }
 
       const primaryUrl = import.meta.env.VITE_PRIMARY_SERVER_URL;
-      const fallbackUrl = import.meta.env.VITE_FALLBACK_SERVER_URL;
 
       try {
-        const results = await Promise.allSettled([
-          axios.get(`${primaryUrl}/api/health`, { timeout: 10000 }),
-          axios.get(`${fallbackUrl}/api/health`, { timeout: 10000 })
-        ]);
-
-        const primarySuccess = results[0].status === 'fulfilled' && results[0].value?.status === 200;
-        const fallbackSuccess = results[1].status === 'fulfilled' && results[1].value?.status === 200;
-
-        // If either server responds successfully, clear failure count
-        if (primarySuccess || fallbackSuccess) {
+        const response = await axios.get(`${primaryUrl}/api/health`, { timeout: 10000 });
+        
+        if (response.status === 200) {
           if (failureCountRef.current > 0) {
             console.log('[ServerHealth] Server recovered, clearing failure count');
           }
           failureCountRef.current = 0;
           return;
         }
-
-        // Both servers failed
-        failureCountRef.current += 1;
-        console.warn(`[ServerHealth] Both servers failed. Strike ${failureCountRef.current}/2`);
-
-        // Redirect on second consecutive failure
-        if (failureCountRef.current >= 2) {
-          console.error('[ServerHealth] 2 consecutive failures detected. Redirecting to maintenance page.');
-          navigate('/maintenance', { replace: true });
-        }
       } catch (error) {
-        console.error('[ServerHealth] Unexpected error during health check:', error);
+        console.error('[ServerHealth] Error during health check:', error);
+      }
+
+      // Server failed
+      failureCountRef.current += 1;
+      console.warn(`[ServerHealth] Server failed. Strike ${failureCountRef.current}/2`);
+
+      // Redirect on second consecutive failure
+      if (failureCountRef.current >= 2) {
+        console.error('[ServerHealth] 2 consecutive failures detected. Redirecting to maintenance page.');
+        navigate('/maintenance', { replace: true });
       }
     };
 
