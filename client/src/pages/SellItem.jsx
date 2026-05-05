@@ -24,7 +24,6 @@ const SellItem = () => {
   const [previews, setPreviews] = useState([]);
   
   const [loading, setLoading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState('');
   const submittingRef = React.useRef(false);
 
@@ -71,34 +70,18 @@ const SellItem = () => {
     setLoading(true);
     submittingRef.current = true;
     setError('');
-    setUploadProgress(0);
-
-    // Simulate fast initial progress (0-40% in 300ms)
-    const initialProgress = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 40) {
-          clearInterval(initialProgress);
-          return 40;
-        }
-        return prev + 8;
-      });
-    }, 30);
 
     if (imageFiles.length === 0) {
-      clearInterval(initialProgress);
       setError('Please upload at least one image.');
       setLoading(false);
-      setUploadProgress(0);
       submittingRef.current = false;
       return;
     }
 
     const rawPhone = formData.sellerPhone.replace(/\D/g, '');
     if (rawPhone.length !== 10) {
-      clearInterval(initialProgress);
       setError('Please enter a valid 10-digit phone number.');
       setLoading(false);
-      setUploadProgress(0);
       submittingRef.current = false;
       return;
     }
@@ -120,29 +103,17 @@ const SellItem = () => {
         data.append('images', file); 
       });
 
-      // ✅ FIX: Use API.post with upload progress tracking
-      await API.post('/items', data, {
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round(
-            40 + (progressEvent.loaded / progressEvent.total) * 60
-          );
-          setUploadProgress(percentCompleted);
-        }
-      });
+      // ✅ FIX: Use API.post
+      // - No token needed (Cookie sent automatically)
+      // - Axios handles 'Content-Type: multipart/form-data' automatically
+      await API.post('/items', data);
 
-      setUploadProgress(100);
       toast.success('Item posted successfully!');
-      
-      // Small delay to show 100% before navigation
-      setTimeout(() => {
-        navigate('/');
-      }, 500); 
+      navigate('/'); 
 
     } catch (err) {
-      clearInterval(initialProgress);
       console.error(err);
       setError(err.response?.data?.message || 'Failed to create item');
-      setUploadProgress(0);
     } finally {
       setLoading(false);
       submittingRef.current = false;
@@ -371,22 +342,6 @@ const SellItem = () => {
                         </div>
 
                         <div className="pt-6">
-                            {loading && (
-                                <div className="mb-4">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Uploading...</span>
-                                        <span className="text-sm font-bold text-cyan-600 dark:text-cyan-400">{uploadProgress}%</span>
-                                    </div>
-                                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden shadow-inner">
-                                        <div 
-                                            className="h-full bg-gradient-to-r from-cyan-500 to-teal-500 rounded-full transition-all duration-300 ease-out shadow-lg"
-                                            style={{ width: `${uploadProgress}%` }}
-                                        >
-                                            <div className="h-full w-full bg-white/20 animate-pulse"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
                             <button 
                                 type="submit" 
                                 disabled={loading} 
