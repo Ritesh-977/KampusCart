@@ -9,7 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { 
   FaWhatsapp, FaEnvelope, FaMapMarkerAlt, FaCommentDots, 
   FaChevronRight, FaShare, FaFacebook, FaTwitter, FaLink, FaTimes, FaFlag,
-  FaChevronLeft, FaChevronRight as FaArrowRight, FaCalendarAlt, FaUser, FaEye
+  FaChevronLeft, FaChevronRight as FaArrowRight, FaCalendarAlt, FaUser
 } from 'react-icons/fa'; 
 
 // --- SKELETON COMPONENT ---
@@ -315,9 +315,7 @@ useEffect(() => {
                 <div className="relative group">
                   <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-white to-cyan-50 dark:from-slate-800 dark:to-slate-900 h-80 sm:h-[500px] relative flex items-center justify-center cursor-zoom-in border-2 border-cyan-200 dark:border-cyan-700/50 shadow-2xl hover:shadow-cyan-500/20 transition-all duration-300 hover:border-cyan-400" onClick={() => setIsZoomed(true)}>
                     <img src={item.images[activeImage]} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" alt="" />
-                    <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <FaEye className="text-white text-sm" />
-                    </div>
+
                     {item.images.length > 1 && (
                       <>
                         <button onClick={(e) => { e.stopPropagation(); setActiveImage((activeImage - 1 + item.images.length) % item.images.length); }} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110"><FaChevronLeft /></button>
@@ -326,8 +324,19 @@ useEffect(() => {
                     )}
                   </div>
                   {item.images.length > 1 && (
-                    <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium">
-                      {activeImage + 1} / {item.images.length}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-2 bg-black/50 backdrop-blur-sm rounded-full">
+                      {item.images.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={(e) => { e.stopPropagation(); setActiveImage(i); }}
+                          style={{
+                            width:   i === activeImage ? '8px' : Math.abs(i - activeImage) === 1 ? '6px' : '5px',
+                            height:  i === activeImage ? '8px' : Math.abs(i - activeImage) === 1 ? '6px' : '5px',
+                            opacity: i === activeImage ? 1    : Math.abs(i - activeImage) === 1 ? 0.5  : 0.3,
+                          }}
+                          className="rounded-full bg-white transition-all duration-300"
+                        />
+                      ))}
                     </div>
                   )}
                 </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { unsubscribeFromPush } from '../utils/pushSubscription';
 import {
-  FaSearch, FaUserCircle, FaHistory, FaTrashAlt,
+  FaSearch, FaUserCircle,
   FaHeart, FaPlus, FaSignOutAlt, FaUser, FaList, FaBullhorn,
   FaCommentDots, FaTimes, FaUserShield, FaUniversity, FaBars,
   FaCalendarCheck, FaTrophy, FaBook, FaStore, FaThLarge, FaChevronDown, FaBell,
@@ -31,11 +31,14 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
-  const [searchTerm, setSearchTerm]   = useState('');
+  const [searchTerm, setSearchTerm]   = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('search') || '';
+  });
   const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [history, setHistory] = useState([]);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const isFocused = useRef(false);
 
   const { selectedCollege } = useCollege();
   const navigate  = useNavigate();
@@ -48,6 +51,12 @@ const Navbar = () => {
   const user       = JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('userInfo'));
   const isLoggedIn = !!user;
   const { unreadCount } = useNotifications();
+
+  // Sync search input with URL on route changes
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setSearchTerm(params.get('search') || '');
+  }, [location.pathname, location.search]);
 
   // Close menus on route change
   useEffect(() => {
@@ -96,7 +105,9 @@ const Navbar = () => {
     socket.on('notification', fetchUnreadCount);
 
     // Campus-wide broadcasts (new listing, event, sport, lost & found)
-    socket.on('campus_notification', ({ title, body }) => {
+    socket.on('campus_notification', ({ title, body, excludeUserId }) => {
+      const currentUserId = String(user._id || user.id);
+      if (excludeUserId && currentUserId === excludeUserId) return;
       toast.info(`${title}: ${body}`, {
         position: 'top-right',
         autoClose: 5000,
@@ -119,9 +130,9 @@ const Navbar = () => {
           if (selectedCollege?.name) params.college = selectedCollege.name;
           const { data } = await API.get('/items', { params });
           setSuggestions(Array.isArray(data) ? data.slice(0, 6) : []);
-          setShowDropdown(true);
-        } catch { setSuggestions([]); }
-      } else { setSuggestions([]); }
+          if (isFocused.current) setShowDropdown(true);
+        } catch { setSuggestions([]); setShowDropdown(false); }
+      } else { setSuggestions([]); setShowDropdown(false); }
     }, 300);
     return () => clearTimeout(t);
   }, [searchTerm, selectedCollege]);
@@ -164,33 +175,18 @@ const Navbar = () => {
     const existing = JSON.parse(localStorage.getItem('searchHistory') || '[]');
     const updated  = [term, ...existing.filter(t => t !== term)].slice(0, 5);
     localStorage.setItem('searchHistory', JSON.stringify(updated));
-    setHistory(updated);
-  };
-
-  const handleDeleteHistoryItem = (e, term) => {
-    e.preventDefault(); e.stopPropagation();
-    const updated = history.filter(t => t !== term);
-    localStorage.setItem('searchHistory', JSON.stringify(updated));
-    setHistory(updated);
-  };
-
-  const handleClearAllHistory = (e) => {
-    e.preventDefault();
-    localStorage.removeItem('searchHistory');
-    setHistory([]);
   };
 
   const handleFocus = () => {
-    const saved = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-    setHistory(saved);
-    setShowDropdown(true);
+    isFocused.current = true;
+    if (searchTerm.trim().length > 0) setShowDropdown(true);
   };
 
   // ── SUB-COMPONENTS ──────────────────────────────────────────────────────────
 
   const SearchDropdown = () => (
     <div className="absolute top-full left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[100] overflow-hidden">
-      {searchTerm.trim().length > 0 && suggestions.length > 0 ? (
+      {suggestions.length > 0 ? (
         <div className="py-2">
           {suggestions.map(item => (
             <button key={item._id}
@@ -212,27 +208,6 @@ const Navbar = () => {
           <button onMouseDown={handleFullSearch} className="w-full text-center py-2.5 text-sm text-indigo-700 dark:text-indigo-400 font-bold hover:bg-indigo-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
             See all results for "{searchTerm}"
           </button>
-        </div>
-      ) : history.length > 0 && searchTerm.trim().length === 0 ? (
-        <div className="py-2">
-          <p className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Recent</p>
-          {history.map((term, i) => (
-            <div key={i} className="flex items-center hover:bg-gray-50 dark:hover:bg-gray-700 group border-b border-gray-50 dark:border-gray-700 last:border-none">
-              <button onMouseDown={() => { setSearchTerm(term); navigate(`/browse?search=${encodeURIComponent(term)}`); }}
-                className="flex-grow text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-300 flex items-center">
-                <FaHistory className="mr-3 text-gray-300 text-xs group-hover:text-indigo-400 transition-colors" />{term}
-              </button>
-              <button onMouseDown={e => handleDeleteHistoryItem(e, term)} className="px-3 py-2 text-gray-300 hover:text-red-500 transition-colors">
-                <FaTimes size={11} />
-              </button>
-            </div>
-          ))}
-          <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
-            <span className="text-xs text-gray-400 italic">Saved locally</span>
-            <button onMouseDown={handleClearAllHistory} className="text-[10px] font-bold text-gray-500 hover:text-red-600 flex items-center uppercase tracking-wide">
-              <FaTrashAlt className="mr-1" /> Clear
-            </button>
-          </div>
         </div>
       ) : null}
     </div>
@@ -373,7 +348,7 @@ const Navbar = () => {
                 type="text"
                 value={searchTerm}
                 onFocus={handleFocus}
-                onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                onBlur={() => { isFocused.current = false; setShowDropdown(false); }}
                 onChange={e => setSearchTerm(e.target.value)}
                 placeholder="Search for items..."
                 autoComplete="off"
@@ -504,7 +479,7 @@ const Navbar = () => {
             type="text"
             value={searchTerm}
             onFocus={handleFocus}
-            onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+            onBlur={() => { isFocused.current = false; setShowDropdown(false); }}
             onChange={e => setSearchTerm(e.target.value)}
             placeholder="Search items..."
             className="block w-full pl-10 pr-24 py-3 bg-white rounded-full border-none shadow-xl focus:ring-2 focus:ring-teal-400 focus:outline-none text-gray-800 dark:text-white dark:bg-slate-800 placeholder-gray-500 dark:placeholder-slate-400 text-sm transition-all"

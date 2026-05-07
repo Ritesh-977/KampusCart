@@ -1,6 +1,6 @@
 // src/App.jsx
 import { Routes, Route, useLocation } from "react-router-dom"; 
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ScrollToTop from "./components/ScrollToTop";
 import Footer from "./components/Footer";
@@ -48,13 +48,14 @@ function App() {
       {/* Toast Notifications */}
       <ToastContainer
         position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
+        autoClose={2000}
+        hideProgressBar
         newestOnTop
         closeOnClick
-        pauseOnHover
-        draggable
+        pauseOnHover={false}
+        draggable={false}
         theme="light"
+        transition={Slide}
       />
 
       {/* Scroll behavior controller */}

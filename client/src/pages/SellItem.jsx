@@ -81,8 +81,8 @@ const SellItem = () => {
     }
 
     const rawPhone = formData.sellerPhone.replace(/\D/g, '');
-    if (rawPhone.length !== 10) {
-      setError('Please enter a valid 10-digit phone number.');
+    if (!/^[6-9]\d{9}$/.test(rawPhone)) {
+      setError('Please enter a valid Indian mobile number (must start with 6, 7, 8, or 9).');
       setLoading(false);
       submittingRef.current = false;
       return;
@@ -110,7 +110,7 @@ const SellItem = () => {
       await apiCall.post('/items', data, { timeout: 60000 });
 
       toast.success('Item posted successfully!');
-      navigate('/'); 
+      setTimeout(() => navigate('/'), 100);
 
     } catch (err) {
       console.error(err);
@@ -206,13 +206,23 @@ const SellItem = () => {
                                         type="tel" 
                                         name="sellerPhone" 
                                         required 
-                                        maxLength="10" 
+                                        maxLength="10"
                                         value={formData.sellerPhone} 
-                                        onChange={handleChange} 
-                                        className="block w-full border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-r-xl focus:ring-cyan-500 focus:border-cyan-500 transition-colors" 
+                                        onChange={(e) => {
+                                          const val = e.target.value.replace(/\D/g, '');
+                                          setFormData(prev => ({ ...prev, sellerPhone: val }));
+                                        }}
+                                        className={`block w-full border bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-r-xl focus:ring-cyan-500 focus:border-cyan-500 transition-colors ${
+                                          formData.sellerPhone.length > 0 && !/^[6-9]\d{0,9}$/.test(formData.sellerPhone)
+                                            ? 'border-red-400 dark:border-red-500'
+                                            : 'border-slate-200 dark:border-slate-600'
+                                        }`}
                                         placeholder="9876543210" 
                                     />
                                 </div>
+                                {formData.sellerPhone.length > 0 && !/^[6-9]\d{0,9}$/.test(formData.sellerPhone) && (
+                                  <p className="mt-1 text-xs text-red-500">Must start with 6, 7, 8, or 9</p>
+                                )}
                             </div>
                             <div>
                                 <label className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase">Email Address</label>

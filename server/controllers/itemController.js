@@ -80,10 +80,11 @@ export const createItem = async (req, res) => {
                     url: itemUrl, icon: imageUrls[0],
                 });
 
-                // 3. Socket.io in-app banner
+                // 3. Socket.io in-app banner (exclude the seller)
                 if (io) {
                     io.to(`college:${college}`).emit('campus_notification', {
                         title: notifTitle, body: notifBody, data: notifData,
+                        excludeUserId: String(excludeUserId),
                     });
                 }
 

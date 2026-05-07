@@ -178,6 +178,7 @@ const UserProfile = () => {
 
   const handleSave = async () => {
     setSaving(true);
+    const toastId = toast.loading('Saving profile...');
     try {
       const formData = new FormData();
       formData.append('name', user.name);
@@ -208,12 +209,11 @@ const UserProfile = () => {
       setIsEditing(false);
       setImageFile(null);
       setCoverFile(null);
-      toast.success("Profile updated successfully!");
+      toast.update(toastId, { render: 'Profile updated successfully!', type: 'success', isLoading: false, autoClose: 2000 });
 
     } catch (err) {
       console.error(err);
-      // Handle Axios error response
-      toast.error(err.response?.data?.message || "Failed to update profile");
+      toast.update(toastId, { render: err.response?.data?.message || 'Failed to update profile', type: 'error', isLoading: false, autoClose: 2000 });
     } finally {
       setSaving(false);
     }

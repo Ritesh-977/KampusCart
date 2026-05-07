@@ -143,7 +143,7 @@ const EditItem = () => {
       await API.put(`/items/${id}`, data);
 
       toast.success('Item updated successfully!');
-      navigate('/my-listings');
+      setTimeout(() => navigate('/my-listings'), 100);
 
     } catch (err) {
       console.error(err);

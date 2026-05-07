@@ -58,7 +58,6 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [signupStep, setSignupStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
-  const [agree, setAgree] = useState(false);
   const MNNIT = { id: 'mnnit-allahabad', name: 'MNNIT Allahabad', emailDomain: 'mnnit.ac.in' };
   const signupCollege = MNNIT;
 
@@ -397,30 +396,12 @@ const Auth = () => {
                 </div>
               )}
 
-              {!isLogin && signupStep === 1 && (
-                <div className="flex items-start gap-2 mt-4">
-                  <input
-                    id="terms"
-                    type="checkbox"
-                    checked={agree}
-                    onChange={(e) => setAgree(e.target.checked)}
-                    className="mt-1 h-4 w-4 text-green-600 border-gray-300 dark:border-gray-600 rounded focus:ring-green-500 dark:bg-gray-700"
-                  />
-                  <label htmlFor="terms" className="text-sm text-gray-600 dark:text-gray-400">
-                    I agree to the{" "}
-                    <Link to="/terms" className="text-green-600 dark:text-green-400 hover:underline font-medium">Terms of Service</Link>
-                    {" "}and{" "}
-                    <Link to="/privacy" className="text-green-600 dark:text-green-400 hover:underline font-medium">Privacy Policy</Link>
-                  </label>
-                </div>
-              )}
-
               <div>
                 <button
                   type="submit"
-                  disabled={loading || (!isLogin && !agree && signupStep === 1)}
+                  disabled={loading}
                   className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white
-                    ${loading || (!isLogin && !agree && signupStep === 1)
+                    ${loading
                       ? 'bg-indigo-400 cursor-not-allowed'
                       : 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500'
                     } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors`}
@@ -434,6 +415,14 @@ const Auth = () => {
                         : 'Verify & Create Account'
                   }
                 </button>
+                {!isLogin && signupStep === 1 && (
+                  <p className="mt-3 text-center text-xs text-gray-400 dark:text-gray-500">
+                    By creating an account, you agree to our{' '}
+                    <Link to="/terms" className="text-indigo-500 dark:text-indigo-400 hover:underline">Terms</Link>
+                    {' '}and{' '}
+                    <Link to="/privacy" className="text-indigo-500 dark:text-indigo-400 hover:underline">Privacy Policy</Link>.
+                  </p>
+                )}
               </div>
 
             </form>
