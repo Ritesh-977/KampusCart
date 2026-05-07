@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import Navbar from '../components/Navbar';
@@ -49,6 +49,7 @@ const ItemDetails = () => {
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
+  const scrollContainerRef = useRef(null);
   
   // State for Modals
   const [showShareModal, setShowShareModal] = useState(false);
@@ -313,13 +314,31 @@ useEffect(() => {
               {/* LEFT: IMAGES */}
               <div className="flex flex-col gap-6 max-w-md mx-auto lg:mx-0 animate-fadeIn" style={{ animation: 'fadeUpIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}>
                 <div className="relative group">
-                  <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-white to-cyan-50 dark:from-slate-800 dark:to-slate-900 h-80 sm:h-[500px] relative flex items-center justify-center cursor-zoom-in border-2 border-cyan-200 dark:border-cyan-700/50 shadow-2xl hover:shadow-cyan-500/20 transition-all duration-300 hover:border-cyan-400" onClick={() => setIsZoomed(true)}>
-                    <img src={item.images[activeImage]} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" alt="" />
+                  {/* Mobile: horizontal scroll/swipe. Desktop: single image view */}
+                  <div
+                    ref={scrollContainerRef}
+                    className="rounded-3xl overflow-x-auto overflow-y-hidden sm:overflow-hidden bg-gradient-to-br from-white to-cyan-50 dark:from-slate-800 dark:to-slate-900 h-80 sm:h-[500px] relative flex sm:items-center sm:justify-center cursor-zoom-in border-2 border-cyan-200 dark:border-cyan-700/50 shadow-2xl hover:shadow-cyan-500/20 transition-all duration-300 hover:border-cyan-400 snap-x snap-mandatory scroll-smooth scrollbar-hide"
+                    onClick={() => setIsZoomed(true)}
+                    onScroll={(e) => {
+                      const idx = Math.round(e.currentTarget.scrollLeft / e.currentTarget.offsetWidth);
+                      if (idx !== activeImage) setActiveImage(idx);
+                    }}
+                  >
+                    {/* Mobile: all images side by side for swiping */}
+                    <div className="flex sm:hidden w-full h-full flex-shrink-0">
+                      {item.images.map((img, i) => (
+                        <div key={i} className="snap-center flex-shrink-0 w-full h-full flex items-center justify-center">
+                          <img src={img} className="w-full h-full object-contain" alt="" />
+                        </div>
+                      ))}
+                    </div>
+                    {/* Desktop: single active image */}
+                    <img src={item.images[activeImage]} className="hidden sm:block w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" alt="" />
 
                     {item.images.length > 1 && (
                       <>
-                        <button onClick={(e) => { e.stopPropagation(); setActiveImage((activeImage - 1 + item.images.length) % item.images.length); }} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110"><FaChevronLeft /></button>
-                        <button onClick={(e) => { e.stopPropagation(); setActiveImage((activeImage + 1) % item.images.length); }} className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110"><FaArrowRight /></button>
+                        <button onClick={(e) => { e.stopPropagation(); setActiveImage((activeImage - 1 + item.images.length) % item.images.length); }} className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110"><FaChevronLeft /></button>
+                        <button onClick={(e) => { e.stopPropagation(); setActiveImage((activeImage + 1) % item.images.length); }} className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110"><FaArrowRight /></button>
                       </>
                     )}
                   </div>
@@ -328,7 +347,15 @@ useEffect(() => {
                       {item.images.map((_, i) => (
                         <button
                           key={i}
-                          onClick={(e) => { e.stopPropagation(); setActiveImage(i); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveImage(i);
+                            // On mobile, scroll the container to the correct image
+                            if (scrollContainerRef.current) {
+                              const child = scrollContainerRef.current.querySelector('.flex.sm\\:hidden');
+                              if (child) scrollContainerRef.current.scrollTo({ left: i * scrollContainerRef.current.offsetWidth, behavior: 'smooth' });
+                            }
+                          }}
                           style={{
                             width:   i === activeImage ? '8px' : Math.abs(i - activeImage) === 1 ? '6px' : '5px',
                             height:  i === activeImage ? '8px' : Math.abs(i - activeImage) === 1 ? '6px' : '5px',
