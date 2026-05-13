@@ -58,7 +58,7 @@ const ItemDetails = () => {
   const [isReporting, setIsReporting] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
 
-useEffect(() => {
+  useEffect(() => {
     const fetchItemAndRelated = async () => {
       try {
         // 1. Fetch the main item
@@ -82,7 +82,7 @@ useEffect(() => {
             itemsArray = relatedRes.data.items;
           }
 
-          // 👇 UPDATED: Filter out the viewed item AND sold items
+          // Filter out the viewed item AND sold items
           const filtered = itemsArray
             .filter(i => String(i._id) !== String(id) && !i.isSold)
             .slice(0, 4);
@@ -108,8 +108,6 @@ useEffect(() => {
     setActiveImage(0);
     fetchItemAndRelated();
   }, [id]);
-
-  
 
   const handleChat = async () => {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -186,6 +184,23 @@ useEffect(() => {
     const message = encodeURIComponent(`Hi, I'm interested in: ${title}. Link: ${currentUrl}`);
     return `https://wa.me/${cleanNumber}?text=${message}`;
   };
+
+  // --- IMAGE NAVIGATION HANDLER ---
+  const handleImageChange = useCallback((index, e = null) => {
+    if (e) e.stopPropagation();
+    setActiveImage(index);
+    
+    // On mobile, scroll the container to the correct image smoothly
+    if (scrollContainerRef.current) {
+      const child = scrollContainerRef.current.querySelector('.flex.sm\\:hidden');
+      if (child) {
+        scrollContainerRef.current.scrollTo({ 
+          left: index * scrollContainerRef.current.offsetWidth, 
+          behavior: 'smooth' 
+        });
+      }
+    }
+  }, []);
 
   const user = JSON.parse(localStorage.getItem('user'));
   const isOtherCollege = !!(user && item?.college && user.college !== item.college);
@@ -337,8 +352,8 @@ useEffect(() => {
 
                     {item.images.length > 1 && (
                       <>
-                        <button onClick={(e) => { e.stopPropagation(); setActiveImage((activeImage - 1 + item.images.length) % item.images.length); }} className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110"><FaChevronLeft /></button>
-                        <button onClick={(e) => { e.stopPropagation(); setActiveImage((activeImage + 1) % item.images.length); }} className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110"><FaArrowRight /></button>
+                        <button onClick={(e) => { e.stopPropagation(); handleImageChange((activeImage - 1 + item.images.length) % item.images.length); }} className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110"><FaChevronLeft /></button>
+                        <button onClick={(e) => { e.stopPropagation(); handleImageChange((activeImage + 1) % item.images.length); }} className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110"><FaArrowRight /></button>
                       </>
                     )}
                   </div>
@@ -347,15 +362,7 @@ useEffect(() => {
                       {item.images.map((_, i) => (
                         <button
                           key={i}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveImage(i);
-                            // On mobile, scroll the container to the correct image
-                            if (scrollContainerRef.current) {
-                              const child = scrollContainerRef.current.querySelector('.flex.sm\\:hidden');
-                              if (child) scrollContainerRef.current.scrollTo({ left: i * scrollContainerRef.current.offsetWidth, behavior: 'smooth' });
-                            }
-                          }}
+                          onClick={(e) => handleImageChange(i, e)}
                           style={{
                             width:   i === activeImage ? '8px' : Math.abs(i - activeImage) === 1 ? '6px' : '5px',
                             height:  i === activeImage ? '8px' : Math.abs(i - activeImage) === 1 ? '6px' : '5px',
@@ -373,7 +380,7 @@ useEffect(() => {
                     {item.images.map((img, index) => (
                       <button 
                         key={index} 
-                        onClick={() => setActiveImage(index)} 
+                        onClick={(e) => handleImageChange(index, e)} 
                         className={`relative flex-shrink-0 h-20 w-20 rounded-xl overflow-hidden border-3 transition-all duration-200 ${
                           activeImage === index ? 'border-cyan-500 shadow-lg shadow-cyan-500/30 scale-110' : 'border-slate-300 dark:border-slate-700 hover:border-cyan-400'
                         }`}
