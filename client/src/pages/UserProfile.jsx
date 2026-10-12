@@ -221,6 +221,7 @@ const UserProfile = () => {
         profilePic: updatedData.profilePic,
         // Add other fields if necessary
       }));
+      window.dispatchEvent(new Event('userUpdated'));
 
       // Update UI
       if (updatedData.profilePic) {

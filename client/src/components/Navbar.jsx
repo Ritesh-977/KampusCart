@@ -48,9 +48,26 @@ const Navbar = () => {
   const campusMenuRef = useRef(null);
   const notificationRef = useRef(null);
 
-  const user       = JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('userInfo'));
+  const [currentUser, setCurrentUser] = useState(() => {
+    return JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('userInfo')) || null;
+  });
+  const user = currentUser;
   const isLoggedIn = !!user;
   const { unreadCount } = useNotifications();
+
+  // Listen for user profile updates from UserProfile or other components
+  useEffect(() => {
+    const handleUserSync = () => {
+      const freshUser = JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('userInfo')) || null;
+      setCurrentUser(freshUser);
+    };
+    window.addEventListener('userUpdated', handleUserSync);
+    window.addEventListener('storage', handleUserSync);
+    return () => {
+      window.removeEventListener('userUpdated', handleUserSync);
+      window.removeEventListener('storage', handleUserSync);
+    };
+  }, []);
 
   // Sync search input with URL on route changes
   useEffect(() => {
