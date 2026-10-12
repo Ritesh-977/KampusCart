@@ -17,13 +17,13 @@ const sendToken = (user, statusCode, res) => {
   // If you are testing on localhost, you might need to temporarily toggle these, 
   // but for your live Vercel/Render site, they MUST be exactly this:
   const options = {
-  expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 Days
-  httpOnly: true, // Prevents XSS attacks
-  sameSite: 'lax', // Protects against CSRF attacks
-  secure: true, // MUST be true in production (requires HTTPS)
-  domain: ".kampuscart.site", // Allows sharing between api. and www.
-  path: "/"
-};
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 Days
+    httpOnly: true, // Prevents XSS attacks
+    sameSite: 'lax', // Protects against CSRF attacks
+    secure: true, // MUST be true in production (requires HTTPS)
+    domain: ".kampuscart.site", // Allows sharing between api. and www.
+    path: "/"
+  };
 
   res.cookie('token', token, options);
 
@@ -53,7 +53,7 @@ export const registerUser = async (req, res) => {
       return res.status(403).json({
         message: "Use your college email (@mnnit.ac.in).",
       });
-}
+    }
 
     const collegeName = 'MNNIT Allahabad';
 
@@ -321,7 +321,7 @@ export const googleLogin = async (req, res) => {
       return res.status(403).json({
         message: "Use your college email (@mnnit.ac.in).",
       });
-}
+    }
 
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
@@ -379,7 +379,7 @@ export const googleSignup = async (req, res) => {
       return res.status(403).json({
         message: "Use your college email (@mnnit.ac.in).",
       });
-}
+    }
 
     const collegeName = 'MNNIT Allahabad';
 

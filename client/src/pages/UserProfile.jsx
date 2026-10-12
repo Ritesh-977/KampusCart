@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import Cropper from 'react-easy-crop';
 import { toast } from 'react-toastify';
 import API from '../api/axios';
+import AvatarPickerModal from '../components/AvatarPickerModal';
 
 // --- UTILITY FUNCTION FOR CROPPING ---
 const createImage = (url) =>
@@ -60,6 +61,8 @@ const UserProfile = () => {
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [selectedAvatarUrl, setSelectedAvatarUrl] = useState(null);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState(null);
   const coverInputRef = useRef(null);
@@ -151,6 +154,7 @@ const UserProfile = () => {
       if (cropTarget === 'profile') {
         setImagePreview(croppedUrl);
         setImageFile(croppedImageBlob);
+        setSelectedAvatarUrl(null);
       } else if (cropTarget === 'cover') {
         setCoverPreview(croppedUrl);
         setCoverFile(croppedImageBlob);
@@ -176,6 +180,18 @@ const UserProfile = () => {
   const triggerFileInput = () => fileInputRef.current.click();
   const triggerCoverInput = () => coverInputRef.current.click();
 
+  const handleSelectAvatar = (avatarUrl) => {
+    setImagePreview(avatarUrl);
+    setSelectedAvatarUrl(avatarUrl);
+    setImageFile(null); // Clear local uploaded file
+    setShowAvatarModal(false);
+  };
+
+  const handleModalUploadClick = () => {
+    setShowAvatarModal(false);
+    triggerFileInput();
+  };
+
   const handleSave = async () => {
     setSaving(true);
     const toastId = toast.loading('Saving profile...');
@@ -185,7 +201,11 @@ const UserProfile = () => {
       formData.append('phone', user.phone);
       formData.append('year', user.year);
 
-      if (imageFile) formData.append('profilePic', imageFile);
+      if (imageFile) {
+        formData.append('profilePic', imageFile);
+      } else if (selectedAvatarUrl) {
+        formData.append('profilePic', selectedAvatarUrl);
+      }
       if (coverFile) formData.append('coverImage', coverFile);
 
       // ✅ FIX: Use API.put
@@ -203,11 +223,18 @@ const UserProfile = () => {
       }));
 
       // Update UI
-      if (updatedData.profilePic) setImagePreview(updatedData.profilePic);
-      if (updatedData.coverImage) setCoverPreview(updatedData.coverImage);
+      if (updatedData.profilePic) {
+        setImagePreview(updatedData.profilePic);
+        setUser((prev) => ({ ...prev, profilePic: updatedData.profilePic }));
+      }
+      if (updatedData.coverImage) {
+        setCoverPreview(updatedData.coverImage);
+        setUser((prev) => ({ ...prev, coverImage: updatedData.coverImage }));
+      }
 
       setIsEditing(false);
       setImageFile(null);
+      setSelectedAvatarUrl(null);
       setCoverFile(null);
       toast.update(toastId, { render: 'Profile updated successfully!', type: 'success', isLoading: false, autoClose: 2000 });
 
@@ -319,7 +346,12 @@ const UserProfile = () => {
     </div>
     <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
     {isEditing && (
-      <button onClick={triggerFileInput} className="absolute bottom-0 right-0 bg-gradient-to-r from-cyan-500 to-teal-500 text-white p-3 rounded-full hover:from-cyan-600 hover:to-teal-600 transition shadow-lg z-20 transform hover:scale-105" title="Upload Photo">
+      <button 
+        type="button"
+        onClick={() => setShowAvatarModal(true)} 
+        className="absolute bottom-0 right-0 bg-gradient-to-r from-cyan-500 to-teal-500 text-white p-3 rounded-full hover:from-cyan-600 hover:to-teal-600 transition shadow-lg z-20 transform hover:scale-105" 
+        title="Change Profile Picture"
+      >
         <FaCamera size={16} />
       </button>
     )}
@@ -340,6 +372,7 @@ const UserProfile = () => {
             setImagePreview(user.profilePic || null);
             setCoverPreview(user.coverImage || null);
             setImageFile(null);
+            setSelectedAvatarUrl(null);
             setCoverFile(null);
           }}
           disabled={saving}
@@ -648,6 +681,15 @@ const UserProfile = () => {
           </div>
         </div>
       )}
+
+      {/* --- AVATAR PICKER MODAL --- */}
+      <AvatarPickerModal
+        isOpen={showAvatarModal}
+        onClose={() => setShowAvatarModal(false)}
+        onSelectAvatar={handleSelectAvatar}
+        onUploadClick={handleModalUploadClick}
+        currentAvatar={imagePreview}
+      />
 
     </div>
   );

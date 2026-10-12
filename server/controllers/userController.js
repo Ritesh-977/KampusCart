@@ -35,19 +35,18 @@ export const updateUserProfile = async (req, res) => {
                 user.password = req.body.password; 
             }
 
-            // 3. Handle Images (Updated for Multiple Files)
+            // 3. Handle Images (Updated for Multiple Files & Default Avatars)
             // 'upload.fields' puts files in 'req.files' (plural) as an object
-            if (req.files) {
-                // Check if Profile Pic was uploaded
-                if (req.files.profilePic) {
-                    // It comes as an array, so we take the first one [0]
-                    user.profilePic = req.files.profilePic[0].path; 
-                }
+            if (req.files && req.files.profilePic) {
+                // Profile picture uploaded via Cloudinary
+                user.profilePic = req.files.profilePic[0].path; 
+            } else if (req.body.profilePic) {
+                // Default avatar URL (e.g. DiceBear) chosen
+                user.profilePic = req.body.profilePic;
+            }
 
-                // Check if Cover Image was uploaded
-                if (req.files.coverImage) {
-                    user.coverImage = req.files.coverImage[0].path;
-                }
+            if (req.files && req.files.coverImage) {
+                user.coverImage = req.files.coverImage[0].path;
             }
 
             const updatedUser = await user.save();
