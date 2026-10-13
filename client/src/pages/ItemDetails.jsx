@@ -208,8 +208,9 @@ const ItemDetails = () => {
   // Helper: handles legacy plain string URLs and new {url, public_id} objects
   const imgUrl = (img) => (img && typeof img === 'object' ? img.url : img) || null;
 
-  const displayName = item ? (item.sellerName || item.seller.name) : '';
-  const displayEmail = item ? (item.sellerEmail || item.seller.email) : '';
+  const images = item?.images?.length ? item.images : [];
+  const displayName = item ? (item.sellerName || item.seller?.name) : '';
+  const displayEmail = item ? (item.sellerEmail || item.seller?.email) : '';
 
   const seo = item ? SEO.item(item, null) : null;
 
@@ -239,7 +240,7 @@ const ItemDetails = () => {
           {/* ZOOM MODAL */}
           {isZoomed && (
             <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out" onClick={() => setIsZoomed(false)}>
-              <img src={imgUrl(item.images[activeImage])} className="max-w-full max-h-full object-contain rounded-lg" alt="" />
+              <img src={imgUrl(images[activeImage])} className="max-w-full max-h-full object-contain rounded-lg" alt="" />
             </div>
           )}
 
@@ -344,25 +345,25 @@ const ItemDetails = () => {
                   >
                     {/* Mobile: all images side by side for swiping */}
                     <div className="flex sm:hidden w-full h-full flex-shrink-0">
-                      {item.images.map((img, i) => (
+                      {images.map((img, i) => (
                         <div key={i} className="snap-center flex-shrink-0 w-full h-full flex items-center justify-center">
                           <img src={imgUrl(img)} className="w-full h-full object-contain" alt="" />
                         </div>
                       ))}
                     </div>
                     {/* Desktop: single active image */}
-                    <img src={imgUrl(item.images[activeImage])} className="hidden sm:block w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" alt="" />
+                    <img src={imgUrl(images[activeImage])} className="hidden sm:block w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" alt="" />
 
-                    {item.images.length > 1 && (
+                    {images.length > 1 && (
                       <>
-                        <button onClick={(e) => { e.stopPropagation(); handleImageChange((activeImage - 1 + item.images.length) % item.images.length); }} className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110"><FaChevronLeft /></button>
-                        <button onClick={(e) => { e.stopPropagation(); handleImageChange((activeImage + 1) % item.images.length); }} className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110"><FaArrowRight /></button>
+                        <button onClick={(e) => { e.stopPropagation(); handleImageChange((activeImage - 1 + images.length) % images.length); }} className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110"><FaChevronLeft /></button>
+                        <button onClick={(e) => { e.stopPropagation(); handleImageChange((activeImage + 1) % images.length); }} className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full p-3 transition-all opacity-0 group-hover:opacity-100 hover:scale-110"><FaArrowRight /></button>
                       </>
                     )}
                   </div>
-                  {item.images.length > 1 && (
+                  {images.length > 1 && (
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-2 bg-black/50 backdrop-blur-sm rounded-full">
-                      {item.images.map((_, i) => (
+                      {images.map((_, i) => (
                         <button
                           key={i}
                           onClick={(e) => handleImageChange(i, e)}
@@ -378,9 +379,9 @@ const ItemDetails = () => {
                   )}
                 </div>
 
-                {item.images.length > 1 && (
+                {images.length > 1 && (
                   <div className="flex gap-3 overflow-x-auto py-2 scrollbar-hide px-2">
-                    {item.images.map((img, index) => (
+                    {images.map((img, index) => (
                       <button 
                         key={index} 
                         onClick={(e) => handleImageChange(index, e)} 
