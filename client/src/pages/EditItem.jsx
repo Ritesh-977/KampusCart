@@ -64,7 +64,8 @@ const EditItem = () => {
         });
 
         if (data.images && data.images.length > 0) {
-            setPreviews(data.images);
+            // Support both legacy string URLs and new {url, public_id} objects
+            setPreviews(data.images.map(img => (img?.url || img)));
         }
 
       } catch (err) {

@@ -205,6 +205,9 @@ const ItemDetails = () => {
   const user = JSON.parse(localStorage.getItem('user'));
   const isOtherCollege = !!(user && item?.college && user.college !== item.college);
 
+  // Helper: handles legacy plain string URLs and new {url, public_id} objects
+  const imgUrl = (img) => (img && typeof img === 'object' ? img.url : img) || null;
+
   const displayName = item ? (item.sellerName || item.seller.name) : '';
   const displayEmail = item ? (item.sellerEmail || item.seller.email) : '';
 
@@ -236,7 +239,7 @@ const ItemDetails = () => {
           {/* ZOOM MODAL */}
           {isZoomed && (
             <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out" onClick={() => setIsZoomed(false)}>
-              <img src={item.images[activeImage]} className="max-w-full max-h-full object-contain rounded-lg" alt="" />
+              <img src={imgUrl(item.images[activeImage])} className="max-w-full max-h-full object-contain rounded-lg" alt="" />
             </div>
           )}
 
@@ -343,12 +346,12 @@ const ItemDetails = () => {
                     <div className="flex sm:hidden w-full h-full flex-shrink-0">
                       {item.images.map((img, i) => (
                         <div key={i} className="snap-center flex-shrink-0 w-full h-full flex items-center justify-center">
-                          <img src={img} className="w-full h-full object-contain" alt="" />
+                          <img src={imgUrl(img)} className="w-full h-full object-contain" alt="" />
                         </div>
                       ))}
                     </div>
                     {/* Desktop: single active image */}
-                    <img src={item.images[activeImage]} className="hidden sm:block w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" alt="" />
+                    <img src={imgUrl(item.images[activeImage])} className="hidden sm:block w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" alt="" />
 
                     {item.images.length > 1 && (
                       <>
@@ -385,7 +388,7 @@ const ItemDetails = () => {
                           activeImage === index ? 'border-cyan-500 shadow-lg shadow-cyan-500/30 scale-110' : 'border-slate-300 dark:border-slate-700 hover:border-cyan-400'
                         }`}
                       >
-                        <img src={img} className="w-full h-full object-cover" alt="" />
+                        <img src={imgUrl(img)} className="w-full h-full object-cover" alt="" />
                         {activeImage === index && <div className="absolute inset-0 bg-cyan-500/20 rounded-xl"></div>}
                       </button>
                     ))}
@@ -570,7 +573,7 @@ const ItemDetails = () => {
                       >
                         <div className="h-48 w-full bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
                           <img 
-                            src={related.images?.[0] || '/placeholder.png'} 
+                            src={imgUrl(related.images?.[0]) || '/placeholder.png'} 
                             alt={related.title} 
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />

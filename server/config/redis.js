@@ -11,23 +11,19 @@ const getRedisUrl = () => {
 };
 
 // Parse the URL to get details, but add specific connection settings
-const redis = new Redis(getRedisUrl(), {
-    // 1. Force IPv4 (Fixes the timeout/retry error on Node 17+)
-    family: 4, 
-    
-    // 2. Explicitly tell ioredis this is a TLS connection (Secure)
-    tls: {
-        rejectUnauthorized: false // Helps avoid SSL verification issues on some networks
-    },
+const rawUrl = getRedisUrl();
+// Upstash (and most managed Redis) requires TLS — the URL scheme must be rediss://
+// If the env var was saved with redis:// by mistake, fix it at runtime so the
+// TLS handshake succeeds without touching the .env file.
+const redisUrl = rawUrl.startsWith('redis://') && !rawUrl.startsWith('rediss://')
+    ? rawUrl.replace('redis://', 'rediss://')
+    : rawUrl;
 
-    // 3. Retry Strategy: If it fails, wait 2 seconds and try again
-    retryStrategy: (times) => {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
-    },
-    
-    // 4. Increase the timeout for the initial connection
-    connectTimeout: 10000, 
+const redis = new Redis(redisUrl, {
+    family: 4,           // Force IPv4 — prevents hangs on Node 17+ dual-stack
+    tls: { rejectUnauthorized: false },
+    retryStrategy: (times) => Math.min(times * 50, 2000),
+    connectTimeout: 10000,
 });
 
 redis.on("connect", () => {

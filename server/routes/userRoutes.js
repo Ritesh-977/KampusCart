@@ -1,5 +1,4 @@
 import express from 'express';
-import multer from 'multer';
 import {
     getUserProfile,
     updateUserProfile,
@@ -8,27 +7,25 @@ import {
     getUserById,
     getSellerProfile,
     changePassword,
+    updateProfilePicture,
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
-
-// 1. Import the storage you defined in utils/cloudinary.js
-import { storage } from '../utils/cloudinaryConfig.js';
+import { uploadAvatar } from '../middleware/multer.js';
 import User from '../models/User.js';
 import Item from '../models/Item.js';
 
 const router = express.Router();
 
-// 2. Configure Multer to use that Cloudinary storage
-const upload = multer({ storage });
-
 // --- Profile Routes ---
 router.route('/profile')
     .get(protect, getUserProfile)
-    // 3. The file uploads to Cloudinary HERE automatically
-     .put(protect, upload.fields([
-    { name: 'profilePic', maxCount: 1 },
-    { name: 'coverImage', maxCount: 1 }
-]), updateUserProfile);
+    .put(protect, uploadAvatar.fields([
+        { name: 'profilePic', maxCount: 1 },
+        { name: 'coverImage', maxCount: 1 }
+    ]), updateUserProfile);
+
+// Avatar toggle: POST with file = custom upload, POST without file = revert to DiceBear
+router.put('/profile/avatar', protect, uploadAvatar.single('avatar'), updateProfilePicture);
 
 // --- Change Password ---
 router.put('/change-password', protect, changePassword);

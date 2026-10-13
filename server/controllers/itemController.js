@@ -6,6 +6,8 @@ import User from '../models/User.js';
 import { sendPushToCollege }      from '../utils/expoPush.js';
 import { sendWebPushToCollege }   from '../utils/webPushService.js';
 import { createNotification, NOTIFICATION_TYPES } from '../utils/notificationHelper.js';
+import { deduplicateAndStage, promoteImage, decrementOrDelete } from '../utils/imageService.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const clearItemCache = async (college) => {
     try {
@@ -19,68 +21,73 @@ const clearItemCache = async (college) => {
 };
 
 export const createItem = async (req, res) => {
+    // Track which temp public_ids were staged so we can roll them back on failure
+    const stagedTempIds = [];
+
     try {
         const { title, description, price, category, contactNumber, location, sellerEmail, sellerName } = req.body;
-
-        // 🛡️ 1. GRAB IDEMPOTENCY KEY FROM FRONTEND HEADERS
         const idempotencyKey = req.headers['x-idempotency-key'];
 
         if (!req.files || req.files.length === 0) {
-            return res.status(400).json({ message: "Please upload at least one image of the item" });
+            return res.status(400).json({ message: 'Please upload at least one image of the item' });
         }
 
-        const imageUrls = req.files.map(file => file.path);
+        // ── Stage 1: Hash + deduplicate + upload to temp/ ──────────────────────
+        // Each file goes to temp/<uuid> first. Cloudinary auto-wipes temp/ after 24h,
+        // so a crash here leaves no permanent orphans.
+        const stagedImages = await Promise.all(
+            req.files.map(async (file) => {
+                const tempId = `temp/${uuidv4()}`;
+                const result = await deduplicateAndStage(file.buffer, tempId);
+                if (result.isNew) stagedTempIds.push(result.public_id); // track for rollback
+                return result; // { url, public_id, isNew }
+            })
+        );
 
-        // 💾 2. SAVE ITEM (INCLUDING IDEMPOTENCY KEY)
+        // ── Stage 2: Persist to DB ─────────────────────────────────────────────
+        // Only after a successful save do we promote temp/ assets to items/.
+        // If Item.create() throws, the temp files expire naturally — no manual cleanup needed.
         const newItem = await Item.create({
             title, description, location, price: Number(price),
             category, contactNumber, sellerEmail, sellerName,
-            images: imageUrls,
+            images: stagedImages.map(img => ({ url: img.url, public_id: img.public_id })),
             seller: req.user.id,
             college: req.user.college,
-            idempotencyKey // <--- This prevents the ghost duplicate bug!
+            idempotencyKey,
         });
 
-        // 🧹 3. CLEAR CACHE
-        await clearItemCache(req.user.college);
+        // ── Stage 3: Promote temp/ → items/ (only new uploads, not dedup reuses) ─
+        const promotedImages = await Promise.all(
+            stagedImages.map(async (img, idx) => {
+                if (!img.isNew) return img; // already a permanent asset, nothing to move
+                const permanentId = `items/${newItem._id}_${idx}`;
+                return promoteImage(img.public_id, permanentId);
+            })
+        );
 
-        // ✅ 4. SEND SUCCESS RESPONSE IMMEDIATELY
-        // This prevents the frontend from timing out and throwing a 404
+        // Patch the item with the final permanent public_ids
+        newItem.images = promotedImages.map(img => ({ url: img.url, public_id: img.public_id }));
+        await newItem.save();
+
+        await clearItemCache(req.user.college);
         res.status(201).json(newItem);
 
-        // 🛑 5. TEST ACCOUNT GUARD 
-        // Stops notifications if you are testing the app
-        if (req.user.email === 'admin@kampuscart.com') {
-            console.log("🤫 Test account detected. Skipping notifications.");
-            return; 
-        }
+        // ── Background: notifications (fire-and-forget) ────────────────────────
+        if (req.user.email === 'admin@kampuscart.com') return;
 
-        // 🚀 6. PROCESS NOTIFICATIONS IN THE BACKGROUND
-        const college = req.user.college;
+        const college      = req.user.college;
         const excludeUserId = req.user._id || req.user.id;
-        const notifTitle = 'New listing on campus 🛒';
-        const notifBody = `${title} listed for ₹${price} · ${category}`;
-        const notifData = { type: 'item', itemId: String(newItem._id) };
-        const itemUrl = `/item/${newItem._id}`;
-        const io = req.app.get('io');
+        const notifTitle   = 'New listing on campus 🛒';
+        const notifBody    = `${title} listed for ₹${price} · ${category}`;
+        const notifData    = { type: 'item', itemId: String(newItem._id) };
+        const itemUrl      = `/item/${newItem._id}`;
+        const io           = req.app.get('io');
 
-        // Fire and forget background tasks
         (async () => {
             try {
-                // 1. Mobile Expo push
-                sendPushToCollege({
-                    college, excludeUserId, prefKey: 'items',
-                    title: notifTitle, body: notifBody, data: notifData,
-                });
+                sendPushToCollege({ college, excludeUserId, prefKey: 'items', title: notifTitle, body: notifBody, data: notifData });
+                sendWebPushToCollege({ college, excludeUserId, prefKey: 'items', title: notifTitle, body: notifBody, url: itemUrl, icon: promotedImages[0]?.url });
 
-                // 2. Web browser push
-                sendWebPushToCollege({
-                    college, excludeUserId, prefKey: 'items',
-                    title: notifTitle, body: notifBody,
-                    url: itemUrl, icon: imageUrls[0],
-                });
-
-                // 3. Socket.io in-app banner (exclude the seller)
                 if (io) {
                     io.to(`college:${college}`).emit('campus_notification', {
                         title: notifTitle, body: notifBody, data: notifData,
@@ -88,97 +95,94 @@ export const createItem = async (req, res) => {
                     });
                 }
 
-                // 4. Create in-app notifications (Optimized with Batching)
                 const users = await User.find({ college, _id: { $ne: excludeUserId } }).select('_id');
-                
-                // Process in chunks of 100 to prevent database connection pool exhaustion
                 const BATCH_SIZE = 100;
                 for (let i = 0; i < users.length; i += BATCH_SIZE) {
-                    const batch = users.slice(i, i + BATCH_SIZE);
-                    
-                    const notificationPromises = batch.map(user => 
-                        createNotification(io, user._id, {
-                            title: notifTitle,
-                            message: notifBody,
-                            type: NOTIFICATION_TYPES.ITEM,
-                            link: itemUrl
-                        })
+                    await Promise.all(
+                        users.slice(i, i + BATCH_SIZE).map(u =>
+                            createNotification(io, u._id, { title: notifTitle, message: notifBody, type: NOTIFICATION_TYPES.ITEM, link: itemUrl })
+                        )
                     );
-                    
-                    // Wait for this batch of 100 to finish before moving to the next
-                    await Promise.all(notificationPromises);
                 }
-
-            } catch (backgroundError) {
-                console.error("Background Notification Error:", backgroundError);
+            } catch (bgErr) {
+                console.error('Background Notification Error:', bgErr);
             }
         })();
 
     } catch (error) {
-        // 🛑 DUPLICATE KEY ERROR CATCHER (Idempotency Guard)
-        // If the fallback API retries the request, MongoDB will throw an 11000 error here.
-        if (error.code === 11000 && error.keyPattern && error.keyPattern.idempotencyKey) {
-            console.warn("[KampusCart] Duplicate request caught and blocked by Idempotency Key.");
-            // Return 200 because the item was successfully created on the *first* attempt
-            if (!res.headersSent) {
-                return res.status(200).json({ message: "Item already created" });
-            }
+        if (error.code === 11000 && error.keyPattern?.idempotencyKey) {
+            console.warn('[KampusCart] Duplicate request blocked by idempotency key.');
+            if (!res.headersSent) return res.status(200).json({ message: 'Item already created' });
             return;
         }
-
-        console.error("CREATE ERROR:", error);
-        // Only trigger this if the actual item creation fails for a different reason
-        if (!res.headersSent) {
-            res.status(500).json({ message: "Server Error", error: error.message });
-        }
+        console.error('CREATE ERROR:', error);
+        if (!res.headersSent) res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
 
 export const updateItem = async (req, res) => {
     try {
         const item = await Item.findById(req.params.id);
-        if (!item) return res.status(404).json({ message: "Item not found" });
-
+        if (!item) return res.status(404).json({ message: 'Item not found' });
         if (item.seller.toString() !== req.user.id) {
-            return res.status(401).json({ message: "Not authorized to update this item" });
+            return res.status(401).json({ message: 'Not authorized to update this item' });
         }
 
-        let imagesToKeep = [];
-        if (req.body.existingImages) {
-            imagesToKeep = JSON.parse(req.body.existingImages);
-        }
-        const newImageUrls = req.files ? req.files.map(file => file.path) : [];
-        const finalImages = [...imagesToKeep, ...newImageUrls];
+        // ── Diff: find orphaned images (in DB but not in the incoming keep-list) ──
+        // The frontend sends existingImages as a JSON array of public_ids to retain.
+        const keepIds = req.body.existingImages ? JSON.parse(req.body.existingImages) : [];
+        const orphans = item.images.filter(img => !keepIds.includes(img.public_id));
+
+        // Decrement / delete each orphan through the dedup service
+        await Promise.all(orphans.map(img => decrementOrDelete(img.public_id)));
+
+        // ── Process new uploads (deduplicate + stage to temp/) ─────────────────
+        const newImages = req.files?.length
+            ? await Promise.all(
+                req.files.map(async (file, idx) => {
+                    const tempId = `temp/${uuidv4()}`;
+                    const staged = await deduplicateAndStage(file.buffer, tempId);
+                    if (staged.isNew) {
+                        // Promote immediately since the item already exists in DB
+                        return promoteImage(staged.public_id, `items/${item._id}_upd_${Date.now()}_${idx}`);
+                    }
+                    return staged;
+                })
+              )
+            : [];
+
+        // Merge kept images (looked up from DB) with newly uploaded ones
+        const keptImages = item.images.filter(img => keepIds.includes(img.public_id));
+        const finalImages = [
+            ...keptImages,
+            ...newImages.map(img => ({ url: img.url, public_id: img.public_id })),
+        ];
 
         if (finalImages.length === 0) {
-            return res.status(400).json({ message: "At least one image is required" });
+            return res.status(400).json({ message: 'At least one image is required' });
         }
-
-        const updateData = {
-            title: req.body.title,
-            price: Number(req.body.price),
-            description: req.body.description,
-            location: req.body.location,
-            category: req.body.category,
-            contactNumber: req.body.contactNumber,
-            images: finalImages,
-            sellerName: req.body.sellerName,
-            sellerEmail: req.body.sellerEmail
-        };
 
         const updatedItem = await Item.findByIdAndUpdate(
             req.params.id,
-            updateData,
+            {
+                title:         req.body.title,
+                price:         Number(req.body.price),
+                description:   req.body.description,
+                location:      req.body.location,
+                category:      req.body.category,
+                contactNumber: req.body.contactNumber,
+                sellerName:    req.body.sellerName,
+                sellerEmail:   req.body.sellerEmail,
+                images:        finalImages,
+            },
             { new: true }
         );
 
-        // 🧹 CLEAR CACHE for this college
         await clearItemCache(req.user.college);
-
         res.status(200).json(updatedItem);
     } catch (error) {
-        console.error("UPDATE ERROR:", error);
-        res.status(500).json({ message: "Server error during update" });
+        console.error('UPDATE ERROR:', error);
+        res.status(500).json({ message: 'Server error during update' });
     }
 };
 
@@ -281,15 +285,17 @@ export const getMyItems = async (req, res) => {
 export const deleteItem = async (req, res) => {
     try {
         const item = await Item.findById(req.params.id);
-        if (!item) return res.status(404).json({ message: "Item not found" });
-        if (item.seller.toString() !== req.user.id) return res.status(401).json({ message: "User not authorized" });
+        if (!item) return res.status(404).json({ message: 'Item not found' });
+        if (item.seller.toString() !== req.user.id) {
+            return res.status(401).json({ message: 'User not authorized' });
+        }
 
-        await item.deleteOne();
+        // findOneAndDelete triggers the Item pre-hook which runs decrementOrDelete
+        // on every image — no manual Cloudinary calls needed here.
+        await Item.findOneAndDelete({ _id: item._id });
 
-        // 🧹 CLEAR CACHE
         await clearItemCache(req.user.college);
-
-        res.status(200).json({ message: "Item removed" });
+        res.status(200).json({ message: 'Item removed' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

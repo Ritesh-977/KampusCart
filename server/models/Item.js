@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { decrementOrDelete } from '../utils/imageService.js';
 
 const itemSchema = new mongoose.Schema({
     title: { type: String, required: true },
@@ -9,7 +10,11 @@ const itemSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    images: [{ type: String }], // Array of Cloudinary URLs
+    // All documents migrated to {url, public_id} via migrate-images.mjs.
+    images: [{
+        url:       { type: String, required: true },
+        public_id: { type: String, required: true },
+    }],
     seller: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -50,5 +55,13 @@ const itemSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 itemSchema.index({ title: 'text', description: 'text' });
+
+// ─── Cascade: decrement / delete Cloudinary assets when an item is removed ───
+itemSchema.pre(['findOneAndDelete', 'deleteOne'], { document: false, query: true }, async function () {
+    const item = await this.model.findOne(this.getFilter()).select('images');
+    if (!item) return;
+    // Process each image through the deduplication decrement routine
+    await Promise.all(item.images.map(img => decrementOrDelete(img.public_id)));
+});
 
 export default mongoose.model('Item', itemSchema);

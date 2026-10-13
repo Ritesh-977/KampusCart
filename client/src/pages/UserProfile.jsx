@@ -215,12 +215,7 @@ const UserProfile = () => {
 
       // Update LocalStorage User Info (So Navbar updates immediately)
       const savedUser = JSON.parse(localStorage.getItem('user')) || {};
-      localStorage.setItem('user', JSON.stringify({
-        ...savedUser,
-        name: updatedData.name,
-        profilePic: updatedData.profilePic,
-        // Add other fields if necessary
-      }));
+      localStorage.setItem('user', JSON.stringify({ ...savedUser, ...updatedData }));
       window.dispatchEvent(new Event('userUpdated'));
 
       // Update UI

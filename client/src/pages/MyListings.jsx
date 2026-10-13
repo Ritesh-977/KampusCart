@@ -93,7 +93,7 @@ const MyListings = () => {
 
                 <div className="relative h-48 w-full bg-slate-200 dark:bg-slate-700 overflow-hidden pointer-events-none">
                    <img 
-                    src={item.image || (item.images && item.images[0]) || 'https://via.placeholder.com/300'} 
+                    src={item.image || (item.images && item.images[0]?.url || item.images[0]) || `https://placehold.co/300x200?text=No+Image`} 
                     alt={item.title} 
                     className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                    />

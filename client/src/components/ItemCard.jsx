@@ -10,7 +10,9 @@ const ItemCard = ({ item, isWishlisted, onToggleWishlist }) => {
   const user = JSON.parse(localStorage.getItem('user'));
   const isOtherCollege = !!(user && item.college && user.college !== item.college);
 
-  const imageSrc = item.image || (item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/400');
+  // images can be a plain string URL (legacy) or a {url, public_id} object (new)
+  const resolveUrl = (img) => (img && typeof img === 'object' ? img.url : img) || null;
+  const imageSrc = item.image || resolveUrl(item.images?.[0]) || 'https://placehold.co/400x300?text=No+Image';
 
   const handleHeartClick = (e) => {
       e.preventDefault();    

@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import Item from '../models/Item.js';
 import bcrypt from 'bcryptjs';
 import { createNotification, NOTIFICATION_TYPES } from '../utils/notificationHelper.js';
+import { uploadToCloudinary, deleteFromCloudinary } from '../utils/imageService.js';
 
 //Get user profile
 // @route   GET /api/users/profile
@@ -35,18 +36,29 @@ export const updateUserProfile = async (req, res) => {
                 user.password = req.body.password; 
             }
 
-            // 3. Handle Images (Updated for Multiple Files & Default Avatars)
-            // 'upload.fields' puts files in 'req.files' (plural) as an object
+            // 3. Handle Images
             if (req.files && req.files.profilePic) {
-                // Profile picture uploaded via Cloudinary
-                user.profilePic = req.files.profilePic[0].path; 
+                const { url } = await uploadToCloudinary(req.files.profilePic[0].buffer, {
+                    public_id:  `users/avatar_${user._id}`,
+                    overwrite:  true,
+                    invalidate: true,
+                });
+                user.profilePic = url;
+                user.avatarType = 'custom';
+                user.avatarUrl  = url;
             } else if (req.body.profilePic) {
-                // Default avatar URL (e.g. DiceBear) chosen
                 user.profilePic = req.body.profilePic;
+                user.avatarType = 'default';
+                user.avatarUrl  = req.body.profilePic;
             }
 
             if (req.files && req.files.coverImage) {
-                user.coverImage = req.files.coverImage[0].path;
+                const { url } = await uploadToCloudinary(req.files.coverImage[0].buffer, {
+                    public_id:  `users/cover_${user._id}`,
+                    overwrite:  true,
+                    invalidate: true,
+                });
+                user.coverImage = url;
             }
 
             const updatedUser = await user.save();
@@ -226,5 +238,55 @@ export const getUserById = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+/**
+ * PUT /api/users/profile/avatar
+ * Handles two transitions:
+ *   • Upload custom image  → overwrite deterministic Cloudinary slot, set avatarType 'custom'
+ *   • Revert to DiceBear   → destroy Cloudinary slot (if it existed), set avatarType 'default'
+ *
+ * Expects multer memoryStorage middleware upstream so req.file.buffer is available.
+ */
+export const updateProfilePicture = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const avatarPublicId = `users/avatar_${user._id}`;
+
+        if (req.file) {
+            // ── Custom upload ──────────────────────────────────────────────────
+            // Deterministic public_id means re-uploads overwrite the same slot in
+            // place — no orphaned files accumulate over time.
+            const { url } = await uploadToCloudinary(req.file.buffer, {
+                public_id:  avatarPublicId,
+                overwrite:  true,
+                invalidate: true, // bust CDN edge cache immediately
+            });
+
+            user.avatarType = 'custom';
+            user.avatarUrl  = url;
+            user.profilePic = url; // keep legacy field in sync
+        } else {
+            // ── Revert to DiceBear ─────────────────────────────────────────────
+            // Only destroy the Cloudinary file if one was actually uploaded before;
+            // avoids a pointless API call for users who never set a custom avatar.
+            if (user.avatarType === 'custom') {
+                await deleteFromCloudinary(avatarPublicId, { invalidate: true });
+            }
+
+            const diceBearUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${user._id}`;
+            user.avatarType = 'default';
+            user.avatarUrl  = diceBearUrl;
+            user.profilePic = diceBearUrl;
+        }
+
+        await user.save();
+        res.json({ avatarType: user.avatarType, avatarUrl: user.avatarUrl });
+    } catch (error) {
+        console.error('[updateProfilePicture]', error.message);
+        res.status(500).json({ message: 'Failed to update profile picture' });
     }
 };

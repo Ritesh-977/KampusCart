@@ -212,7 +212,7 @@ const Navbar = () => {
             >
               <div className="h-12 w-12 rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden flex-shrink-0 mr-3 border border-gray-200 dark:border-gray-600">
                 {item.images?.[0]
-                  ? <img src={item.images[0]} alt="" className="h-full w-full object-cover" />
+                  ? <img src={item.images[0]?.url || item.images[0]} alt="" className="h-full w-full object-cover" />
                   : <img src="/logo.png" alt="" className="h-full w-full p-2 object-contain opacity-40 grayscale" />
                 }
               </div>
