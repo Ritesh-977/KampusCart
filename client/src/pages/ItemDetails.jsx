@@ -205,8 +205,9 @@ const ItemDetails = () => {
   const user = JSON.parse(localStorage.getItem('user'));
   const isOtherCollege = !!(user && item?.college && user.college !== item.college);
 
+  const PLACEHOLDER = 'https://placehold.co/600x400?text=No+Image';
   // Helper: handles legacy plain string URLs and new {url, public_id} objects
-  const imgUrl = (img) => (img && typeof img === 'object' ? img.url : img) || null;
+  const imgUrl = (img) => (img && typeof img === 'object' ? img.url : img) || PLACEHOLDER;
 
   const images = item?.images?.length ? item.images : [];
   const displayName = item ? (item.sellerName || item.seller?.name) : '';
@@ -240,7 +241,7 @@ const ItemDetails = () => {
           {/* ZOOM MODAL */}
           {isZoomed && (
             <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out" onClick={() => setIsZoomed(false)}>
-              <img src={imgUrl(images[activeImage])} className="max-w-full max-h-full object-contain rounded-lg" alt="" />
+              <img src={imgUrl(images[activeImage])} onError={e => { e.target.src = PLACEHOLDER; }} className="max-w-full max-h-full object-contain rounded-lg" alt="" />
             </div>
           )}
 
@@ -347,12 +348,12 @@ const ItemDetails = () => {
                     <div className="flex sm:hidden w-full h-full flex-shrink-0">
                       {images.map((img, i) => (
                         <div key={i} className="snap-center flex-shrink-0 w-full h-full flex items-center justify-center">
-                          <img src={imgUrl(img)} className="w-full h-full object-contain" alt="" />
+                          <img src={imgUrl(img)} onError={e => { e.target.src = PLACEHOLDER; }} className="w-full h-full object-contain" alt="" />
                         </div>
                       ))}
                     </div>
                     {/* Desktop: single active image */}
-                    <img src={imgUrl(images[activeImage])} className="hidden sm:block w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" alt="" />
+                    <img src={imgUrl(images[activeImage])} onError={e => { e.target.src = PLACEHOLDER; }} className="hidden sm:block w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" alt="" />
 
                     {images.length > 1 && (
                       <>
@@ -389,7 +390,7 @@ const ItemDetails = () => {
                           activeImage === index ? 'border-cyan-500 shadow-lg shadow-cyan-500/30 scale-110' : 'border-slate-300 dark:border-slate-700 hover:border-cyan-400'
                         }`}
                       >
-                        <img src={imgUrl(img)} className="w-full h-full object-cover" alt="" />
+                        <img src={imgUrl(img)} onError={e => { e.target.src = PLACEHOLDER; }} className="w-full h-full object-cover" alt="" />
                         {activeImage === index && <div className="absolute inset-0 bg-cyan-500/20 rounded-xl"></div>}
                       </button>
                     ))}
@@ -574,7 +575,8 @@ const ItemDetails = () => {
                       >
                         <div className="h-48 w-full bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
                           <img 
-                            src={imgUrl(related.images?.[0]) || '/placeholder.png'} 
+                            src={imgUrl(related.images?.[0])}
+                            onError={e => { e.target.src = PLACEHOLDER; }}
                             alt={related.title} 
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />

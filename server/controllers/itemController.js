@@ -254,7 +254,7 @@ export const getItems = async (req, res) => {
 
 export const getItemById = async (req, res) => {
     try {
-        const item = await Item.findById(req.params.id).populate('seller', 'name email');
+        const item = await Item.findById(req.params.id).populate('seller', 'name email profilePic');
         if (!item) return res.status(404).json({ message: "Item not found" });
 
         // 🛡️ SECURITY CHECK 1: Ensure the user is logged in (req.user exists)
