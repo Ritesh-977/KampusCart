@@ -190,6 +190,20 @@ async function migrate() {
         console.warn('⚠️  Some documents had errors. Check the logs above and re-run to retry.');
     }
 
+    if (!DRY_RUN) {
+        try {
+            const { default: redis } = await import('./config/redis.js');
+            const keys = await redis.keys('items:*');
+            if (keys.length > 0) {
+                await redis.del(...keys);
+                console.log(`🧹  Cleared ${keys.length} cached item query key(s) in Redis.`);
+            }
+            await redis.quit();
+        } catch (cacheErr) {
+            console.warn('⚠️  Could not clear Redis cache:', cacheErr.message);
+        }
+    }
+
     await mongoose.disconnect();
     console.log('🔌  Disconnected from MongoDB.');
 }

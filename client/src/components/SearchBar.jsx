@@ -1,3 +1,5 @@
+
+
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaSearch, FaHistory, FaTrashAlt, FaTimes, FaImage } from 'react-icons/fa';
@@ -14,12 +16,12 @@ import { useSearchSuggestions } from '../hooks/useSearchSuggestions';
  */
 const SearchBar = ({ college, onSearch, placeholder = 'Search for items...', className = '' }) => {
   const [showDropdown, setShowDropdown] = useState(false);
-  const [history, setHistory]           = useState(() =>
+  const [history, setHistory] = useState(() =>
     JSON.parse(localStorage.getItem('searchHistory') || '[]')
   );
 
   const navigate = useNavigate();
-  const location  = useLocation();
+  const location = useLocation();
 
   const [query, setQuery] = useState(() => new URLSearchParams(location.search).get('search') || '');
 
@@ -90,7 +92,7 @@ const SearchBar = ({ college, onSearch, placeholder = 'Search for items...', cla
 
   // ── Dropdown content decision ─────────────────────────────────────────────
   const showSuggestions = query.trim().length > 0 && suggestions.length > 0;
-  const showHistory     = query.trim().length === 0 && history.length > 0;
+  const showHistory = query.trim().length === 0 && history.length > 0;
   const dropdownVisible = showDropdown && (showSuggestions || showHistory || isLoading);
 
   return (
@@ -158,7 +160,7 @@ const SearchBar = ({ college, onSearch, placeholder = 'Search for items...', cla
                 >
                   <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-600">
                     {item.images?.[0]
-                      ? <img src={item.images[0]} alt="" className="h-full w-full object-cover" />
+                      ? <img src={item.images[0]?.url || item.images[0]} alt="" className="h-full w-full object-cover" />
                       : <FaImage className="h-full w-full p-2.5 text-gray-300" />
                     }
                   </div>

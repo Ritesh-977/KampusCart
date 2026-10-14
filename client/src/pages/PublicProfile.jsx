@@ -233,7 +233,7 @@ const PublicProfile = () => {
                 >
                   <div className="aspect-w-4 aspect-h-3 bg-gray-100 dark:bg-gray-700 relative overflow-hidden h-48">
                     <img 
-                      src={item.images[0]} 
+                      src={item.images[0]?.url || item.images[0]} 
                       alt={item.title} 
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />

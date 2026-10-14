@@ -263,7 +263,7 @@ const AdminDashboard = () => {
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="flex items-center">
                                                             <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-600">
-                                                                <img src={item.images[0]} className="h-full w-full object-cover" alt="" />
+                                                                <img src={item.images[0]?.url || item.images[0]} className="h-full w-full object-cover" alt="" />
                                                             </div>
                                                             <div className="ml-4">
                                                                 <div className="text-sm font-bold text-gray-900 dark:text-white">{item.title}</div>
@@ -319,7 +319,7 @@ const AdminDashboard = () => {
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="flex items-center">
                                                                 <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-600">
-                                                                    <img src={item.images[0]} className="h-full w-full object-cover" alt="" />
+                                                                    <img src={item.images[0]?.url || item.images[0]} className="h-full w-full object-cover" alt="" />
                                                                 </div>
                                                                 <div className="ml-4">
                                                                     <div className="text-sm font-bold text-gray-900 dark:text-white">{item.title}</div>

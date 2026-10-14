@@ -6,8 +6,15 @@ const getOrSetCache = async (key, cb) => {
         if (data) {
             const parsed = JSON.parse(data);
             // Don't serve empty arrays from cache — re-fetch so stale empty results don't persist
-            if (!Array.isArray(parsed) || parsed.length > 0) {
+            // Also reject cached item lists if items are missing the 'images' field (stale pre-migration cache)
+            const isStaleItemCache = Array.isArray(parsed) && parsed.length > 0 && parsed.some(item => item && typeof item === 'object' && !item.images);
+
+            if (!isStaleItemCache && (!Array.isArray(parsed) || parsed.length > 0)) {
                 return parsed;
+            }
+
+            if (isStaleItemCache) {
+                console.warn(`[Redis Cache] Detected stale cache missing images for key: ${key}. Refreshing from DB.`);
             }
         }
     } catch (error) {

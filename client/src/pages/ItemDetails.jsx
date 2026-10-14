@@ -207,9 +207,11 @@ const ItemDetails = () => {
 
   const PLACEHOLDER = 'https://placehold.co/600x400?text=No+Image';
   // Helper: handles legacy plain string URLs and new {url, public_id} objects
-  const imgUrl = (img) => (img && typeof img === 'object' ? img.url : img) || PLACEHOLDER;
+  const resolveUrl = (img) => (img && typeof img === 'object' ? img.url : img) || null;
+  const imgUrl = (img) => resolveUrl(img) || PLACEHOLDER;
+  const getItemThumb = (itm) => itm?.image || resolveUrl(itm?.images?.[0]) || PLACEHOLDER;
 
-  const images = item?.images?.length ? item.images : [];
+  const images = item?.images?.length ? item.images : (item?.image ? [item.image] : []);
   const displayName = item ? (item.sellerName || item.seller?.name) : '';
   const displayEmail = item ? (item.sellerEmail || item.seller?.email) : '';
 
@@ -575,8 +577,8 @@ const ItemDetails = () => {
                       >
                         <div className="h-48 w-full bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
                           <img 
-                            src={imgUrl(related.images?.[0])}
-                            onError={e => { e.target.src = PLACEHOLDER; }}
+                            src={getItemThumb(related)}
+                            onError={e => { if (e.target.src !== PLACEHOLDER) e.target.src = PLACEHOLDER; }}
                             alt={related.title} 
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />

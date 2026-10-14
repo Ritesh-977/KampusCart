@@ -80,7 +80,7 @@ const Wishlist = () => {
 
                     <div className="relative h-56 w-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
                        <img 
-                        src={item.image || (item.images && item.images[0])} 
+                        src={item.image || (item.images && (item.images[0]?.url || item.images[0]))} 
                         alt={item.title} 
                         className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                        />
