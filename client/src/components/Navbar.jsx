@@ -18,20 +18,20 @@ const ENDPOINT = import.meta.env.VITE_SERVER_URL;
 
 // Campus features shown in the waffle menu grid
 const CAMPUS_FEATURES = [
-  { to: '/browse',          icon: FaStore,         label: 'Browse',       color: 'from-purple-500 to-indigo-500', bg: 'bg-purple-50 dark:bg-purple-900/20', ring: 'ring-purple-200 dark:ring-purple-800' },
-  { to: '/lost-and-found',  icon: FaBullhorn,      label: 'Lost & Found', color: 'from-cyan-500 to-sky-500',      bg: 'bg-cyan-50 dark:bg-cyan-900/20',     ring: 'ring-cyan-200 dark:ring-cyan-800' },
-  { to: '/events',          icon: FaCalendarCheck, label: 'Events',       color: 'from-indigo-500 to-violet-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20', ring: 'ring-indigo-200 dark:ring-indigo-800' },
-  { to: '/sports',          icon: FaTrophy,        label: 'Sports',       color: 'from-amber-500 to-orange-500',  bg: 'bg-amber-50 dark:bg-amber-900/20',   ring: 'ring-amber-200 dark:ring-amber-800' },
-  { to: '/study-materials', icon: FaBook,          label: 'Study',        color: 'from-teal-500 to-emerald-500',  bg: 'bg-teal-50 dark:bg-teal-900/20',     ring: 'ring-teal-200 dark:ring-teal-800' },
+  { to: '/browse', icon: FaStore, label: 'Browse', color: 'from-purple-500 to-indigo-500', bg: 'bg-purple-50 dark:bg-purple-900/20', ring: 'ring-purple-200 dark:ring-purple-800' },
+  { to: '/lost-and-found', icon: FaBullhorn, label: 'Lost & Found', color: 'from-cyan-500 to-sky-500', bg: 'bg-cyan-50 dark:bg-cyan-900/20', ring: 'ring-cyan-200 dark:ring-cyan-800' },
+  { to: '/events', icon: FaCalendarCheck, label: 'Events', color: 'from-indigo-500 to-violet-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20', ring: 'ring-indigo-200 dark:ring-indigo-800' },
+  { to: '/sports', icon: FaTrophy, label: 'Sports', color: 'from-amber-500 to-orange-500', bg: 'bg-amber-50 dark:bg-amber-900/20', ring: 'ring-amber-200 dark:ring-amber-800' },
+  { to: '/study-materials', icon: FaBook, label: 'Study', color: 'from-teal-500 to-emerald-500', bg: 'bg-teal-50 dark:bg-teal-900/20', ring: 'ring-teal-200 dark:ring-teal-800' },
 ];
 
 const Navbar = () => {
-  const [isProfileOpen, setIsProfileOpen]   = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isCampusMenuOpen, setIsCampusMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
-  const [searchTerm, setSearchTerm]   = useState(() => {
+  const [searchTerm, setSearchTerm] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('search') || '';
   });
@@ -41,10 +41,10 @@ const Navbar = () => {
   const isFocused = useRef(false);
 
   const { selectedCollege } = useCollege();
-  const navigate  = useNavigate();
-  const location  = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const profileRef    = useRef(null);
+  const profileRef = useRef(null);
   const campusMenuRef = useRef(null);
   const notificationRef = useRef(null);
 
@@ -86,7 +86,7 @@ const Navbar = () => {
   // Close on outside click
   useEffect(() => {
     const handler = (e) => {
-      if (profileRef.current && !profileRef.current.contains(e.target))   setIsProfileOpen(false);
+      if (profileRef.current && !profileRef.current.contains(e.target)) setIsProfileOpen(false);
       if (campusMenuRef.current && !campusMenuRef.current.contains(e.target)) setIsCampusMenuOpen(false);
       if (notificationRef.current && !notificationRef.current.contains(e.target)) setIsNotificationOpen(false);
     };
@@ -159,19 +159,19 @@ const Navbar = () => {
 
     const syncProfile = async () => {
       try {
-        const { data } = await API.get('/users/profile'); 
-        
+        const { data } = await API.get('/users/profile');
+
         // Check which key you are using
         const storageKey = localStorage.getItem('userInfo') ? 'userInfo' : 'user';
         const localData = JSON.parse(localStorage.getItem(storageKey) || '{}');
-        
+
         // Merge the fresh DB data into localStorage
         const updatedUser = { ...localData, ...data };
         localStorage.setItem(storageKey, JSON.stringify(updatedUser));
-        
+
         // Update the Navbar state
         setCurrentUser(updatedUser);
-        
+
         // Tell other components (like the Profile page) to update too
         window.dispatchEvent(new Event('userUpdated'));
       } catch (error) {
@@ -183,17 +183,17 @@ const Navbar = () => {
   }, [isLoggedIn]);
 
   const handleLogout = async () => {
-    unsubscribeFromPush().catch(() => {});
+    unsubscribeFromPush().catch(() => { });
     try {
       await API.get('/auth/logout');
     } catch { /* ignore */ } finally {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('userInfo');
-      
+
       // Dispatch custom event to notify NotificationContext
       window.dispatchEvent(new Event('user-logout'));
-      
+
       toast.success('Logged out successfully!');
       navigate('/login');
     }
@@ -218,7 +218,7 @@ const Navbar = () => {
 
   const saveHistory = (term) => {
     const existing = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-    const updated  = [term, ...existing.filter(t => t !== term)].slice(0, 5);
+    const updated = [term, ...existing.filter(t => t !== term)].slice(0, 5);
     localStorage.setItem('searchHistory', JSON.stringify(updated));
   };
 
@@ -301,8 +301,8 @@ const Navbar = () => {
           {user?.profilePic
             ? <img className="h-9 w-9 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700" src={user.profilePic} alt="" />
             : <div className="h-9 w-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                {user?.name?.[0]?.toUpperCase() || 'U'}
-              </div>
+              {user?.name?.[0]?.toUpperCase() || 'U'}
+            </div>
           }
           <div className="min-w-0">
             <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user?.name || 'User'}</p>
@@ -438,11 +438,10 @@ const Navbar = () => {
             <div className={`relative ${!isLoggedIn ? 'hidden sm:block' : ''}`} ref={campusMenuRef}>
               <button
                 onClick={() => { setIsCampusMenuOpen(p => !p); setIsProfileOpen(false); }}
-                className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-xl text-sm font-semibold transition-all ${
-                  isCampusMenuOpen
+                className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-xl text-sm font-semibold transition-all ${isCampusMenuOpen
                     ? 'bg-slate-700 text-white'
                     : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                }`}
+                  }`}
                 title="Campus features"
               >
                 <FaThLarge className="text-base" />
@@ -476,15 +475,17 @@ const Navbar = () => {
               <div className="relative" ref={profileRef}>
                 <button
                   onClick={() => { setIsProfileOpen(p => !p); setIsCampusMenuOpen(false); }}
-                  className={`flex items-center gap-2 pl-1 pr-1 sm:pr-2.5 py-1 rounded-xl transition-all ${
-                    isProfileOpen ? 'bg-slate-700' : 'hover:bg-slate-800'
-                  }`}
+                  className={`flex items-center gap-2 pl-1 pr-1 sm:pr-2.5 py-1 rounded-xl transition-all ${isProfileOpen ? 'bg-slate-700' : 'hover:bg-slate-800'
+                    }`}
                 >
                   {user?.profilePic
-                    ? <img className="h-8 w-8 rounded-full object-cover border-2 border-slate-600" src={user.profilePic} alt="" />
-                    : <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                        {user?.name?.[0]?.toUpperCase() || 'U'}
-                      </div>
+                    ? <img
+                      className="h-8 w-8 rounded-full object-cover border-2 border-slate-600"
+                      src={`${user.profilePic}${user.profilePic.includes('cloudinary') ? `?t=${Date.now()}` : ''}`}
+                      alt=""
+                    /> : <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                      {user?.name?.[0]?.toUpperCase() || 'U'}
+                    </div>
                   }
                   <span className="hidden lg:block text-sm font-semibold text-slate-200 max-w-[80px] truncate">
                     {user?.name?.split(' ')[0] || 'User'}
@@ -547,8 +548,8 @@ const Navbar = () => {
             className="flex items-center justify-center w-full py-3 border-2 border-slate-700 hover:border-indigo-500 text-slate-200 font-bold rounded-xl text-sm transition-colors">
             Log in
           </Link>
-         {/* Switch Campus button commented out */}
-         {/* <button onClick={() => { setIsMobileMenuOpen(false); handleSwitchCampus(); }}
+          {/* Switch Campus button commented out */}
+          {/* <button onClick={() => { setIsMobileMenuOpen(false); handleSwitchCampus(); }}
             className="relative flex items-center justify-center w-full py-3 border border-slate-700 hover:border-indigo-500 text-slate-300 hover:text-indigo-400 font-semibold rounded-xl text-sm transition-colors">
             
             Switch Campus
