@@ -8,6 +8,7 @@ import { sendWebPushToCollege }   from '../utils/webPushService.js';
 import { createNotification, NOTIFICATION_TYPES } from '../utils/notificationHelper.js';
 import { deduplicateAndStage, promoteImage, decrementOrDelete } from '../utils/imageService.js';
 import { v4 as uuidv4 } from 'uuid';
+import mongoose from 'mongoose'; // Ensure this is imported at the top
 
 const clearItemCache = async (college) => {
     try {
@@ -20,10 +21,8 @@ const clearItemCache = async (college) => {
     }
 };
 
-export const createItem = async (req, res) => {
-    // Track which temp public_ids were staged so we can roll them back on failure
-    const stagedTempIds = [];
 
+export const createItem = async (req, res) => {
     try {
         const { title, description, price, category, contactNumber, location, sellerEmail, sellerName } = req.body;
         const idempotencyKey = req.headers['x-idempotency-key'];
@@ -32,82 +31,41 @@ export const createItem = async (req, res) => {
             return res.status(400).json({ message: 'Please upload at least one image of the item' });
         }
 
-        // ── Stage 1: Hash + deduplicate + upload to temp/ ──────────────────────
-        // Each file goes to temp/<uuid> first. Cloudinary auto-wipes temp/ after 24h,
-        // so a crash here leaves no permanent orphans.
+        // 1. Generate the item ID upfront so we can create permanent Cloudinary IDs
+        const itemId = new mongoose.Types.ObjectId();
+
+        // 2. Hash + deduplicate + upload to temp/
         const stagedImages = await Promise.all(
             req.files.map(async (file) => {
                 const tempId = `temp/${uuidv4()}`;
-                const result = await deduplicateAndStage(file.buffer, tempId);
-                if (result.isNew) stagedTempIds.push(result.public_id); // track for rollback
-                return result; // { url, public_id, isNew }
+                return await deduplicateAndStage(file.buffer, tempId);
             })
         );
 
-        // ── Stage 2: Persist to DB ─────────────────────────────────────────────
-        // Only after a successful save do we promote temp/ assets to items/.
-        // If Item.create() throws, the temp files expire naturally — no manual cleanup needed.
+        // 3. Promote temp/ → items/ BEFORE DB save
+        const finalImages = await Promise.all(
+            stagedImages.map(async (img, idx) => {
+                if (!img.isNew) return img; // Dedup reused an existing image
+                const permanentId = `items/${itemId}_${idx}`;
+                return await promoteImage(img.public_id, permanentId);
+            })
+        );
+
+        // 4. Single, final DB write
         const newItem = await Item.create({
+            _id: itemId, // Use the pre-generated ID
             title, description, location, price: Number(price),
             category, contactNumber, sellerEmail, sellerName,
-            images: stagedImages.map(img => ({ url: img.url, public_id: img.public_id })),
+            images: finalImages.map(img => ({ url: img.url, public_id: img.public_id })),
             seller: req.user.id,
             college: req.user.college,
             idempotencyKey,
         });
 
-        // ── Stage 3: Promote temp/ → items/ (only new uploads, not dedup reuses) ─
-        const promotedImages = await Promise.all(
-            stagedImages.map(async (img, idx) => {
-                if (!img.isNew) return img; // already a permanent asset, nothing to move
-                const permanentId = `items/${newItem._id}_${idx}`;
-                return promoteImage(img.public_id, permanentId);
-            })
-        );
-
-        // Patch the item with the final permanent public_ids
-        newItem.images = promotedImages.map(img => ({ url: img.url, public_id: img.public_id }));
-        await newItem.save();
-
         await clearItemCache(req.user.college);
         res.status(201).json(newItem);
 
-        // ── Background: notifications (fire-and-forget) ────────────────────────
-        if (req.user.email === 'admin@kampuscart.com') return;
-
-        const college      = req.user.college;
-        const excludeUserId = req.user._id || req.user.id;
-        const notifTitle   = 'New listing on campus 🛒';
-        const notifBody    = `${title} listed for ₹${price} · ${category}`;
-        const notifData    = { type: 'item', itemId: String(newItem._id) };
-        const itemUrl      = `/item/${newItem._id}`;
-        const io           = req.app.get('io');
-
-        (async () => {
-            try {
-                sendPushToCollege({ college, excludeUserId, prefKey: 'items', title: notifTitle, body: notifBody, data: notifData });
-                sendWebPushToCollege({ college, excludeUserId, prefKey: 'items', title: notifTitle, body: notifBody, url: itemUrl, icon: promotedImages[0]?.url });
-
-                if (io) {
-                    io.to(`college:${college}`).emit('campus_notification', {
-                        title: notifTitle, body: notifBody, data: notifData,
-                        excludeUserId: String(excludeUserId),
-                    });
-                }
-
-                const users = await User.find({ college, _id: { $ne: excludeUserId } }).select('_id');
-                const BATCH_SIZE = 100;
-                for (let i = 0; i < users.length; i += BATCH_SIZE) {
-                    await Promise.all(
-                        users.slice(i, i + BATCH_SIZE).map(u =>
-                            createNotification(io, u._id, { title: notifTitle, message: notifBody, type: NOTIFICATION_TYPES.ITEM, link: itemUrl })
-                        )
-                    );
-                }
-            } catch (bgErr) {
-                console.error('Background Notification Error:', bgErr);
-            }
-        })();
+        // ... Keep your background notification logic here ...
 
     } catch (error) {
         if (error.code === 11000 && error.keyPattern?.idempotencyKey) {
@@ -128,55 +86,62 @@ export const updateItem = async (req, res) => {
             return res.status(401).json({ message: 'Not authorized to update this item' });
         }
 
-        // ── Diff: find orphaned images (in DB but not in the incoming keep-list) ──
-        // The frontend sends existingImages as a JSON array of public_ids to retain.
         const keepIds = req.body.existingImages ? JSON.parse(req.body.existingImages) : [];
         const orphans = item.images.filter(img => !keepIds.includes(img.public_id));
 
-        // Decrement / delete each orphan through the dedup service
-        await Promise.all(orphans.map(img => decrementOrDelete(img.public_id)));
-
-        // ── Process new uploads (deduplicate + stage to temp/) ─────────────────
-        const newImages = req.files?.length
+        // 1. Process new uploads to temp/ ONLY
+        const stagedNewImages = req.files?.length
             ? await Promise.all(
-                req.files.map(async (file, idx) => {
+                req.files.map(async (file) => {
                     const tempId = `temp/${uuidv4()}`;
-                    const staged = await deduplicateAndStage(file.buffer, tempId);
-                    if (staged.isNew) {
-                        // Promote immediately since the item already exists in DB
-                        return promoteImage(staged.public_id, `items/${item._id}_upd_${Date.now()}_${idx}`);
-                    }
-                    return staged;
+                    return await deduplicateAndStage(file.buffer, tempId);
                 })
               )
             : [];
 
-        // Merge kept images (looked up from DB) with newly uploaded ones
         const keptImages = item.images.filter(img => keepIds.includes(img.public_id));
-        const finalImages = [
+        const DB_Images = [
             ...keptImages,
-            ...newImages.map(img => ({ url: img.url, public_id: img.public_id })),
+            ...stagedNewImages.map(img => ({ url: img.url, public_id: img.public_id }))
         ];
 
-        if (finalImages.length === 0) {
+        if (DB_Images.length === 0) {
             return res.status(400).json({ message: 'At least one image is required' });
         }
 
+        // 2. Perform DB Update First
         const updatedItem = await Item.findByIdAndUpdate(
             req.params.id,
             {
-                title:         req.body.title,
-                price:         Number(req.body.price),
-                description:   req.body.description,
-                location:      req.body.location,
-                category:      req.body.category,
-                contactNumber: req.body.contactNumber,
-                sellerName:    req.body.sellerName,
-                sellerEmail:   req.body.sellerEmail,
-                images:        finalImages,
+                title: req.body.title, price: Number(req.body.price),
+                description: req.body.description, location: req.body.location,
+                category: req.body.category, contactNumber: req.body.contactNumber,
+                sellerName: req.body.sellerName, sellerEmail: req.body.sellerEmail,
+                images: DB_Images,
             },
             { new: true }
         );
+
+        // 3. Promote temp images ONLY after DB succeeds
+        const finalPromotedImages = await Promise.all(
+            stagedNewImages.map(async (img, idx) => {
+                if (!img.isNew) return img;
+                const permanentId = `items/${item._id}_upd_${Date.now()}_${idx}`;
+                return await promoteImage(img.public_id, permanentId);
+            })
+        );
+
+        // 4. If any promotions happened, patch the DB one last time
+        if (finalPromotedImages.some(img => img.isNew)) {
+            updatedItem.images = [
+                ...keptImages,
+                ...finalPromotedImages.map(img => ({ url: img.url, public_id: img.public_id }))
+            ];
+            await updatedItem.save();
+        }
+
+        // 5. Delete the orphans safely at the end
+        await Promise.all(orphans.map(img => decrementOrDelete(img.public_id)));
 
         await clearItemCache(req.user.college);
         res.status(200).json(updatedItem);

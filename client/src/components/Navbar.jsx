@@ -154,6 +154,34 @@ const Navbar = () => {
     return () => clearTimeout(t);
   }, [searchTerm, selectedCollege]);
 
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const syncProfile = async () => {
+      try {
+        const { data } = await API.get('/users/profile'); 
+        
+        // Check which key you are using
+        const storageKey = localStorage.getItem('userInfo') ? 'userInfo' : 'user';
+        const localData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        
+        // Merge the fresh DB data into localStorage
+        const updatedUser = { ...localData, ...data };
+        localStorage.setItem(storageKey, JSON.stringify(updatedUser));
+        
+        // Update the Navbar state
+        setCurrentUser(updatedUser);
+        
+        // Tell other components (like the Profile page) to update too
+        window.dispatchEvent(new Event('userUpdated'));
+      } catch (error) {
+        console.error("Failed to background sync profile:", error);
+      }
+    };
+
+    syncProfile();
+  }, [isLoggedIn]);
+
   const handleLogout = async () => {
     unsubscribeFromPush().catch(() => {});
     try {
