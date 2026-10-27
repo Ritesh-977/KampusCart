@@ -12,7 +12,7 @@ const PrivacyPolicy = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-surface font-sans transition-colors duration-200">
       <SEOHead {...SEO.privacy()} />
       <Navbar />
 
@@ -21,24 +21,24 @@ const PrivacyPolicy = () => {
         {/* Header */}
         <header className="mb-12">
           {/* FIX 2: Title Color */}
-          <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-2xl md:text-3xl font-semibold text-foreground mb-2">
             Privacy Policy
           </h1>
           {/* FIX 3: Subtitle Color */}
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-muted">
             Last updated: December 2025
           </p>
         </header>
 
         {/* Content */}
         {/* FIX 4: Body Text Color */}
-        <div className="space-y-10 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+        <div className="space-y-10 text-sm text-foreground leading-relaxed">
 
           {/* 1. Information We Collect */}
           <section>
-            <div className="flex items-center gap-3 mb-3 text-gray-900 dark:text-white">
+            <div className="flex items-center gap-3 mb-3 text-foreground">
               {/* FIX 5: Icon Colors */}
-              <FaDatabase className="text-gray-500 dark:text-indigo-400" />
+              <FaDatabase className="text-muted" />
               <h2 className="font-medium">
                 1. Information We Collect
               </h2>
@@ -59,7 +59,7 @@ const PrivacyPolicy = () => {
 
           {/* 2. How We Use Information */}
           <section>
-            <h2 className="font-medium text-gray-900 dark:text-white mb-3">
+            <h2 className="font-medium text-foreground mb-3">
               2. How We Use Your Information
             </h2>
 
@@ -78,8 +78,8 @@ const PrivacyPolicy = () => {
 
           {/* 3. Chat Privacy */}
           <section>
-            <div className="flex items-center gap-3 mb-3 text-gray-900 dark:text-white">
-              <FaLock className="text-gray-500 dark:text-indigo-400" />
+            <div className="flex items-center gap-3 mb-3 text-foreground">
+              <FaLock className="text-muted" />
               <h2 className="font-medium">
                 3. Chat & Messaging Privacy
               </h2>
@@ -94,8 +94,8 @@ const PrivacyPolicy = () => {
 
           {/* 4. Data Sharing & Security */}
           <section>
-            <div className="flex items-center gap-3 mb-3 text-gray-900 dark:text-white">
-              <FaUserShield className="text-gray-500 dark:text-indigo-400" />
+            <div className="flex items-center gap-3 mb-3 text-foreground">
+              <FaUserShield className="text-muted" />
               <h2 className="font-medium">
                 4. Data Sharing & Security
               </h2>

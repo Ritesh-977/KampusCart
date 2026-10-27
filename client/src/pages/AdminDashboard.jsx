@@ -107,25 +107,25 @@ const AdminDashboard = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 font-sans transition-colors">
+        <div className="min-h-screen bg-surface-muted font-sans transition-colors">
             <Navbar />
             <div className="max-w-7xl mx-auto px-4 py-8">
-                <h1 className="text-3xl font-black text-gray-800 dark:text-white mb-8">Admin Panel</h1>
+                <h1 className="text-3xl font-black text-foreground mb-8">Admin Panel</h1>
 
                 {/* TABS */}
-                <div className="flex space-x-4 mb-8 border-b border-gray-200 dark:border-gray-700 pb-1 overflow-x-auto">
+                <div className="flex space-x-4 mb-8 border-b border-border pb-1 overflow-x-auto">
                     {['stats', 'users', 'items', 'reports'].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`pb-3 px-4 text-sm font-bold uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap ${activeTab === tab
-                                    ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted hover:text-foreground'
                                 }`}
                         >
                             {tab === 'reports' ? (
                                 <span className="flex items-center gap-2">
-                                    Reports <FaFlag className={activeTab === 'reports' ? 'text-red-500' : ''} />
+                                    Reports <FaFlag className={activeTab === 'reports' ? 'text-danger' : ''} />
                                 </span>
                             ) : tab}
                         </button>
@@ -133,31 +133,31 @@ const AdminDashboard = () => {
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-20 text-gray-500">Loading Dashboard...</div>
+                    <div className="text-center py-20 text-muted">Loading Dashboard...</div>
                 ) : (
                     <>
                         {/* --- STATS TAB --- */}
                         {activeTab === 'stats' && (
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center">
-                                    <div className="p-4 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full mr-4"><FaUsers size={24} /></div>
+                                <div className="bg-surface p-6 rounded-2xl shadow-sm border border-border flex items-center">
+                                    <div className="p-4 bg-info-muted text-info rounded-full mr-4"><FaUsers size={24} /></div>
                                     <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Total Users</p>
-                                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.usersCount}</p>
+                                        <p className="text-sm text-muted">Total Users</p>
+                                        <p className="text-2xl font-bold text-foreground">{stats.usersCount}</p>
                                     </div>
                                 </div>
-                                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center">
-                                    <div className="p-4 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full mr-4"><FaBoxOpen size={24} /></div>
+                                <div className="bg-surface p-6 rounded-2xl shadow-sm border border-border flex items-center">
+                                    <div className="p-4 bg-tertiary-muted text-tertiary rounded-full mr-4"><FaBoxOpen size={24} /></div>
                                     <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Total Items Listed</p>
-                                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.itemsCount}</p>
+                                        <p className="text-sm text-muted">Total Items Listed</p>
+                                        <p className="text-2xl font-bold text-foreground">{stats.itemsCount}</p>
                                     </div>
                                 </div>
-                                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center">
-                                    <div className="p-4 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full mr-4"><FaCheckCircle size={24} /></div>
+                                <div className="bg-surface p-6 rounded-2xl shadow-sm border border-border flex items-center">
+                                    <div className="p-4 bg-success-muted text-success rounded-full mr-4"><FaCheckCircle size={24} /></div>
                                     <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Items Sold</p>
-                                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.soldItemsCount}</p>
+                                        <p className="text-sm text-muted">Items Sold</p>
+                                        <p className="text-2xl font-bold text-foreground">{stats.soldItemsCount}</p>
                                     </div>
                                 </div>
                             </div>
@@ -165,74 +165,74 @@ const AdminDashboard = () => {
 
                         {/* --- USERS TAB --- */}
                         {activeTab === 'users' && (
-                            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
-                                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                            <div className="bg-surface rounded-2xl shadow-sm overflow-hidden border border-border">
+                                <div className="p-4 border-b border-border">
                                     <input
                                         type="text"
                                         placeholder="Search by name or email..."
                                         value={userSearch}
                                         onChange={e => setUserSearch(e.target.value)}
-                                        className="w-full sm:w-80 px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="w-full sm:w-80 px-4 py-2 text-sm rounded-lg border border-border-strong bg-surface-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                     />
                                 </div>
                                 <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                        <thead className="bg-gray-50 dark:bg-gray-700">
+                                    <table className="min-w-full divide-y divide-border">
+                                        <thead className="bg-surface-2">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">User</th>
-                                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
-                                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                                                <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                                <th className="px-6 py-3 text-left text-xs font-bold text-muted uppercase tracking-wider">User</th>
+                                                <th className="px-6 py-3 text-left text-xs font-bold text-muted uppercase tracking-wider">Role</th>
+                                                <th className="px-6 py-3 text-left text-xs font-bold text-muted uppercase tracking-wider">Status</th>
+                                                <th className="px-6 py-3 text-right text-xs font-bold text-muted uppercase tracking-wider">Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                        <tbody className="bg-surface divide-y divide-border">
                                             {users.filter(u =>
                                                 u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
                                                 u.email.toLowerCase().includes(userSearch.toLowerCase())
                                             ).map(u => (
-                                                <tr key={u._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                                                <tr key={u._id} className="hover:bg-surface-2 dark:hover:bg-surface-muted transition">
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div
                                                             className="flex items-center cursor-pointer group"
                                                             onClick={() => navigate(`/profile/view/${u._id}`)}
                                                         >
-                                                            <div className="flex-shrink-0 h-10 w-10 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold">
+                                                            <div className="flex-shrink-0 h-10 w-10 bg-primary-muted rounded-full flex items-center justify-center text-primary font-bold">
                                                                 {u.name.charAt(0).toUpperCase()}
                                                             </div>
                                                             <div className="ml-4">
-                                                                <div className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">{u.name}</div>
-                                                                <div className="text-sm text-gray-500 dark:text-gray-400">{u.email}</div>
+                                                                <div className="text-sm font-bold text-foreground group-hover:text-primary dark:group-hover:text-primary transition">{u.name}</div>
+                                                                <div className="text-sm text-muted">{u.email}</div>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         {u.isAdmin ? (
-                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">Admin</span>
+                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary-muted text-primary">Admin</span>
                                                         ) : (
-                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">Student</span>
+                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-surface-muted text-subtle">Student</span>
                                                         )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         {u.isBanned ? (
-                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-danger-muted text-danger">
                                                                 {u.banExpiresAt ? `Suspended` : `Banned`}
                                                             </span>
                                                         ) : (
-                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Active</span>
+                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-success-muted text-success">Active</span>
                                                         )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         {!u.isAdmin && (
                                                             <div className="flex justify-end items-center space-x-2">
                                                                 {u.isBanned ? (
-                                                                    <button onClick={() => handleBanUser(u._id, 'unban')} title="Unban User" className="text-green-600 bg-green-100 p-2 rounded-lg"><FaUnlock /></button>
+                                                                    <button onClick={() => handleBanUser(u._id, 'unban')} title="Unban User" className="text-success bg-success-muted p-2 rounded-lg"><FaUnlock /></button>
                                                                 ) : (
                                                                     <>
-                                                                        <button onClick={() => handleBanUser(u._id, 'temporary')} title="7 Day Ban" className="text-orange-600 bg-orange-100 p-2 rounded-lg"><FaClock /></button>
-                                                                        <button onClick={() => handleBanUser(u._id, 'permanent')} title="Permanent Ban" className="text-red-600 bg-red-100 p-2 rounded-lg"><FaBan /></button>
+                                                                        <button onClick={() => handleBanUser(u._id, 'temporary')} title="7 Day Ban" className="text-warning bg-warning-muted p-2 rounded-lg"><FaClock /></button>
+                                                                        <button onClick={() => handleBanUser(u._id, 'permanent')} title="Permanent Ban" className="text-danger bg-danger-muted p-2 rounded-lg"><FaBan /></button>
                                                                     </>
                                                                 )}
-                                                                <button onClick={() => handleDeleteUser(u._id)} title="Delete User" className="text-gray-500 hover:text-red-600 p-2"><FaTrash /></button>
+                                                                <button onClick={() => handleDeleteUser(u._id)} title="Delete User" className="text-muted hover:text-danger p-2"><FaTrash /></button>
                                                             </div>
                                                         )}
                                                     </td>
@@ -246,45 +246,45 @@ const AdminDashboard = () => {
 
                         {/* --- ITEMS TAB --- */}
                         {activeTab === 'items' && (
-                            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
+                            <div className="bg-surface rounded-2xl shadow-sm overflow-hidden border border-border">
                                 <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                        <thead className="bg-gray-50 dark:bg-gray-700">
+                                    <table className="min-w-full divide-y divide-border">
+                                        <thead className="bg-surface-2">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Item</th>
-                                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Seller</th>
-                                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                                                <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
+                                                <th className="px-6 py-3 text-left text-xs font-bold text-muted uppercase tracking-wider">Item</th>
+                                                <th className="px-6 py-3 text-left text-xs font-bold text-muted uppercase tracking-wider">Seller</th>
+                                                <th className="px-6 py-3 text-left text-xs font-bold text-muted uppercase tracking-wider">Status</th>
+                                                <th className="px-6 py-3 text-right text-xs font-bold text-muted uppercase tracking-wider">Action</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                        <tbody className="bg-surface divide-y divide-border">
                                             {items.map(item => (
-                                                <tr key={item._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                                                <tr key={item._id} className="hover:bg-surface-2 dark:hover:bg-surface-muted transition">
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="flex items-center">
-                                                            <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-600">
+                                                            <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-border">
                                                                 <img src={item.images[0]?.url || item.images[0]} className="h-full w-full object-cover" alt="" />
                                                             </div>
                                                             <div className="ml-4">
-                                                                <div className="text-sm font-bold text-gray-900 dark:text-white">{item.title}</div>
-                                                                <div className="text-sm text-gray-500 dark:text-gray-400">₹{item.price}</div>
+                                                                <div className="text-sm font-bold text-foreground">{item.title}</div>
+                                                                <div className="text-sm text-muted">₹{item.price}</div>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                                         {item.seller?.name || "Unknown"}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         {item.isSold ? (
-                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Sold</span>
+                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-danger-muted text-danger">Sold</span>
                                                         ) : (
-                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Active</span>
+                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-success-muted text-success">Active</span>
                                                         )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         <button
                                                             onClick={() => handleDeleteItem(item._id)}
-                                                            className="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 hover:bg-red-100 transition"
+                                                            className="text-danger hover:text-danger bg-danger-muted px-3 py-1.5 rounded-lg border border-danger hover:bg-danger-muted transition"
                                                         >
                                                             Delete
                                                         </button>
@@ -299,45 +299,45 @@ const AdminDashboard = () => {
 
                         {/* --- 4. NEW REPORTS TAB --- */}
                         {activeTab === 'reports' && (
-                            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
+                            <div className="bg-surface rounded-2xl shadow-sm overflow-hidden border border-border">
                                 {reportedItems.length === 0 ? (
-                                    <div className="p-10 text-center text-gray-500">No reported items! Good job.</div>
+                                    <div className="p-10 text-center text-muted">No reported items! Good job.</div>
                                 ) : (
                                     <div className="overflow-x-auto">
-                                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                            <thead className="bg-red-50 dark:bg-red-900/20">
+                                        <table className="min-w-full divide-y divide-border">
+                                            <thead className="bg-danger-muted">
                                                 <tr>
-                                                    <th className="px-6 py-3 text-left text-xs font-bold text-red-600 dark:text-red-300 uppercase tracking-wider">Reported Item</th>
-                                                    <th className="px-6 py-3 text-left text-xs font-bold text-red-600 dark:text-red-300 uppercase tracking-wider">Reason</th>
-                                                    <th className="px-6 py-3 text-left text-xs font-bold text-red-600 dark:text-red-300 uppercase tracking-wider">Seller</th>
-                                                    <th className="px-6 py-3 text-right text-xs font-bold text-red-600 dark:text-red-300 uppercase tracking-wider">Action</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-bold text-danger uppercase tracking-wider">Reported Item</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-bold text-danger uppercase tracking-wider">Reason</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-bold text-danger uppercase tracking-wider">Seller</th>
+                                                    <th className="px-6 py-3 text-right text-xs font-bold text-danger uppercase tracking-wider">Action</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                            <tbody className="bg-surface divide-y divide-border">
                                                 {reportedItems.map(item => (
-                                                    <tr key={item._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                                                    <tr key={item._id} className="hover:bg-surface-2 dark:hover:bg-surface-muted transition">
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="flex items-center">
-                                                                <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-600">
+                                                                <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-border">
                                                                     <img src={item.images[0]?.url || item.images[0]} className="h-full w-full object-cover" alt="" />
                                                                 </div>
                                                                 <div className="ml-4">
-                                                                    <div className="text-sm font-bold text-gray-900 dark:text-white">{item.title}</div>
-                                                                    <a href={`/item/${item._id}`} target="_blank" rel="noreferrer" className="text-xs text-indigo-500 hover:underline">View Item</a>
+                                                                    <div className="text-sm font-bold text-foreground">{item.title}</div>
+                                                                    <a href={`/item/${item._id}`} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">View Item</a>
                                                                 </div>
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
-                                                            <span className="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border border-red-200">
+                                                            <span className="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-danger-muted text-danger border border-danger">
                                                                 {item.reportReason || "No reason provided"}
                                                             </span>
                                                         </td>
                                                         {item.reportCount > 1 && (
-                                                            <span className="mt-1 text-[10px] text-red-600 font-bold ml-1">
+                                                            <span className="mt-1 text-[10px] text-danger font-bold ml-1">
                                                                 ⚠️ Reported {item.reportCount} times
                                                             </span>
                                                         )}
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                                             {item.seller?.name || "Unknown"}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -345,14 +345,14 @@ const AdminDashboard = () => {
                                                                 <button
                                                                     onClick={() => handleDismissReport(item._id)}
                                                                     title="Dismiss Report (Keep Item)"
-                                                                    className="text-gray-600 hover:text-green-600 bg-gray-100 hover:bg-green-100 px-3 py-1.5 rounded-lg transition border border-gray-200"
+                                                                    className="text-muted hover:text-success bg-surface-muted hover:bg-success-muted px-3 py-1.5 rounded-lg transition border border-border"
                                                                 >
                                                                     Dismiss
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDeleteItem(item._id)}
                                                                     title="Delete Item"
-                                                                    className="text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-3 py-1.5 rounded-lg transition border border-red-100"
+                                                                    className="text-danger hover:text-white bg-danger-muted hover:bg-danger px-3 py-1.5 rounded-lg transition border border-danger"
                                                                 >
                                                                     Delete Item
                                                                 </button>

@@ -17,24 +17,24 @@ const ItemDetailsSkeleton = () => (
   <div className="max-w-7xl mx-auto px-4 py-10 sm:px-6 lg:px-8 animate-pulse">
     <div className="lg:grid lg:grid-cols-2 lg:gap-x-12 lg:items-start">
       <div className="flex flex-col gap-4 max-w-md mx-auto lg:mx-0">
-        <div className="rounded-2xl bg-slate-200 dark:bg-slate-700 h-80 sm:h-[450px] w-full shadow-lg"></div>
+        <div className="rounded-2xl bg-surface-muted h-80 sm:h-[450px] w-full shadow-lg"></div>
         <div className="flex gap-2 py-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 w-16 rounded-lg bg-slate-200 dark:bg-slate-700"></div>
+            <div key={i} className="h-16 w-16 rounded-lg bg-surface-muted"></div>
           ))}
         </div>
       </div>
       <div className="mt-10 px-4 sm:px-0 lg:mt-0">
         <div className="flex justify-between items-start">
           <div className="flex-1 pr-4">
-            <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-3"></div>
-            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/4"></div>
+            <div className="h-8 bg-surface-muted rounded w-3/4 mb-3"></div>
+            <div className="h-4 bg-surface-muted rounded w-1/4"></div>
           </div>
         </div>
-        <div className="mt-6 h-10 w-1/3 bg-slate-200 dark:bg-slate-700 rounded"></div>
+        <div className="mt-6 h-10 w-1/3 bg-surface-muted rounded"></div>
         <div className="mt-8 space-y-4">
-           <div className="h-24 w-full bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
-           <div className="h-20 w-full bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+           <div className="h-24 w-full bg-surface-muted rounded-xl"></div>
+           <div className="h-20 w-full bg-surface-muted rounded-xl"></div>
         </div>
       </div>
     </div>
@@ -218,7 +218,7 @@ const ItemDetails = () => {
   const seo = item ? SEO.item(item, null) : null;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-200">
+    <div className="min-h-screen bg-surface transition-colors duration-200">
       {seo && <SEOHead {...seo} />}
       <Navbar />
       <ToastContainer />
@@ -228,16 +228,16 @@ const ItemDetails = () => {
       ) : accessDenied ? (
         <div className="flex flex-col items-center justify-center py-32 px-4 text-center">
           <div className="text-5xl mb-4">🔒</div>
-          <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Outside Your Campus</h2>
-          <p className="text-gray-500 dark:text-gray-400 max-w-sm">
+          <h2 className="text-xl font-bold text-foreground mb-2">Outside Your Campus</h2>
+          <p className="text-muted max-w-sm">
             You cannot interact with items outside your college. This listing belongs to a different campus marketplace.
           </p>
-          <button onClick={() => navigate(-1)} className="mt-6 px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-xl font-semibold hover:from-cyan-600 hover:to-teal-600 transition shadow-lg">
+          <button onClick={() => navigate(-1)} className="mt-6 px-6 py-2.5 bg-gradient-to-r from-accent to-primary text-white rounded-xl font-semibold hover:from-accent hover:to-primary transition shadow-lg">
             Go Back
           </button>
         </div>
       ) : !item ? (
-        <div className="text-center py-20 text-gray-600 dark:text-gray-400">Item not found.</div>
+        <div className="text-center py-20 text-muted">Item not found.</div>
       ) : (
         <>
           {/* ZOOM MODAL */}
@@ -250,24 +250,24 @@ const ItemDetails = () => {
           {/* SHARE MODAL */}
           {showShareModal && (
             <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fadeIn" onClick={() => setShowShareModal(false)}>
-              <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md p-6 border border-cyan-200 dark:border-cyan-700/50 animate-scaleIn" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-between items-center mb-6 border-b border-cyan-200 dark:border-cyan-700/50 pb-4">
-                  <h3 className="font-bold text-xl text-gray-800 dark:text-white flex items-center gap-2">
-                    <FaShare className="text-cyan-500" /> Share Item
+              <div className="bg-surface rounded-3xl shadow-2xl w-full max-w-md p-6 border border-accent animate-scaleIn" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-between items-center mb-6 border-b border-accent pb-4">
+                  <h3 className="font-bold text-xl text-foreground flex items-center gap-2">
+                    <FaShare className="text-accent" /> Share Item
                   </h3>
-                  <button onClick={() => setShowShareModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors">
-                    <FaTimes className="text-slate-400 hover:text-slate-600" />
+                  <button onClick={() => setShowShareModal(false)} className="p-2 hover:bg-surface-muted dark:hover:bg-surface-muted rounded-xl transition-colors">
+                    <FaTimes className="text-subtle hover:text-muted" />
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                  <button onClick={shareToFacebook} className="flex flex-col items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-2xl transition-all duration-200 hover:scale-105 border border-blue-200 dark:border-blue-800"><FaFacebook className="text-3xl text-blue-600" /><span className="text-sm font-medium dark:text-blue-300">Facebook</span></button>
-                  <button onClick={shareToTwitter} className="flex flex-col items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-2xl transition-all duration-200 hover:scale-105 border border-blue-200 dark:border-blue-800"><FaTwitter className="text-3xl text-blue-400" /><span className="text-sm font-medium dark:text-blue-300">Twitter</span></button>
-                  <button onClick={shareToWhatsapp} className="flex flex-col items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-2xl transition-all duration-200 hover:scale-105 border border-green-200 dark:border-green-800"><FaWhatsapp className="text-3xl text-green-500" /><span className="text-sm font-medium dark:text-green-300">WhatsApp</span></button>
-                  <button onClick={copyLink} className="flex flex-col items-center gap-3 p-4 bg-cyan-50 dark:bg-cyan-900/20 hover:bg-cyan-100 dark:hover:bg-cyan-900/30 rounded-2xl transition-all duration-200 hover:scale-105 border border-cyan-200 dark:border-cyan-800"><FaLink className="text-3xl text-cyan-500" /><span className="text-sm font-medium dark:text-cyan-300">Copy Link</span></button>
+                  <button onClick={shareToFacebook} className="flex flex-col items-center gap-3 p-4 bg-info-muted hover:bg-info-muted dark:hover:bg-info/30 rounded-2xl transition-all duration-200 hover:scale-105 border border-info"><FaFacebook className="text-3xl text-info" /><span className="text-sm font-medium text-info">Facebook</span></button>
+                  <button onClick={shareToTwitter} className="flex flex-col items-center gap-3 p-4 bg-info-muted hover:bg-info-muted dark:hover:bg-info/30 rounded-2xl transition-all duration-200 hover:scale-105 border border-info"><FaTwitter className="text-3xl text-info" /><span className="text-sm font-medium text-info">Twitter</span></button>
+                  <button onClick={shareToWhatsapp} className="flex flex-col items-center gap-3 p-4 bg-success-muted hover:bg-success-muted dark:hover:bg-success/30 rounded-2xl transition-all duration-200 hover:scale-105 border border-success"><FaWhatsapp className="text-3xl text-success" /><span className="text-sm font-medium text-success">WhatsApp</span></button>
+                  <button onClick={copyLink} className="flex flex-col items-center gap-3 p-4 bg-accent-muted hover:bg-accent-muted dark:hover:bg-accent/30 rounded-2xl transition-all duration-200 hover:scale-105 border border-accent"><FaLink className="text-3xl text-accent" /><span className="text-sm font-medium text-accent">Copy Link</span></button>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Or share this link:</p>
-                  <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-xl text-xs font-mono text-slate-800 dark:text-slate-200 break-all">{currentUrl}</div>
+                  <p className="text-sm text-muted mb-2">Or share this link:</p>
+                  <div className="bg-surface-muted p-3 rounded-xl text-xs font-mono text-foreground break-all">{currentUrl}</div>
                 </div>
               </div>
             </div>
@@ -276,29 +276,29 @@ const ItemDetails = () => {
           {/* REPORT MODAL */}
           {showReportModal && (
             <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fadeIn" onClick={() => setShowReportModal(false)}>
-              <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-red-200 dark:border-red-700/50 animate-scaleIn" onClick={e => e.stopPropagation()}>
-                <div className="p-6 border-b border-red-200 dark:border-red-700/50 bg-red-50 dark:bg-red-900/20">
+              <div className="bg-surface rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-danger animate-scaleIn" onClick={e => e.stopPropagation()}>
+                <div className="p-6 border-b border-danger bg-danger-muted">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-xl text-red-600 flex items-center gap-3">
-                      <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg"><FaFlag className="text-red-600" /></div>
+                    <h3 className="font-bold text-xl text-danger flex items-center gap-3">
+                      <div className="p-2 bg-danger-muted rounded-lg"><FaFlag className="text-danger" /></div>
                       Report Item
                     </h3>
-                    <button onClick={() => setShowReportModal(false)} className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl transition-colors">
-                      <FaTimes className="text-slate-400 hover:text-slate-600" />
+                    <button onClick={() => setShowReportModal(false)} className="p-2 hover:bg-danger-muted dark:hover:bg-danger/30 rounded-xl transition-colors">
+                      <FaTimes className="text-subtle hover:text-muted" />
                     </button>
                   </div>
                 </div>
                 <div className="p-6">
-                  <p className="text-slate-600 dark:text-slate-300 mb-6 text-center font-medium">Why are you reporting this item?</p>
+                  <p className="text-muted mb-6 text-center font-medium">Why are you reporting this item?</p>
                   <div className="space-y-3 mb-6">
                     {['Spam / Misleading', 'Fraud / Scam', 'Inappropriate Content', 'Duplicate Listing', 'Item Already Sold'].map((reason) => (
-                        <label key={reason} className="flex items-center space-x-4 p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 cursor-pointer hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200">
-                            <input type="radio" name="reportReason" value={reason} checked={reportReason === reason} onChange={(e) => setReportReason(e.target.value)} className="text-red-600 focus:ring-red-500 w-4 h-4"/>
-                            <span className="text-slate-700 dark:text-slate-200 font-medium">{reason}</span>
+                        <label key={reason} className="flex items-center space-x-4 p-4 rounded-2xl border-2 border-border cursor-pointer hover:border-danger dark:hover:border-danger hover:bg-danger-muted dark:hover:bg-danger/20 transition-all duration-200">
+                            <input type="radio" name="reportReason" value={reason} checked={reportReason === reason} onChange={(e) => setReportReason(e.target.value)} className="text-danger focus:ring-danger w-4 h-4"/>
+                            <span className="text-foreground font-medium">{reason}</span>
                         </label>
                     ))}
                   </div>
-                  <button onClick={handleReportSubmit} disabled={isReporting || !reportReason} className="w-full bg-red-600 hover:bg-red-700 disabled:bg-slate-400 text-white py-4 px-6 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:cursor-not-allowed flex items-center justify-center">
+                  <button onClick={handleReportSubmit} disabled={isReporting || !reportReason} className="w-full bg-danger hover:bg-danger disabled:bg-surface-muted text-white py-4 px-6 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:cursor-not-allowed flex items-center justify-center">
                     {isReporting ? <><div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3"></div>Sending...</> : <><FaFlag className="mr-3" />Submit Report</>}
                   </button>
                 </div>
@@ -311,21 +311,21 @@ const ItemDetails = () => {
             <nav className="flex mb-6" aria-label="Breadcrumb">
               <ol className="inline-flex items-center space-x-1 md:space-x-3">
                 <li className="inline-flex items-center">
-                  <button onClick={() => navigate('/')} className="inline-flex items-center text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition">
+                  <button onClick={() => navigate('/')} className="inline-flex items-center text-sm font-medium text-muted hover:text-accent dark:hover:text-accent transition">
                     <FaChevronRight className="w-3 h-3 mr-2 rotate-180" />
                     Home
                   </button>
                 </li>
                 <li>
                   <div className="flex items-center">
-                    <FaChevronRight className="w-3 h-3 text-slate-400 mx-1" />
-                    <span className="ml-1 text-sm font-medium text-slate-500 dark:text-slate-400 md:ml-2">{item.category}</span>
+                    <FaChevronRight className="w-3 h-3 text-subtle mx-1" />
+                    <span className="ml-1 text-sm font-medium text-muted md:ml-2">{item.category}</span>
                   </div>
                 </li>
                 <li aria-current="page">
                   <div className="flex items-center">
-                    <FaChevronRight className="w-3 h-3 text-slate-400 mx-1" />
-                    <span className="ml-1 text-sm font-medium text-cyan-600 dark:text-cyan-400 md:ml-2">{item.title}</span>
+                    <FaChevronRight className="w-3 h-3 text-subtle mx-1" />
+                    <span className="ml-1 text-sm font-medium text-accent md:ml-2">{item.title}</span>
                   </div>
                 </li>
               </ol>
@@ -339,7 +339,7 @@ const ItemDetails = () => {
                   {/* Mobile: horizontal scroll/swipe. Desktop: single image view */}
                   <div
                     ref={scrollContainerRef}
-                    className="rounded-3xl overflow-x-auto overflow-y-hidden sm:overflow-hidden bg-gradient-to-br from-white to-cyan-50 dark:from-slate-800 dark:to-slate-900 h-80 sm:h-[500px] relative flex sm:items-center sm:justify-center cursor-zoom-in border-2 border-cyan-200 dark:border-cyan-700/50 shadow-2xl hover:shadow-cyan-500/20 transition-all duration-300 hover:border-cyan-400 snap-x snap-mandatory scroll-smooth scrollbar-hide"
+                    className="rounded-3xl overflow-x-auto overflow-y-hidden sm:overflow-hidden bg-gradient-to-br from-white to-accent-muted   h-80 sm:h-[500px] relative flex sm:items-center sm:justify-center cursor-zoom-in border-2 border-accent shadow-2xl hover:shadow-accent/20 transition-all duration-300 hover:border-accent snap-x snap-mandatory scroll-smooth scrollbar-hide"
                     onClick={() => setIsZoomed(true)}
                     onScroll={(e) => {
                       const idx = Math.round(e.currentTarget.scrollLeft / e.currentTarget.offsetWidth);
@@ -375,7 +375,7 @@ const ItemDetails = () => {
                             height:  i === activeImage ? '8px' : Math.abs(i - activeImage) === 1 ? '6px' : '5px',
                             opacity: i === activeImage ? 1    : Math.abs(i - activeImage) === 1 ? 0.5  : 0.3,
                           }}
-                          className="rounded-full bg-white transition-all duration-300"
+                          className="rounded-full bg-surface transition-all duration-300"
                         />
                       ))}
                     </div>
@@ -389,11 +389,11 @@ const ItemDetails = () => {
                         key={index} 
                         onClick={(e) => handleImageChange(index, e)} 
                         className={`relative flex-shrink-0 h-20 w-20 rounded-xl overflow-hidden border-3 transition-all duration-200 ${
-                          activeImage === index ? 'border-cyan-500 shadow-lg shadow-cyan-500/30 scale-110' : 'border-slate-300 dark:border-slate-700 hover:border-cyan-400'
+                          activeImage === index ? 'border-accent shadow-lg shadow-accent/30 scale-110' : 'border-border-strong hover:border-accent'
                         }`}
                       >
                         <img src={imgUrl(img)} onError={e => { e.target.src = PLACEHOLDER; }} className="w-full h-full object-cover" alt="" />
-                        {activeImage === index && <div className="absolute inset-0 bg-cyan-500/20 rounded-xl"></div>}
+                        {activeImage === index && <div className="absolute inset-0 bg-accent/20 rounded-xl"></div>}
                       </button>
                     ))}
                   </div>
@@ -405,18 +405,18 @@ const ItemDetails = () => {
                 <div className="flex justify-between items-start mb-6">
                   <div className="flex-1 pr-4">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="px-3 py-1 bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-xs font-bold uppercase rounded-full shadow-md">{item.category}</span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase shadow-md ${item.isSold ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'}`}>
+                      <span className="px-3 py-1 bg-gradient-to-r from-accent to-primary text-white text-xs font-bold uppercase rounded-full shadow-md">{item.category}</span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase shadow-md ${item.isSold ? 'bg-danger-muted text-danger' : 'bg-success-muted text-success'}`}>
                         {item.isSold ? 'SOLD' : 'AVAILABLE'}
                       </span>
                     </div>
-                    <h1 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white leading-tight mb-3">{item.title}</h1>
+                    <h1 className="text-3xl lg:text-4xl font-black text-foreground leading-tight mb-3">{item.title}</h1>
                   </div>
                   
                   <div className="flex flex-col items-end gap-3">
                     <div className="flex gap-2">
-                      <button onClick={() => setShowShareModal(true)} className="p-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-cyan-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-cyan-600 rounded-xl transition-all duration-200 hover:scale-105 shadow-md"><FaShare size={14} /></button>
-                      <button onClick={() => setShowReportModal(true)} className="p-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-red-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-red-600 rounded-xl transition-all duration-200 hover:scale-105 shadow-md"><FaFlag size={14} /></button>
+                      <button onClick={() => setShowShareModal(true)} className="p-2.5 bg-surface-muted hover:bg-accent-muted dark:hover:bg-surface-muted text-muted hover:text-accent rounded-xl transition-all duration-200 hover:scale-105 shadow-md"><FaShare size={14} /></button>
+                      <button onClick={() => setShowReportModal(true)} className="p-2.5 bg-surface-muted hover:bg-danger-muted dark:hover:bg-surface-muted text-muted hover:text-danger rounded-xl transition-all duration-200 hover:scale-105 shadow-md"><FaFlag size={14} /></button>
                     </div>
                   </div>
                 </div>
@@ -424,17 +424,17 @@ const ItemDetails = () => {
                 {/* SMALLER PRICE SECTION */}
                 <div className="mb-6">
                   <div className="flex items-baseline gap-3 mb-1">
-                    <p className="text-3xl lg:text-4xl font-black bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">
+                    <p className="text-3xl lg:text-4xl font-black bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
                       ₹{item.price.toLocaleString('en-IN')}
                     </p>
                     {item.originalPrice && item.originalPrice > item.price && (
-                      <p className="text-lg text-slate-500 dark:text-slate-400 line-through">
+                      <p className="text-lg text-muted line-through">
                         ₹{item.originalPrice.toLocaleString('en-IN')}
                       </p>
                     )}
                   </div>
                   {item.originalPrice && item.originalPrice > item.price && (
-                    <div className="inline-flex items-center px-2.5 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-bold rounded-full">
+                    <div className="inline-flex items-center px-2.5 py-1 bg-success-muted text-success text-xs font-bold rounded-full">
                       Save ₹{(item.originalPrice - item.price).toLocaleString('en-IN')}
                     </div>
                   )}
@@ -443,34 +443,34 @@ const ItemDetails = () => {
                 {/* DESCRIPTION */}
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-5 bg-gradient-to-b from-cyan-500 to-teal-500 rounded-full"></div>
-                    <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Description</h3>
+                    <div className="w-1 h-5 bg-gradient-to-b from-accent to-primary rounded-full"></div>
+                    <h3 className="text-base font-bold text-foreground uppercase tracking-wide">Description</h3>
                   </div>
-                  <div className="bg-gradient-to-br from-white to-cyan-50/50 dark:from-slate-800 dark:to-slate-900/50 p-4 rounded-xl border border-cyan-200 dark:border-cyan-700/50 shadow-md whitespace-pre-line text-sm text-gray-700 dark:text-slate-300 leading-relaxed">
+                  <div className="bg-gradient-to-br from-white to-accent-muted   p-4 rounded-xl border border-accent shadow-md whitespace-pre-line text-sm text-foreground leading-relaxed">
                     {item.description}
                   </div>
                 </div>
 
                 {/* DETAILS GRID */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="bg-gradient-to-br from-white to-cyan-50/30 dark:from-slate-800 dark:to-slate-900/30 p-4 rounded-xl border border-cyan-200 dark:border-cyan-700/50 shadow-sm">
+                  <div className="bg-gradient-to-br from-white to-accent-muted   p-4 rounded-xl border border-accent shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="p-1.5 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
-                        <FaMapMarkerAlt className="text-cyan-600 dark:text-cyan-400 text-sm" />
+                      <div className="p-1.5 bg-accent-muted rounded-lg">
+                        <FaMapMarkerAlt className="text-accent text-sm" />
                       </div>
-                      <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">Location</h4>
+                      <h4 className="font-bold text-sm text-foreground">Location</h4>
                     </div>
-                    <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">{item.location || "Not specified"}</p>
+                    <p className="text-muted text-sm font-medium">{item.location || "Not specified"}</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-white to-teal-50/30 dark:from-slate-800 dark:to-slate-900/30 p-4 rounded-xl border border-teal-200 dark:border-teal-700/50 shadow-sm">
+                  <div className="bg-gradient-to-br from-white to-primary-muted   p-4 rounded-xl border border-primary shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="p-1.5 bg-teal-100 dark:bg-teal-900/30 rounded-lg">
-                        <FaCalendarAlt className="text-teal-600 dark:text-teal-400 text-sm" />
+                      <div className="p-1.5 bg-primary-muted rounded-lg">
+                        <FaCalendarAlt className="text-primary text-sm" />
                       </div>
-                      <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">Posted</h4>
+                      <h4 className="font-bold text-sm text-foreground">Posted</h4>
                     </div>
-                    <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">{new Date(item.createdAt).toLocaleDateString('en-IN', { 
+                    <p className="text-muted text-sm font-medium">{new Date(item.createdAt).toLocaleDateString('en-IN', { 
                       year: 'numeric', month: 'short', day: 'numeric' 
                     })}</p>
                   </div>
@@ -479,35 +479,35 @@ const ItemDetails = () => {
                 {/* SELLER CARD */}
                 <div className="mb-8">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-5 bg-gradient-to-b from-cyan-500 to-teal-500 rounded-full"></div>
-                    <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Seller Info</h3>
+                    <div className="w-1 h-5 bg-gradient-to-b from-accent to-primary rounded-full"></div>
+                    <h3 className="text-base font-bold text-foreground uppercase tracking-wide">Seller Info</h3>
                   </div>
                   
                   <div 
                     onClick={handleViewProfile} 
-                    className="bg-gradient-to-r from-white via-cyan-50/20 to-teal-50/20 dark:from-slate-800 dark:via-slate-900/50 dark:to-slate-800 p-4 rounded-2xl border border-cyan-200 dark:border-cyan-700/50 shadow-md hover:shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.02]"
+                    className="bg-gradient-to-r from-white via-accent-muted to-primary-muted    p-4 rounded-2xl border border-accent shadow-md hover:shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.02]"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center text-white font-bold text-xl overflow-hidden shadow-md">
+                          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-accent to-primary flex items-center justify-center text-white font-bold text-xl overflow-hidden shadow-md">
                             {item.seller.profilePic ? (
                               <img src={item.seller.profilePic} className="h-full w-full object-cover" alt="" />
                             ) : (
                               displayName.charAt(0)
                             )}
                           </div>
-                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center">
+                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-success rounded-full border-2 border-border-strong flex items-center justify-center">
                             <FaUser className="text-white" style={{ fontSize: '0.5rem' }} />
                           </div>
                         </div>
                         
                         <div className="flex-1">
-                          <h4 className="font-bold text-base text-slate-800 dark:text-white mb-0.5">{displayName}</h4>
-                          <p className="text-slate-500 dark:text-slate-400 text-xs">{displayEmail}</p>
+                          <h4 className="font-bold text-base text-foreground mb-0.5">{displayName}</h4>
+                          <p className="text-muted text-xs">{displayEmail}</p>
                         </div>
                       </div>
-                      <div className="text-cyan-500 dark:text-cyan-400">
+                      <div className="text-accent">
                         <FaChevronRight className="text-xl" />
                       </div>
                     </div>
@@ -517,35 +517,35 @@ const ItemDetails = () => {
                 {/* ACTIONS */}
                 <div className="space-y-4">
                   {isOtherCollege ? (
-                    <div className="bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800/50 dark:to-slate-700/50 p-5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
-                      <div className="flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400">
+                    <div className="bg-gradient-to-r from-surface-muted to-surface-muted   p-5 rounded-xl border border-dashed border-border-strong">
+                      <div className="flex items-center justify-center gap-2 text-muted">
                         <FaMapMarkerAlt />
                         <span className="font-bold text-sm text-center">Available only for {item.college} students</span>
                       </div>
                     </div>
                   ) : !item.isSold ? (
                     <div className="grid grid-cols-1 gap-3">
-                      <button onClick={handleChat} className="group relative overflow-hidden bg-gradient-to-r from-cyan-500 via-cyan-600 to-teal-500 text-white py-4 px-6 rounded-xl font-bold text-base shadow-lg hover:shadow-xl hover:shadow-cyan-500/25 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center">
-                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-teal-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <button onClick={handleChat} className="group relative overflow-hidden bg-gradient-to-r from-accent via-accent to-primary text-white py-4 px-6 rounded-xl font-bold text-base shadow-lg hover:shadow-xl hover:shadow-accent/25 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center">
+                        <div className="absolute inset-0 bg-gradient-to-r from-accent to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         <FaCommentDots className="mr-2 text-lg relative z-10" />
                         <span className="relative z-10">Chat with Seller</span>
                       </button>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {item.contactNumber && (
-                          <a href={getWhatsappLink(item.contactNumber, item.title)} target="_blank" rel="noreferrer" className="group bg-[#25D366] hover:bg-[#128C7E] text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md transition-all duration-300 hover:scale-[1.02] flex items-center justify-center">
+                          <a href={getWhatsappLink(item.contactNumber, item.title)} target="_blank" rel="noreferrer" className="group bg-whatsapp hover:bg-whatsapp-hover text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md transition-all duration-300 hover:scale-[1.02] flex items-center justify-center">
                             <FaWhatsapp className="mr-2 text-xl" /> WhatsApp
                           </a>
                         )}
-                        <a href={`mailto:${displayEmail}`} className="group bg-white dark:bg-slate-800 border border-cyan-300 dark:border-cyan-700/50 hover:border-cyan-500 text-gray-700 dark:text-slate-200 py-3 px-4 rounded-xl font-bold text-sm hover:bg-cyan-50 dark:hover:bg-slate-700 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center shadow-sm">
+                        <a href={`mailto:${displayEmail}`} className="group bg-surface border border-accent hover:border-accent text-foreground py-3 px-4 rounded-xl font-bold text-sm hover:bg-accent-muted dark:hover:bg-surface-muted transition-all duration-300 hover:scale-[1.02] flex items-center justify-center shadow-sm">
                           <FaEnvelope className="mr-2" /> Email
                         </a>
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-700 p-5 rounded-xl border border-slate-300 dark:border-slate-700">
-                      <div className="flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400">
-                        <div className="w-2.5 h-2.5 bg-red-500 rounded-full"></div>
+                    <div className="bg-gradient-to-r from-surface-muted to-surface-muted   p-5 rounded-xl border border-border-strong">
+                      <div className="flex items-center justify-center gap-2 text-muted">
+                        <div className="w-2.5 h-2.5 bg-danger rounded-full"></div>
                         <span className="font-bold text-sm text-center">This item has been sold</span>
                       </div>
                     </div>
@@ -557,15 +557,15 @@ const ItemDetails = () => {
 
             {/* RELATED PRODUCTS SECTION */}
             {relatedItems && (
-              <div className="mt-16 pt-10 border-t border-slate-200 dark:border-slate-800 animate-fadeIn" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
+              <div className="mt-16 pt-10 border-t border-border animate-fadeIn" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
                 <div className="flex items-center gap-3 mb-8">
-                  <div className="w-1.5 h-8 bg-gradient-to-b from-cyan-500 to-teal-500 rounded-full"></div>
-                  <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Similar {item.category} Items</h2>
+                  <div className="w-1.5 h-8 bg-gradient-to-b from-accent to-primary rounded-full"></div>
+                  <h2 className="text-2xl font-bold text-foreground">Similar {item.category} Items</h2>
                 </div>
                 
                 {relatedItems.length === 0 ? (
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-8 text-center border border-slate-200 dark:border-slate-700">
-                     <p className="text-slate-500 dark:text-slate-400 font-medium">No similar items found in this category right now.</p>
+                  <div className="bg-surface-2 rounded-2xl p-8 text-center border border-border">
+                     <p className="text-muted font-medium">No similar items found in this category right now.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -573,9 +573,9 @@ const ItemDetails = () => {
                       <div 
                         key={related._id} 
                         onClick={() => navigate(`/item/${related._id}`)}
-                        className="group cursor-pointer bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-xl hover:border-cyan-300 dark:hover:border-cyan-700 transition-all duration-300 flex flex-col"
+                        className="group cursor-pointer bg-surface rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-xl hover:border-accent dark:hover:border-accent transition-all duration-300 flex flex-col"
                       >
-                        <div className="h-48 w-full bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
+                        <div className="h-48 w-full bg-surface-muted relative overflow-hidden">
                           <img 
                             src={getItemThumb(related)}
                             onError={e => { if (e.target.src !== PLACEHOLDER) e.target.src = PLACEHOLDER; }}
@@ -583,19 +583,19 @@ const ItemDetails = () => {
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />
                           {related.isSold && (
-                            <div className="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full">
+                            <div className="absolute top-2 right-2 bg-danger text-white text-[10px] font-bold px-2 py-1 rounded-full">
                               SOLD
                             </div>
                           )}
                         </div>
                         <div className="p-4 flex flex-col flex-1">
-                          <h3 className="font-bold text-slate-800 dark:text-slate-200 line-clamp-1 mb-1 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                          <h3 className="font-bold text-foreground line-clamp-1 mb-1 group-hover:text-accent dark:group-hover:text-accent transition-colors">
                             {related.title}
                           </h3>
-                          <p className="text-cyan-600 dark:text-cyan-400 font-bold text-lg mb-2">
+                          <p className="text-accent font-bold text-lg mb-2">
                             ₹{related.price.toLocaleString('en-IN')}
                           </p>
-                          <div className="mt-auto flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                          <div className="mt-auto flex items-center justify-between text-xs text-muted">
                             <span className="flex items-center gap-1"><FaMapMarkerAlt /> {related.location || 'Campus'}</span>
                           </div>
                         </div>

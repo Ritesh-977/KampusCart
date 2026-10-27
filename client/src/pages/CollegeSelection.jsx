@@ -37,28 +37,28 @@ const CollegeSelection = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-surface-inverse flex flex-col relative overflow-hidden">
       {/* Animated background blobs */}
       <div
         className="pointer-events-none absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full opacity-20 blur-3xl animate-pulse"
-        style={{ background: 'radial-gradient(circle, #6366f1, transparent)' }}
+        style={{ background: 'radial-gradient(circle, rgb(var(--primary)), transparent)' }}
       />
       <div
         className="pointer-events-none absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full opacity-20 blur-3xl animate-pulse"
-        style={{ background: 'radial-gradient(circle, #8b5cf6, transparent)', animationDelay: '1s' }}
+        style={{ background: 'radial-gradient(circle, rgb(var(--tertiary)), transparent)', animationDelay: '1s' }}
       />
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 py-5 border-b border-white/10">
-        <div className="flex items-center text-2xl font-black text-indigo-400">
+        <div className="flex items-center text-2xl font-black text-primary">
           <img 
             src="/logo.png" 
             alt="KampusCart Logo" 
             className="h-8 w-8 sm:h-12 sm:w-12 mr-0.5 sm:mr-1 object-contain" 
           />
-          <span className="text-white">kampus<span className="text-gray-400">Cart</span></span>
+          <span className="text-white">kampus<span className="text-inverse-muted">Cart</span></span>
         </div>
-        <span className="text-xs text-gray-500 font-medium tracking-widest uppercase text-right">
+        <span className="text-xs text-inverse-muted font-medium tracking-widest uppercase text-right">
           Multi-Campus Marketplace
         </span>
       </header>
@@ -67,30 +67,30 @@ const CollegeSelection = () => {
       <main className="relative z-10 flex-grow flex flex-col items-center px-4 py-12">
         {/* Headline */}
         <div className="text-center mb-10 max-w-xl">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-bold uppercase tracking-widest mb-4">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-bold uppercase tracking-widest mb-4">
             Step 1 of 1
           </span>
           <h1 className="text-4xl sm:text-5xl font-black text-white leading-tight mb-4">
-            Choose Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Campus</span>
+            Choose Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-tertiary">Campus</span>
           </h1>
-          <p className="text-gray-400 text-lg">
+          <p className="text-inverse-muted text-lg">
             Select your college to browse listings, post items, and connect with your campus community.
           </p>
         </div>
 
         {/* Search Bar */}
         <div className="w-full max-w-lg mb-8 relative">
-          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-inverse-muted" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by college name, city, or short name..."
             autoFocus
-            className="w-full pl-11 pr-5 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+            className="w-full pl-11 pr-5 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-inverse-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
           />
           {searchQuery && (
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-medium">
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-inverse-muted font-medium">
               {filteredColleges.length} result{filteredColleges.length !== 1 ? 's' : ''}
             </span>
           )}
@@ -101,10 +101,10 @@ const CollegeSelection = () => {
           {filteredColleges.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-4xl mb-4">🔍</p>
-              <p className="text-gray-400 font-medium">No colleges found matching "{searchQuery}"</p>
+              <p className="text-inverse-muted font-medium">No colleges found matching "{searchQuery}"</p>
               <button
                 onClick={() => setSearchQuery('')}
-                className="mt-3 text-indigo-400 text-sm hover:underline"
+                className="mt-3 text-primary text-sm hover:underline"
               >
                 Clear search
               </button>
@@ -131,7 +131,7 @@ const CollegeSelection = () => {
                     className={`relative text-left p-5 rounded-2xl border transition-all duration-200 focus:outline-none ${
                       isSelected
                         ? 'border-white/30 shadow-lg scale-[1.02]'
-                        : 'border-white/5 bg-white/3 hover:border-white/15 hover:bg-white/8 hover:scale-[1.01]'
+                        : 'border-white/5 bg-white/5 hover:border-white/15 hover:bg-white/10 hover:scale-[1.01]'
                     }`}
                     style={
                       isSelected
@@ -180,7 +180,7 @@ const CollegeSelection = () => {
                       {college.name}
                     </h3>
 
-                    <p className="flex items-center gap-1.5 text-[11px] text-gray-500 mt-auto">
+                    <p className="flex items-center gap-1.5 text-[11px] text-inverse-muted mt-auto">
                       <FaMapMarkerAlt className="flex-shrink-0" />
                       {college.location}
                     </p>
@@ -202,11 +202,11 @@ const CollegeSelection = () => {
           selectedCollege ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
         }`}
       >
-        <div className="bg-gray-900/95 backdrop-blur-xl border-t border-white/10 px-6 py-4 flex items-center justify-between gap-4 max-w-5xl mx-auto w-full">
+        <div className="bg-surface-inverse/95 backdrop-blur-xl border-t border-white/10 px-6 py-4 flex items-center justify-between gap-4 max-w-5xl mx-auto w-full">
           <div className="flex items-center gap-3 min-w-0">
             <span className="text-2xl flex-shrink-0">{selectedCollege?.emoji}</span>
             <div className="min-w-0">
-              <p className="text-xs text-gray-400 uppercase tracking-widest font-bold">Selected Campus</p>
+              <p className="text-xs text-inverse-muted uppercase tracking-widest font-bold">Selected Campus</p>
               <p className="text-white font-bold truncate text-sm">{selectedCollege?.name}</p>
             </div>
           </div>
@@ -217,7 +217,7 @@ const CollegeSelection = () => {
             style={{
               background: selectedCollege
                 ? `linear-gradient(135deg, ${selectedCollege.theme.primary}, ${selectedCollege.theme.primary}cc)`
-                : '#6366f1',
+                : 'rgb(var(--primary))',
               boxShadow: selectedCollege ? `0 4px 24px ${selectedCollege.theme.primary}55` : undefined,
             }}
           >

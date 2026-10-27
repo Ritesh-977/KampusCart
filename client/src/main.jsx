@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
+import './theme/theme.css' // <--- Single source of truth for all colors
 import './index.css' // <--- THIS LINE IS MANDATORY
 import { BrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext.jsx'
@@ -11,21 +12,21 @@ import { MaintenanceProvider } from './context/MaintenanceContext.jsx';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <HelmetProvider>
-      <BrowserRouter>
-        <ThemeProvider>
-          <CollegeProvider>
-            <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ''}>
-              <MaintenanceProvider>
-                <NotificationProvider>
-                  <App />
-                </NotificationProvider>
-              </MaintenanceProvider>
-            </GoogleOAuthProvider>
-          </CollegeProvider>
-        </ThemeProvider>
-      </BrowserRouter>
-    </HelmetProvider>
-  </React.StrictMode>,
+ <React.StrictMode>
+ <HelmetProvider>
+ <BrowserRouter>
+ <ThemeProvider>
+ <CollegeProvider>
+ <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ''}>
+ <MaintenanceProvider>
+ <NotificationProvider>
+ <App />
+ </NotificationProvider>
+ </MaintenanceProvider>
+ </GoogleOAuthProvider>
+ </CollegeProvider>
+ </ThemeProvider>
+ </BrowserRouter>
+ </HelmetProvider>
+ </React.StrictMode>,
 )

@@ -224,7 +224,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200 relative overflow-x-hidden">
+    <div className="min-h-screen bg-surface-muted transition-colors duration-200 relative overflow-x-hidden">
 
       {init && (
         <div className="fixed inset-0 z-0">
@@ -240,13 +240,13 @@ const Auth = () => {
 
         {/* Logo */}
         <div className="absolute top-6 left-6">
-          <Link to="/" className="flex items-center text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+          <Link to="/" className="flex items-center text-2xl font-bold text-primary">
             <img
               src="/logo.png"
               alt="KampusCart Logo"
               className="h-10 w-10 sm:h-12 sm:w-12 mr-0.5 sm:mr-1 object-contain"
             />
-            <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-tertiary to-info bg-clip-text text-transparent">
               kampusCart
             </span>
           </Link>
@@ -254,29 +254,29 @@ const Auth = () => {
 
         {/* Header */}
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+          <h2 className="text-center text-3xl font-extrabold text-foreground">
             {isLogin ? 'Sign in to your account' : 'Create your account'}
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-center text-sm text-muted">
             Access the secure campus buy & sell goods
           </p>
         </div>
 
         {/* Form Card */}
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
-          <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-transparent dark:border-gray-700 transition-colors">
+          <div className="bg-surface py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-border-strong transition-colors">
 
             <form className="space-y-6" onSubmit={handleSubmit}>
 
               {error && (
-                <div className="bg-red-50 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 px-4 py-2 rounded text-sm">
+                <div className="bg-danger-muted border border-danger text-danger px-4 py-2 rounded text-sm">
                   {error}
                 </div>
               )}
 
               {!isLogin && signupStep === 1 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
+                  <label className="block text-sm font-medium text-foreground">Full Name</label>
                   <div className="mt-1">
                     <input
                       name="fullName"
@@ -285,7 +285,7 @@ const Auth = () => {
                       placeholder="Your full name"
                       value={formData.fullName}
                       onChange={handleChange}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+                      className="appearance-none block w-full px-3 py-2 border border-border-strong rounded-md shadow-sm placeholder-subtle focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-surface text-foreground transition-colors"
                     />
                   </div>
                 </div>
@@ -294,7 +294,7 @@ const Auth = () => {
 
               {signupStep === 1 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="block text-sm font-medium text-foreground">
                     College Email
                   </label>
                   <div className="mt-1">
@@ -305,7 +305,7 @@ const Auth = () => {
                       placeholder={!isLogin ? 'yourname@mnnit.ac.in' : 'your.email@mnnit.ac.in'}
                       value={formData.email}
                       onChange={handleChange}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+                      className="appearance-none block w-full px-3 py-2 border border-border-strong rounded-md shadow-sm placeholder-subtle focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-surface text-foreground transition-colors"
                     />
                   </div>
                 </div>
@@ -313,7 +313,7 @@ const Auth = () => {
 
               {(isLogin || signupStep === 1) && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="block text-sm font-medium text-foreground">
                     Password
                   </label>
                   <div className="mt-1 relative">
@@ -324,13 +324,13 @@ const Auth = () => {
                       required
                       value={formData.password}
                       onChange={handleChange}
-                      className="appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+                      className="appearance-none block w-full px-3 py-2 pr-10 border border-border-strong rounded-md shadow-sm placeholder-subtle focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-surface text-foreground transition-colors"
                     />
                     {formData.password && (
                       <button
                         type="button"
                         onClick={() => setShowPassword(prev => !prev)}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted hover:text-foreground dark:hover:text-subtle"
                       >
                         {showPassword ? <FaEyeSlash /> : <FaEye />}
                       </button>
@@ -338,7 +338,7 @@ const Auth = () => {
                   </div>
                   {isLogin && (
                     <div className="flex items-center justify-end mt-1">
-                      <Link to="/forgot-password" className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
+                      <Link to="/forgot-password" className="text-sm font-medium text-primary hover:text-primary dark:hover:text-primary">
                         Forgot your password?
                       </Link>
                     </div>
@@ -348,7 +348,7 @@ const Auth = () => {
 
               {!isLogin && signupStep === 1 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
+                  <label className="block text-sm font-medium text-foreground">Confirm Password</label>
                   <div className="mt-1">
                     <input
                       name="confirmPassword"
@@ -356,7 +356,7 @@ const Auth = () => {
                       required
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+                      className="appearance-none block w-full px-3 py-2 border border-border-strong rounded-md shadow-sm placeholder-subtle focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-surface text-foreground transition-colors"
                     />
                   </div>
                 </div>
@@ -364,10 +364,10 @@ const Auth = () => {
 
               {!isLogin && signupStep === 2 && (
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    We sent a code to <b className="text-gray-900 dark:text-white">{formData.email}</b>
+                  <p className="text-sm text-muted mb-4">
+                    We sent a code to <b className="text-foreground">{formData.email}</b>
                   </p>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 text-left">Verification Code</label>
+                  <label className="block text-sm font-medium text-foreground text-left">Verification Code</label>
                   <div className="mt-1">
                     <input
                       name="otp"
@@ -377,17 +377,17 @@ const Auth = () => {
                       required
                       value={formData.otp}
                       onChange={handleChange}
-                      className="text-center text-2xl tracking-widest appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+                      className="text-center text-2xl tracking-widest appearance-none block w-full px-3 py-2 border border-border-strong rounded-md shadow-sm placeholder-subtle focus:outline-none focus:ring-primary focus:border-primary bg-surface text-foreground transition-colors"
                     />
                   </div>
 
                   <div className="mt-4 text-center">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-muted">
                       Didn't receive the code?{' '}
                       <button
                         type="button"
                         onClick={handleResendOtp}
-                        className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 hover:underline"
+                        className="font-medium text-primary hover:text-primary dark:hover:text-primary hover:underline"
                       >
                         Resend Code
                       </button>
@@ -402,9 +402,9 @@ const Auth = () => {
                   disabled={loading}
                   className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white
                     ${loading
-                      ? 'bg-indigo-400 cursor-not-allowed'
-                      : 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500'
-                    } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors`}
+                      ? 'bg-primary cursor-not-allowed'
+                      : 'bg-primary hover:bg-primary bg-primary dark:hover:bg-primary'
+                    } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors`}
                 >
                   {loading
                     ? 'Processing...'
@@ -416,11 +416,11 @@ const Auth = () => {
                   }
                 </button>
                 {!isLogin && signupStep === 1 && (
-                  <p className="mt-3 text-center text-xs text-gray-400 dark:text-gray-500">
+                  <p className="mt-3 text-center text-xs text-subtle">
                     By creating an account, you agree to our{' '}
-                    <Link to="/terms" className="text-indigo-500 dark:text-indigo-400 hover:underline">Terms</Link>
+                    <Link to="/terms" className="text-primary hover:underline">Terms</Link>
                     {' '}and{' '}
-                    <Link to="/privacy" className="text-indigo-500 dark:text-indigo-400 hover:underline">Privacy Policy</Link>.
+                    <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
                   </p>
                 )}
               </div>
@@ -432,10 +432,10 @@ const Auth = () => {
               <div className="mt-6">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                    <div className="w-full border-t border-border-strong" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                    <span className="px-2 bg-surface text-muted">
                       — OR —
                     </span>
                   </div>
@@ -445,7 +445,7 @@ const Auth = () => {
                   type="button"
                   onClick={() => googleSigninHook()}
                   disabled={googleLoading}
-                  className="mt-4 w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="mt-4 w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-border-strong rounded-md shadow-sm bg-surface text-foreground text-sm font-medium hover:bg-surface-2 dark:hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -463,10 +463,10 @@ const Auth = () => {
               <div className="mt-6">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                    <div className="w-full border-t border-border-strong" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                    <span className="px-2 bg-surface text-muted">
                       — OR —
                     </span>
                   </div>
@@ -476,7 +476,7 @@ const Auth = () => {
                   type="button"
                   onClick={handleGoogleSignupClick}
                   disabled={googleLoading}
-                  className="mt-4 w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="mt-4 w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-border-strong rounded-md shadow-sm bg-surface text-foreground text-sm font-medium hover:bg-surface-2 dark:hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -492,10 +492,10 @@ const Auth = () => {
             <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                  <div className="w-full border-t border-border-strong" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                  <span className="px-2 bg-surface text-muted">
                     {isLogin ? "New in this app?" : "Already have an account?"}
                   </span>
                 </div>
@@ -508,7 +508,7 @@ const Auth = () => {
                     setSignupStep(1);
                     setError('');
                   }}
-                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-[#5dbd62] hover:bg-[#51a956] dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white text-sm font-medium transition-colors"
+                  className="w-full inline-flex justify-center py-2 px-4 border border-border-strong rounded-md shadow-sm bg-surface-muted hover:bg-surface-2 text-foreground text-sm font-medium transition-colors"
                 >
                   {isLogin ? 'Create an account' : 'Sign in instead'}
                 </button>

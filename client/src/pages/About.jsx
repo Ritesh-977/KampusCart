@@ -11,7 +11,7 @@ const About = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-surface-2 font-sans transition-colors duration-200">
       <SEOHead {...SEO.about()} />
       <Navbar />
 
@@ -19,24 +19,24 @@ const About = () => {
 
         {/* Header */}
         <div className="text-center mb-14">
-          <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 dark:text-white mb-4">
-            About <span className="text-gray-700 dark:text-indigo-400">KampusCart</span>
+          <h1 className="text-3xl md:text-4xl font-semibold text-foreground mb-4">
+            About <span className="text-foreground">KampusCart</span>
           </h1>
-          <p className="text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="text-base text-muted max-w-2xl mx-auto">
             KampusCart is a community-focused marketplace designed to help students
             buy and sell items easily within their campus network.
           </p>
         </div>
 
         {/* Who We Are */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 mb-10 transition-colors">
+        <div className="bg-surface border border-border rounded-xl p-8 mb-10 transition-colors">
           <div className="flex items-start gap-4">
-            <FaUsers size={20} className="text-gray-500 dark:text-indigo-400 mt-1" />
+            <FaUsers size={20} className="text-muted mt-1" />
             <div>
-              <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-3">
+              <h2 className="text-xl font-medium text-foreground mb-3">
                 Who We Are
               </h2>
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
+              <p className="text-muted leading-relaxed text-sm">
                 KampusCart is built to bridge the gap between students who need items
                 and those who have items to sell. From textbooks and electronics to
                 daily essentials, our platform enables students to connect locally
@@ -48,23 +48,23 @@ const About = () => {
 
         {/* What We Do */}
         <div className="grid md:grid-cols-2 gap-6 mb-12">
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 transition-colors">
-            <FaHandshake size={20} className="text-gray-500 dark:text-indigo-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          <div className="bg-surface border border-border rounded-xl p-8 transition-colors">
+            <FaHandshake size={20} className="text-muted mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
               Simple & Efficient Trading
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+            <p className="text-sm text-muted leading-relaxed">
               KampusCart provides a straightforward way for students to list unused
               items and discover affordable deals from peers within the same campus.
             </p>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 transition-colors">
-            <FaShieldAlt size={20} className="text-gray-500 dark:text-indigo-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          <div className="bg-surface border border-border rounded-xl p-8 transition-colors">
+            <FaShieldAlt size={20} className="text-muted mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
               Secure Communication
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+            <p className="text-sm text-muted leading-relaxed">
               Our in-app messaging system allows buyers and sellers to communicate
               securely without sharing personal contact details.
             </p>
@@ -72,11 +72,11 @@ const About = () => {
         </div>
 
         {/* Why We Exist */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 transition-colors">
-          <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-4 text-center">
+        <div className="bg-surface border border-border rounded-xl p-8 transition-colors">
+          <h2 className="text-xl font-medium text-foreground mb-4 text-center">
             Why We Exist
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed text-center max-w-3xl mx-auto">
+          <p className="text-sm text-muted leading-relaxed text-center max-w-3xl mx-auto">
             KampusCart was created to make local buying and selling simple, transparent,
             and reliable. We aim to reduce waste by giving items a second life while
             fostering trust and collaboration within campus communities.

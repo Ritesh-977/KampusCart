@@ -11,32 +11,32 @@ import { toast } from 'react-toastify';
 // --- SKELETON COMPONENT ---
 const PublicProfileSkeleton = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 text-slate-800 transition-colors duration-200 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-primary-muted via-white to-tertiary-muted text-foreground transition-colors duration-200 font-sans">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-pulse">
         
         {/* Profile Header Skeleton */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 relative">
+        <div className="bg-surface rounded-3xl shadow-xl overflow-hidden border border-border relative">
           {/* Cover Photo */}
-          <div className="h-48 sm:h-64 bg-gray-200 dark:bg-gray-700"></div>
+          <div className="h-48 sm:h-64 bg-surface-muted"></div>
           
           <div className="px-6 pb-8">
             <div className="relative flex justify-between items-end -mt-16 mb-6">
               {/* Profile Pic */}
-              <div className="bg-white dark:bg-gray-800 p-1.5 rounded-full z-10">
-                <div className="h-32 w-32 rounded-full bg-gray-300 dark:bg-gray-600 border-4 border-white dark:border-gray-800"></div>
+              <div className="bg-surface p-1.5 rounded-full z-10">
+                <div className="h-32 w-32 rounded-full bg-surface-muted border-4 border-border-strong"></div>
               </div>
             </div>
 
             <div>
               {/* Name Skeleton */}
-              <div className="h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+              <div className="h-8 w-64 bg-surface-muted rounded mb-4"></div>
               
               {/* Details Pills Skeleton */}
               <div className="flex flex-wrap gap-3 mt-4">
-                <div className="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-                <div className="h-8 w-40 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-                <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                <div className="h-8 w-32 bg-surface-muted rounded-lg"></div>
+                <div className="h-8 w-40 bg-surface-muted rounded-lg"></div>
+                <div className="h-8 w-48 bg-surface-muted rounded-lg"></div>
               </div>
             </div>
           </div>
@@ -45,30 +45,30 @@ const PublicProfileSkeleton = () => {
         {/* Listings Header Skeleton */}
         <div className="mt-12 mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-             <div className="h-12 w-12 rounded-xl bg-gray-200 dark:bg-gray-700"></div>
+             <div className="h-12 w-12 rounded-xl bg-surface-muted"></div>
              <div className="space-y-2">
-               <div className="h-6 w-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
-               <div className="h-4 w-60 bg-gray-200 dark:bg-gray-700 rounded"></div>
+               <div className="h-6 w-40 bg-surface-muted rounded"></div>
+               <div className="h-4 w-60 bg-surface-muted rounded"></div>
              </div>
           </div>
-          <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+          <div className="h-8 w-24 bg-surface-muted rounded-full"></div>
         </div>
 
         {/* Items Grid Skeleton */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full">
-              <div className="h-48 bg-gray-200 dark:bg-gray-700 w-full"></div>
+            <div key={i} className="bg-surface rounded-2xl border border-border overflow-hidden flex flex-col h-full">
+              <div className="h-48 bg-surface-muted w-full"></div>
               <div className="p-4 flex-1 flex flex-col gap-3">
                 <div className="flex justify-between">
-                  <div className="h-5 w-2/3 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                  <div className="h-5 w-1/4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="h-5 w-2/3 bg-surface-muted rounded"></div>
+                  <div className="h-5 w-1/4 bg-surface-muted rounded"></div>
                 </div>
-                <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded"></div>
-                <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                <div className="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between">
-                   <div className="h-3 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                   <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div className="h-4 w-full bg-surface-muted rounded"></div>
+                <div className="h-4 w-1/2 bg-surface-muted rounded"></div>
+                <div className="mt-auto pt-3 border-t border-border flex justify-between">
+                   <div className="h-3 w-16 bg-surface-muted rounded"></div>
+                   <div className="h-3 w-20 bg-surface-muted rounded"></div>
                 </div>
               </div>
             </div>
@@ -122,9 +122,9 @@ const PublicProfile = () => {
 
   if (!profile) {
     return (
-      <div className={`min-h-screen ${isOtherUserProfile ? 'bg-gradient-to-br from-indigo-50 via-white to-purple-50 text-slate-800' : 'bg-gray-50 dark:bg-gray-900'} flex flex-col transition-colors duration-200`}>
+      <div className={`min-h-screen ${isOtherUserProfile ? 'bg-gradient-to-br from-primary-muted via-white to-tertiary-muted text-foreground' : 'bg-surface-2'} flex flex-col transition-colors duration-200`}>
         <Navbar />
-        <div className={`flex-1 flex flex-col items-center justify-center ${isOtherUserProfile ? 'text-slate-700' : 'text-gray-500 dark:text-gray-400'}`}>
+        <div className={`flex-1 flex flex-col items-center justify-center ${isOtherUserProfile ? 'text-foreground' : 'text-muted'}`}>
           <FaExclamationCircle className="text-4xl mb-4" />
           <p className="text-lg font-medium">User not found</p>
         </div>
@@ -133,16 +133,16 @@ const PublicProfile = () => {
   }
 
   return (
-    <div className={`min-h-screen ${isOtherUserProfile ? 'bg-gradient-to-br from-indigo-50 via-white to-purple-50 text-slate-800' : 'bg-gray-50 dark:bg-gray-900'} transition-colors duration-200 font-sans`}>
+    <div className={`min-h-screen ${isOtherUserProfile ? 'bg-gradient-to-br from-primary-muted via-white to-tertiary-muted text-foreground' : 'bg-surface-2'} transition-colors duration-200 font-sans`}>
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
         {/* --- PROFILE HEADER CARD --- */}
-        <div className={`rounded-3xl overflow-hidden relative transition-all duration-300 ${isOtherUserProfile ? 'bg-white border border-indigo-200 shadow-2xl' : 'bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700'}`}>
+        <div className={`rounded-3xl overflow-hidden relative transition-all duration-300 ${isOtherUserProfile ? 'bg-surface border border-primary shadow-2xl' : 'bg-surface shadow-xl border border-border'}`}>
           
           {/* 1. Cover Photo */}
-          <div className={`h-48 sm:h-64 relative ${isOtherUserProfile ? 'bg-indigo-100' : 'bg-gray-300 dark:bg-gray-700'}`}>
+          <div className={`h-48 sm:h-64 relative ${isOtherUserProfile ? 'bg-primary-muted' : 'bg-surface-muted'}`}>
             {profile.coverImage ? (
               <img 
                 src={profile.coverImage} 
@@ -150,19 +150,19 @@ const PublicProfile = () => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-r from-indigo-600 to-purple-600"></div>
+              <div className="w-full h-full bg-gradient-to-r from-primary to-tertiary"></div>
             )}
           </div>
 
           <div className="px-6 pb-8">
             <div className="relative flex justify-between items-end -mt-16 mb-6">
               {/* 2. Profile Picture */}
-              <div className="bg-white dark:bg-gray-800 p-1.5 rounded-full z-10">
-                <div className="h-32 w-32 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden border-4 border-white dark:border-gray-800 shadow-lg flex items-center justify-center">
+              <div className="bg-surface p-1.5 rounded-full z-10">
+                <div className="h-32 w-32 rounded-full bg-surface-muted overflow-hidden border-4 border-border-strong shadow-lg flex items-center justify-center">
                   {profile.profilePic ? (
                     <img src={profile.profilePic} alt={profile.name} className="h-full w-full object-cover" />
                   ) : (
-                    <div className="h-full w-full flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 text-5xl font-bold">
+                    <div className="h-full w-full flex items-center justify-center bg-primary-muted text-primary text-5xl font-bold">
                         {profile.name?.charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -171,35 +171,35 @@ const PublicProfile = () => {
             </div>
 
             <div>
-              <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">{profile.name}</h1>
+              <h1 className="text-3xl font-black text-foreground mb-2 tracking-tight">{profile.name}</h1>
               
               {/* 3. User Details (Branch, Phone, Email, Joined) */}
               <div className="flex flex-wrap gap-3 text-sm font-medium mt-4">
                 
                 {/* Branch (Year/Department) */}
                 {profile.year && ( 
-                  <div className="flex items-center bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600">
-                    <FaUniversity className="mr-2 text-indigo-500" /> 
+                  <div className="flex items-center bg-surface-muted text-foreground px-3 py-1.5 rounded-lg border border-border">
+                    <FaUniversity className="mr-2 text-primary" /> 
                     {profile.year}
                   </div>
                 )}
 
                 {/* Mobile Number */}
                 {profile.phone && ( 
-                  <div className="flex items-center bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-3 py-1.5 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="flex items-center bg-success-muted text-success px-3 py-1.5 rounded-lg border border-success">
                     <FaPhone className="mr-2" /> 
                     {profile.phone}
                   </div>
                 )}
 
                 {/* Email */}
-                <div className="flex items-center bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center bg-info-muted text-info px-3 py-1.5 rounded-lg border border-info">
                     <FaEnvelope className="mr-2" />
                     {profile.email}
                 </div>
 
                 {/* Join Date */}
-                <div className="flex items-center text-gray-500 dark:text-gray-400 px-2 py-1.5">
+                <div className="flex items-center text-muted px-2 py-1.5">
                   <FaCalendarAlt className="mr-2" />
                   Joined {new Date(profile.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
                 </div>
@@ -209,16 +209,16 @@ const PublicProfile = () => {
         </div>
 
         {/* --- ACTIVE LISTINGS GRID --- */}
-        <div className={`mt-12 transition-colors duration-200 ${isOtherUserProfile ? 'bg-white/70 p-5 rounded-3xl border border-indigo-200' : ''}`}>
+        <div className={`mt-12 transition-colors duration-200 ${isOtherUserProfile ? 'bg-surface p-5 rounded-3xl border border-primary' : ''}`}>
           <div className="flex items-center mb-6">
-            <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl mr-4">
-                <FaBoxOpen className="text-2xl text-indigo-600 dark:text-indigo-400" />
+            <div className="p-3 bg-primary-muted rounded-xl mr-4">
+                <FaBoxOpen className="text-2xl text-primary" />
             </div>
             <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Active Listings</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Items currently being sold by {profile.name.split(' ')[0]}</p>
+                <h2 className="text-2xl font-bold text-foreground">Active Listings</h2>
+                <p className="text-sm text-muted">Items currently being sold by {profile.name.split(' ')[0]}</p>
             </div>
-            <span className="ml-auto bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm font-bold px-4 py-1 rounded-full border border-gray-200 dark:border-gray-600">
+            <span className="ml-auto bg-surface-muted text-foreground text-sm font-bold px-4 py-1 rounded-full border border-border">
               {items.length} Items
             </span>
           </div>
@@ -229,29 +229,29 @@ const PublicProfile = () => {
                 <Link 
                   to={`/item/${item._id}`} 
                   key={item._id}
-                  className="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full"
+                  className="group bg-surface rounded-2xl shadow-sm hover:shadow-xl border border-border overflow-hidden transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full"
                 >
-                  <div className="aspect-w-4 aspect-h-3 bg-gray-100 dark:bg-gray-700 relative overflow-hidden h-48">
+                  <div className="aspect-w-4 aspect-h-3 bg-surface-muted relative overflow-hidden h-48">
                     <img 
                       src={item.images[0]?.url || item.images[0]} 
                       alt={item.title} 
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     {item.isSold && (
-                      <div className="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow uppercase tracking-wider">
+                      <div className="absolute top-2 right-2 bg-danger text-white text-[10px] font-bold px-2 py-1 rounded shadow uppercase tracking-wider">
                         Sold
                       </div>
                     )}
                   </div>
                   <div className="p-4 flex-1 flex flex-col">
                     <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate pr-2 flex-1">{item.title}</h3>
-                        <p className="text-lg font-black text-indigo-600 dark:text-indigo-400">₹{item.price}</p>
+                        <h3 className="text-lg font-bold text-foreground truncate pr-2 flex-1">{item.title}</h3>
+                        <p className="text-lg font-black text-primary">₹{item.price}</p>
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 flex-1">
+                    <p className="text-sm text-muted line-clamp-2 mb-4 flex-1">
                         {item.description}
                     </p>
-                    <div className="flex justify-between items-center text-xs font-semibold text-gray-400 dark:text-gray-500 pt-3 border-t border-gray-100 dark:border-gray-700 mt-auto">
+                    <div className="flex justify-between items-center text-xs font-semibold text-subtle pt-3 border-t border-border mt-auto">
                         <span className="uppercase tracking-wide">{item.category}</span>
                         <span>{new Date(item.createdAt).toLocaleDateString()}</span>
                     </div>
@@ -260,12 +260,12 @@ const PublicProfile = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-700">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
-                <FaBoxOpen className="text-3xl text-gray-400 dark:text-gray-500" />
+            <div className="text-center py-20 bg-surface rounded-3xl border-2 border-dashed border-border">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-surface-muted mb-4">
+                <FaBoxOpen className="text-3xl text-subtle" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">No active listings</h3>
-              <p className="text-gray-500 dark:text-gray-400 mt-1">{profile.name} hasn't listed anything yet.</p>
+              <h3 className="text-lg font-medium text-foreground">No active listings</h3>
+              <p className="text-muted mt-1">{profile.name} hasn't listed anything yet.</p>
             </div>
           )}
         </div>

@@ -1,0 +1,165 @@
+/* ============================================================================
+ * KampusCart — SINGLE SOURCE OF TRUTH FOR COLORS
+ * ----------------------------------------------------------------------------
+ * This is the ONLY file you need to edit to change the site's theme.
+ *
+ * Every colour used by the app is defined here as a CSS variable, once for
+ * light mode (`:root`) and once for dark mode (`.dark`). Tailwind maps these
+ * variables to semantic utility classes (see tailwind.config.js), so a class
+ * like `bg-surface` or `text-primary` automatically changes value when the
+ * values below change — no component edits required.
+ *
+ * Values are written as space-separated RGB channels ("R G B") so Tailwind can
+ * apply opacity modifiers (e.g. `bg-primary/10`, `border-primary/30`).
+ *
+ * To add a new theme (e.g. "ocean"), copy the two blocks, rename the selector,
+ * and point the ThemeContext at it. Nothing else changes.
+ * ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* ── Base surfaces ─────────────────────────────────────────────────────── */
+  --background: 248 250 252;      /* app/page background            */
+  --surface: 255 255 255;         /* cards, panels, modals          */
+  --surface-2: 249 250 251;       /* slightly recessed surface      */
+  --surface-muted: 243 244 246;   /* inputs, hover fills, chips     */
+  --surface-inverse: 15 23 42;    /* always-dark chrome (nav/footer)*/
+
+  /* ── Text ──────────────────────────────────────────────────────────────── */
+  --foreground: 17 24 39;         /* primary text                   */
+  --muted: 107 114 128;           /* secondary text                 */
+  --subtle: 156 163 175;          /* tertiary / placeholders / icons*/
+  --inverse-foreground: 226 232 240; /* text on inverse surfaces    */
+  --inverse-muted: 148 163 184;   /* muted text on inverse surfaces */
+
+  /* ── Borders ───────────────────────────────────────────────────────────── */
+  --border: 229 231 235;          /* default border                 */
+  --border-strong: 209 213 219;   /* emphasised border / inputs     */
+
+  /* ── Brand: primary (teal) ─────────────────────────────────────────────── */
+  --primary: 13 148 136;          /* #0d9488 — buttons, links, focus*/
+  --primary-hover: 15 118 110;    /* darker on hover                */
+  --primary-foreground: 255 255 255;
+  --primary-muted: 240 253 250;   /* tinted background (teal-50)    */
+
+  /* ── Brand: accent (cyan) ──────────────────────────────────────────────── */
+  --accent: 6 182 212;            /* #06b6d4 — secondary / gradients*/
+  --accent-hover: 8 145 178;
+  --accent-foreground: 255 255 255;
+  --accent-muted: 236 254 255;
+
+  /* ── Brand: tertiary (violet) ──────────────────────────────────────────── */
+  --tertiary: 139 92 246;         /* #8b5cf6 — highlights / categories */
+  --tertiary-hover: 124 58 237;
+  --tertiary-foreground: 255 255 255;
+  --tertiary-muted: 245 243 255;
+
+  /* ── Status ────────────────────────────────────────────────────────────── */
+  --success: 22 163 74;
+  --success-foreground: 255 255 255;
+  --success-muted: 240 253 244;
+
+  --warning: 217 119 6;
+  --warning-foreground: 255 255 255;
+  --warning-muted: 255 251 235;
+
+  --danger: 220 38 38;
+  --danger-foreground: 255 255 255;
+  --danger-muted: 254 242 242;
+
+  --info: 37 99 235;
+  --info-foreground: 255 255 255;
+  --info-muted: 239 246 255;
+
+  /* ── Misc ──────────────────────────────────────────────────────────────── */
+  --ring: var(--primary);         /* focus ring colour              */
+  --logo-from: 168 85 247;        /* wordmark gradient start (purple)*/
+  --logo-to: 59 130 246;          /* wordmark gradient end   (blue)  */
+  --chat-canvas: 240 242 245;     /* chat conversation backdrop     */
+
+  /* ── Decorative / category accents (icons, chips, illustrations) ───────── */
+  --cat-browse: 168 85 247;
+  --cat-lost: 6 182 212;
+  --cat-events: 99 102 241;
+  --cat-sports: 245 158 11;
+  --cat-study: 20 184 166;
+
+  /* ── Third-party brand colours (do not change with theme) ──────────────── */
+  --whatsapp: 37 211 102;
+  --whatsapp-hover: 18 140 126;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* ── Base surfaces ─────────────────────────────────────────────────────── */
+  --background: 17 24 39;
+  --surface: 31 41 55;
+  --surface-2: 17 24 39;
+  --surface-muted: 55 65 81;
+  --surface-inverse: 2 6 23;
+
+  /* ── Text ──────────────────────────────────────────────────────────────── */
+  --foreground: 249 250 251;
+  --muted: 156 163 175;
+  --subtle: 107 114 128;
+  --inverse-foreground: 226 232 240;
+  --inverse-muted: 148 163 184;
+
+  /* ── Borders ───────────────────────────────────────────────────────────── */
+  --border: 55 65 81;
+  --border-strong: 75 85 99;
+
+  /* ── Brand: primary (teal) ─────────────────────────────────────────────── */
+  --primary: 20 184 166;
+  --primary-hover: 45 212 191;
+  --primary-foreground: 255 255 255;
+  --primary-muted: 19 78 74;
+
+  /* ── Brand: accent (cyan) ──────────────────────────────────────────────── */
+  --accent: 34 211 238;
+  --accent-hover: 103 232 249;
+  --accent-foreground: 8 47 73;
+  --accent-muted: 22 78 99;
+
+  /* ── Brand: tertiary (violet) ──────────────────────────────────────────── */
+  --tertiary: 167 139 250;
+  --tertiary-hover: 196 181 253;
+  --tertiary-foreground: 46 16 101;
+  --tertiary-muted: 76 29 149;
+
+  /* ── Status ────────────────────────────────────────────────────────────── */
+  --success: 34 197 94;
+  --success-foreground: 6 35 20;
+  --success-muted: 20 83 45;
+
+  --warning: 245 158 11;
+  --warning-foreground: 40 22 2;
+  --warning-muted: 120 53 15;
+
+  --danger: 248 113 113;
+  --danger-foreground: 69 10 10;
+  --danger-muted: 127 29 29;
+
+  --info: 96 165 250;
+  --info-foreground: 8 47 73;
+  --info-muted: 30 58 138;
+
+  /* ── Misc ──────────────────────────────────────────────────────────────── */
+  --ring: var(--primary);
+  --logo-from: 192 132 252;
+  --logo-to: 96 165 250;
+  --chat-canvas: 11 18 32;
+
+  /* ── Decorative / category accents ─────────────────────────────────────── */
+  --cat-browse: 192 132 252;
+  --cat-lost: 34 211 238;
+  --cat-events: 129 140 248;
+  --cat-sports: 251 191 36;
+  --cat-study: 45 212 191;
+
+  /* ── Third-party brand colours (do not change with theme) ──────────────── */
+  --whatsapp: 37 211 102;
+  --whatsapp-hover: 18 140 126;
+}

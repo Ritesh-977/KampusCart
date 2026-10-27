@@ -52,13 +52,13 @@ const ItemCard = ({ item, isWishlisted, onToggleWishlist }) => {
   
   return (
     // FIX 3: Card Background & Border with smooth fade-up animation
-    <div className="item-card-animate group relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 ease-in-out opacity-0" style={{ 
+    <div className="item-card-animate group relative bg-surface border border-border rounded-xl flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 ease-in-out opacity-0" style={{ 
       animation: 'fadeUpIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
       animationDelay: 'var(--animation-delay, 0s)'
     }}>
       
       {/* Image Container */}
-      <div className="aspect-w-1 aspect-h-1 bg-gray-200 dark:bg-gray-700 group-hover:opacity-90 h-56 relative">
+      <div className="aspect-w-1 aspect-h-1 bg-surface-muted group-hover:opacity-90 h-56 relative">
         <img
           src={imageSrc}
           alt={item.title}
@@ -68,20 +68,20 @@ const ItemCard = ({ item, isWishlisted, onToggleWishlist }) => {
         {/* FIX 4: Wishlist Button (Dark Mode Background) */}
         <button
           onClick={handleHeartClick}
-          className="absolute top-2 right-2 p-2 rounded-full bg-white/90 dark:bg-gray-900/80 backdrop-blur-sm shadow-sm hover:scale-110 active:scale-95 transition-all duration-200 z-30 group/heart cursor-pointer"
+          className="absolute top-2 right-2 p-2 rounded-full bg-surface/90 backdrop-blur-sm shadow-sm hover:scale-110 active:scale-95 transition-all duration-200 z-30 group/heart cursor-pointer"
           title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
         >
           {isWishlisted ? (
-            <FaHeart className="text-pink-500 text-lg drop-shadow-sm" />
+            <FaHeart className="text-danger text-lg drop-shadow-sm" />
           ) : (
-            <FaRegHeart className="text-gray-400 dark:text-gray-300 text-lg group-hover/heart:text-pink-500 transition-colors" />
+            <FaRegHeart className="text-subtle text-lg group-hover/heart:text-danger transition-colors" />
           )}
         </button>
 
         {/* Chat Button — disabled for cross-college items */}
         {isOtherCollege ? (
           <div
-            className="absolute bottom-2 right-2 p-2 rounded-full bg-gray-100/90 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm z-30 text-gray-400 cursor-not-allowed"
+            className="absolute bottom-2 right-2 p-2 rounded-full bg-surface/90 backdrop-blur-sm shadow-sm z-30 text-subtle cursor-not-allowed"
             title={`Available only for ${item.college} students`}
           >
             <FaCommentDots className="text-lg" />
@@ -89,7 +89,7 @@ const ItemCard = ({ item, isWishlisted, onToggleWishlist }) => {
         ) : (
           <button
             onClick={handleChatClick}
-            className="absolute bottom-2 right-2 p-2 rounded-full bg-white/90 dark:bg-gray-900/80 backdrop-blur-sm shadow-sm hover:scale-110 active:scale-95 transition-all duration-200 z-30 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 cursor-pointer group/chat"
+            className="absolute bottom-2 right-2 p-2 rounded-full bg-surface/90 backdrop-blur-sm shadow-sm hover:scale-110 active:scale-95 transition-all duration-200 z-30 text-primary hover:text-primary dark:hover:text-primary cursor-pointer group/chat"
             title="Chat with Seller"
           >
             <FaCommentDots className="text-lg group-hover/chat:scale-110 transition-transform" />
@@ -97,8 +97,8 @@ const ItemCard = ({ item, isWishlisted, onToggleWishlist }) => {
         )}
 
         {/* FIX 6: Status Badge (Dark Mode Colors) */}
-        <div className="absolute top-2 left-2 bg-white/90 dark:bg-gray-900/80 backdrop-blur-sm text-xs font-semibold px-2.5 py-1 rounded-full text-gray-700 dark:text-gray-200 uppercase tracking-wider shadow-sm z-20">
-          {item.isSold ? <span className="text-red-600 dark:text-red-400">Sold</span> : <span className="text-green-600 dark:text-green-400">Available</span>}
+        <div className="absolute top-2 left-2 bg-surface/90 backdrop-blur-sm text-xs font-semibold px-2.5 py-1 rounded-full text-foreground uppercase tracking-wider shadow-sm z-20">
+          {item.isSold ? <span className="text-danger">Sold</span> : <span className="text-success">Available</span>}
         </div>
       </div>
 
@@ -106,9 +106,9 @@ const ItemCard = ({ item, isWishlisted, onToggleWishlist }) => {
       <div className="flex-1 p-4 flex flex-col justify-between relative">
         <div>
           {/* FIX 7: Category Text */}
-          <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium mb-1">{item.category}</p>
+          <p className="text-sm text-primary font-medium mb-1">{item.category}</p>
           {/* FIX 8: Title Text */}
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">
+          <h3 className="text-lg font-semibold text-foreground line-clamp-2">
             <Link to={`/item/${item._id}`}>
               <span aria-hidden="true" className="absolute inset-0 z-10" />
               {item.title}
@@ -118,11 +118,11 @@ const ItemCard = ({ item, isWishlisted, onToggleWishlist }) => {
 
         <div className="mt-4 flex items-end justify-between relative z-20">
             {/* FIX 9: Price Text */}
-            <p className="text-xl font-bold text-gray-900 dark:text-white">
+            <p className="text-xl font-bold text-foreground">
                 ₹{item.price ? item.price.toLocaleString('en-IN') : '0'}
             </p>
             {/* FIX 10: Link Text */}
-            <span className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium pointer-events-none">
+            <span className="text-sm text-primary hover:text-primary text-primary dark:hover:text-primary font-medium pointer-events-none">
                 View Details
             </span>
         </div>

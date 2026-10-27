@@ -12,18 +12,18 @@ import { FiArrowRight, FiSearch, FiTag, FiMessageCircle, FiCheckCircle, FiShield
 
 // --- SKELETON COMPONENT ---
 const SkeletonItemCard = () => (
-  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full animate-pulse">
-    <div className="aspect-[4/3] bg-gray-200 dark:bg-gray-700 w-full"></div>
+  <div className="bg-surface rounded-2xl shadow-sm border border-border overflow-hidden flex flex-col h-full animate-pulse">
+    <div className="aspect-[4/3] bg-surface-muted w-full"></div>
     <div className="p-4 flex flex-col flex-1 gap-3">
       <div className="flex justify-between">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+        <div className="h-4 bg-surface-muted rounded w-1/3"></div>
+        <div className="h-4 bg-surface-muted rounded w-1/4"></div>
       </div>
-      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-      <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mt-auto"></div>
-      <div className="flex items-center gap-2 mt-2 pt-3 border-t border-gray-100 dark:border-gray-700">
-        <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+      <div className="h-6 bg-surface-muted rounded w-3/4"></div>
+      <div className="h-8 bg-surface-muted rounded w-1/2 mt-auto"></div>
+      <div className="flex items-center gap-2 mt-2 pt-3 border-t border-border">
+        <div className="h-8 w-8 rounded-full bg-surface-muted"></div>
+        <div className="h-4 bg-surface-muted rounded w-1/3"></div>
       </div>
     </div>
   </div>
@@ -77,12 +77,12 @@ const features = [
 
 // --- CATEGORY SHORTCUTS ---
 const categoryLinks = [
-  { name: 'Cycles', emoji: '🚲', color: 'from-green-500 to-emerald-600' },
-  { name: 'Books & Notes', emoji: '📚', color: 'from-blue-500 to-indigo-600' },
-  { name: 'Electronics', emoji: '💻', color: 'from-purple-500 to-violet-600' },
-  { name: 'Hostel Essentials', emoji: '🛏️', color: 'from-orange-500 to-amber-600' },
-  { name: 'Stationery', emoji: '✏️', color: 'from-pink-500 to-rose-600' },
-  { name: 'Others', emoji: '📦', color: 'from-cyan-500 to-teal-600' },
+  { name: 'Cycles', emoji: '🚲', color: 'from-success to-success' },
+  { name: 'Books & Notes', emoji: '📚', color: 'from-info to-primary' },
+  { name: 'Electronics', emoji: '💻', color: 'from-tertiary to-tertiary' },
+  { name: 'Hostel Essentials', emoji: '🛏️', color: 'from-warning to-warning' },
+  { name: 'Stationery', emoji: '✏️', color: 'from-danger to-danger' },
+  { name: 'Others', emoji: '📦', color: 'from-accent to-primary' },
 ];
 
 const PREVIEW_COUNT = 8;
@@ -178,13 +178,13 @@ const Home = () => {
   const seo = SEO.home(selectedCollege);
 
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-white dark:bg-slate-950 transition-colors duration-300">
+    <div className="min-h-screen flex flex-col font-sans bg-surface transition-colors duration-300">
       <SEOHead {...seo} />
 
       {/* Animated Gradient Background */}
       <div className="fixed inset-0 gradient-dark-cyan-animated opacity-15 dark:opacity-30 pointer-events-none z-0"></div>
-      <div className="fixed top-20 right-10 w-72 h-72 bg-cyan-400 rounded-full blur-3xl opacity-20 dark:opacity-15 float-animation pointer-events-none z-0"></div>
-      <div className="fixed bottom-20 left-10 w-80 h-80 bg-teal-500 rounded-full blur-3xl opacity-20 dark:opacity-15 float-animation pointer-events-none z-0" style={{ animationDelay: '2s' }}></div>
+      <div className="fixed top-20 right-10 w-72 h-72 bg-accent rounded-full blur-3xl opacity-20 dark:opacity-15 float-animation pointer-events-none z-0"></div>
+      <div className="fixed bottom-20 left-10 w-80 h-80 bg-primary rounded-full blur-3xl opacity-20 dark:opacity-15 float-animation pointer-events-none z-0" style={{ animationDelay: '2s' }}></div>
 
       <div className="relative z-10">
         <Navbar />
@@ -198,7 +198,7 @@ const Home = () => {
 
               {/* Tourist Banner */}
               {isViewingOtherCollege && (
-                <div className="mb-6 flex items-start gap-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-300 dark:border-amber-700/50 rounded-xl px-4 py-3 text-sm text-amber-800 dark:text-amber-300 shadow-sm">
+                <div className="mb-6 flex items-start gap-3 bg-gradient-to-r from-warning-muted to-warning-muted   border border-warning rounded-xl px-4 py-3 text-sm text-warning shadow-sm">
                   <span className="text-lg leading-snug">👀</span>
                   <p>
                     You are viewing <strong>{selectedCollege.name}</strong>. Your home campus is{' '}
@@ -209,20 +209,20 @@ const Home = () => {
 
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h2 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-teal-500 dark:from-cyan-400 dark:to-teal-300">
+                  <h2 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary  ">
                     {searchQuery
                       ? `Results for "${searchQuery}"`
                       : selectedCollege
                       ? `Fresh Picks at ${selectedCollege.shortName}`
                       : 'Fresh Picks'}
                   </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-muted mt-1">
                     Recently listed by students on your campus
                   </p>
                 </div>
                 <Link
                   to="/browse"
-                  className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors group"
+                  className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent dark:hover:text-accent transition-colors group"
                 >
                   View all
                   <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
@@ -251,8 +251,8 @@ const Home = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
-                  <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">No items found.</p>
+                <div className="text-center py-16 bg-surface rounded-2xl border border-dashed border-border-strong">
+                  <p className="text-muted text-lg font-medium">No items found.</p>
                 </div>
               )}
 
@@ -261,12 +261,12 @@ const Home = () => {
                 <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                   <Link
                     to="/browse"
-                    className="inline-flex items-center gap-3 px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-semibold text-sm shadow-lg hover:shadow-cyan-500/30 hover:from-cyan-400 hover:to-teal-400 transition-all duration-200 group"
+                    className="inline-flex items-center gap-3 px-8 py-3.5 rounded-xl bg-gradient-to-r from-accent to-primary text-white font-semibold text-sm shadow-lg hover:shadow-accent/30 hover:from-accent hover:to-primary transition-all duration-200 group"
                   >
                     Browse All Items
                     <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
                   </Link>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                  <p className="text-xs text-subtle">
                     Filter by category, sort by price, and more
                   </p>
                 </div>
@@ -275,13 +275,13 @@ const Home = () => {
           </section>
 
           {/* ── CATEGORY SHORTCUTS ── */}
-          <section className="py-14 bg-slate-50 dark:bg-slate-900/60">
+          <section className="py-14 bg-surface-2">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-10">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-2xl font-bold text-foreground">
                   Shop by Category
                 </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                <p className="text-sm text-muted mt-2">
                   Jump straight to what you're looking for
                 </p>
               </div>
@@ -290,12 +290,12 @@ const Home = () => {
                   <Link
                     key={cat.name}
                     to={`/browse?category=${encodeURIComponent(cat.name)}`}
-                    className="group flex flex-col items-center justify-center p-5 rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 hover:border-cyan-300 dark:hover:border-cyan-600 shadow-sm hover:shadow-md transition-all duration-200"
+                    className="group flex flex-col items-center justify-center p-5 rounded-2xl bg-surface border border-border hover:border-accent dark:hover:border-accent shadow-sm hover:shadow-md transition-all duration-200"
                   >
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-transform duration-200`}>
                       {cat.emoji}
                     </div>
-                    <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200 text-center leading-tight">
+                    <span className="text-xs sm:text-sm font-semibold text-foreground text-center leading-tight">
                       {cat.name}
                     </span>
                   </Link>
@@ -305,39 +305,39 @@ const Home = () => {
           </section>
 
           {/* ── HOW IT WORKS ── */}
-          <section className="py-20 bg-white dark:bg-slate-950">
+          <section className="py-20 bg-surface">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-14">
-                <span className="inline-block text-xs font-bold uppercase tracking-widest text-cyan-500 dark:text-cyan-400 mb-3">
+                <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent mb-3">
                   Simple Process
                 </span>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-3xl font-bold text-foreground">
                   How It Works
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400 mt-3 max-w-xl mx-auto text-sm">
+                <p className="text-muted mt-3 max-w-xl mx-auto text-sm">
                   Trading within your campus has never been easier. Three steps and you're done.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
                 {/* Connector line (desktop only) */}
-                <div className="hidden md:block absolute top-14 left-[calc(16.7%+1rem)] right-[calc(16.7%+1rem)] h-px bg-gradient-to-r from-cyan-200 via-teal-300 to-cyan-200 dark:from-cyan-800 dark:via-teal-700 dark:to-cyan-800 z-0"></div>
+                <div className="hidden md:block absolute top-14 left-[calc(16.7%+1rem)] right-[calc(16.7%+1rem)] h-px bg-gradient-to-r from-accent via-primary to-accent    z-0"></div>
 
                 {steps.map((step, i) => (
                   <div
                     key={step.number}
-                    className="relative z-10 flex flex-col items-center text-center p-8 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 hover:border-cyan-300 dark:hover:border-cyan-700 shadow-sm hover:shadow-lg transition-all duration-300 group"
+                    className="relative z-10 flex flex-col items-center text-center p-8 rounded-2xl bg-surface-2 border border-border hover:border-accent dark:hover:border-accent shadow-sm hover:shadow-lg transition-all duration-300 group"
                   >
                     {/* Step number badge */}
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center text-white text-xs font-bold shadow-md">
                       {step.number}
                     </div>
                     {/* Icon */}
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-900/30 dark:to-teal-900/30 border border-cyan-100 dark:border-cyan-800 flex items-center justify-center text-cyan-600 dark:text-cyan-400 mb-5 mt-4 group-hover:scale-110 transition-transform duration-200">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-muted to-primary-muted   border border-accent flex items-center justify-center text-accent mb-5 mt-4 group-hover:scale-110 transition-transform duration-200">
                       {step.icon}
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{step.title}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{step.description}</p>
+                    <h3 className="text-lg font-bold text-foreground mb-2">{step.title}</h3>
+                    <p className="text-sm text-muted leading-relaxed">{step.description}</p>
                   </div>
                 ))}
               </div>
@@ -345,16 +345,16 @@ const Home = () => {
           </section>
 
           {/* ── WHY CAMPUS TRADE ── */}
-          <section className="py-20 bg-slate-50 dark:bg-slate-900/60">
+          <section className="py-20 bg-surface-2">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-14">
-                <span className="inline-block text-xs font-bold uppercase tracking-widest text-cyan-500 dark:text-cyan-400 mb-3">
+                <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent mb-3">
                   Why Us
                 </span>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-3xl font-bold text-foreground">
                   Built for Campus Life
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400 mt-3 max-w-xl mx-auto text-sm">
+                <p className="text-muted mt-3 max-w-xl mx-auto text-sm">
                   A marketplace designed around the unique needs of college students — safe, simple, and free.
                 </p>
               </div>
@@ -363,13 +363,13 @@ const Home = () => {
                 {features.map((feat) => (
                   <div
                     key={feat.title}
-                    className="flex flex-col p-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 hover:border-cyan-300 dark:hover:border-cyan-700 shadow-sm hover:shadow-md transition-all duration-300 group"
+                    className="flex flex-col p-6 rounded-2xl bg-surface border border-border hover:border-accent dark:hover:border-accent shadow-sm hover:shadow-md transition-all duration-300 group"
                   >
-                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-900/30 dark:to-teal-900/30 border border-cyan-100 dark:border-cyan-800 flex items-center justify-center text-cyan-600 dark:text-cyan-400 mb-4 group-hover:scale-110 transition-transform duration-200">
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent-muted to-primary-muted   border border-accent flex items-center justify-center text-accent mb-4 group-hover:scale-110 transition-transform duration-200">
                       {feat.icon}
                     </div>
-                    <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2">{feat.title}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{feat.description}</p>
+                    <h3 className="text-base font-bold text-foreground mb-2">{feat.title}</h3>
+                    <p className="text-sm text-muted leading-relaxed">{feat.description}</p>
                   </div>
                 ))}
               </div>
@@ -377,23 +377,23 @@ const Home = () => {
           </section>
 
           {/* ── CALL TO ACTION ── */}
-          <section className="py-20 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+          <section className="py-20 bg-gradient-to-br from-surface-inverse via-surface-inverse to-surface-inverse relative overflow-hidden">
             {/* Background accents */}
             <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-0 left-1/4 w-64 h-64 bg-cyan-500 rounded-full blur-3xl opacity-10"></div>
-              <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-teal-500 rounded-full blur-3xl opacity-10"></div>
+              <div className="absolute top-0 left-1/4 w-64 h-64 bg-accent rounded-full blur-3xl opacity-10"></div>
+              <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-primary rounded-full blur-3xl opacity-10"></div>
             </div>
             <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
                 Got something to sell?
               </h2>
-              <p className="text-gray-400 text-base mb-8 leading-relaxed">
+              <p className="text-inverse-muted text-base mb-8 leading-relaxed">
                 List your item in under 2 minutes. Reach hundreds of students on your campus for free — no fees, no commissions, ever.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   to="/sell"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-semibold text-sm shadow-lg hover:shadow-cyan-500/30 hover:from-cyan-400 hover:to-teal-400 transition-all duration-200 group"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-accent to-primary text-white font-semibold text-sm shadow-lg hover:shadow-accent/30 hover:from-accent hover:to-primary transition-all duration-200 group"
                 >
                   <FiTag className="text-base" />
                   List an Item
@@ -401,7 +401,7 @@ const Home = () => {
                 </Link>
                 <Link
                   to="/browse"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl border border-slate-600 text-slate-300 font-semibold text-sm hover:border-cyan-500 hover:text-cyan-400 transition-all duration-200"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl border border-white/20 text-inverse-foreground font-semibold text-sm hover:border-accent hover:text-accent transition-all duration-200"
                 >
                   <FiSearch className="text-base" />
                   Browse Items

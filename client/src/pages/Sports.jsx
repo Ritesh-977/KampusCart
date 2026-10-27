@@ -243,25 +243,25 @@ const Sports = () => {
     new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
   const statusIcon = (status) => {
-    if (status === 'approved') return <FaCheckCircle className="text-green-500" />;
-    if (status === 'rejected') return <FaTimesCircle className="text-red-500" />;
-    return <FaHourglassHalf className="text-amber-500" />;
+    if (status === 'approved') return <FaCheckCircle className="text-success" />;
+    if (status === 'rejected') return <FaTimesCircle className="text-danger" />;
+    return <FaHourglassHalf className="text-warning" />;
   };
 
-  const INPUT = "w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white dark:bg-slate-700 dark:text-white text-sm";
-  const LABEL = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
+  const INPUT = "w-full px-3 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-warning focus:outline-none bg-surface text-foreground text-sm";
+  const LABEL = "block text-sm font-medium text-foreground mb-1";
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-surface font-sans transition-colors duration-300">
       <SEOHead {...SEO.sports(selectedCollege)} />
       <Navbar />
 
       {/* HERO */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-10 px-4 sm:px-6 lg:px-8 text-center shadow-lg border-b border-amber-700/30">
+      <div className="bg-gradient-to-br from-surface-inverse via-surface-inverse to-surface-inverse    py-10 px-4 sm:px-6 lg:px-8 text-center shadow-lg border-b border-warning/30">
         <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2 flex items-center justify-center gap-3">
-          <FaTrophy className="text-amber-400" /> Campus Sports
+          <FaTrophy className="text-warning" /> Campus Sports
         </h1>
-        <p className="text-slate-300 text-lg max-w-2xl mx-auto">
+        <p className="text-inverse-muted text-lg max-w-2xl mx-auto">
           Register for sports tournaments and competitions on your campus.
         </p>
       </div>
@@ -272,17 +272,17 @@ const Sports = () => {
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setFilterType('all')}
-            className={`px-3 py-1.5 rounded-full text-sm font-semibold transition ${filterType === 'all' ? 'bg-amber-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20'}`}
+            className={`px-3 py-1.5 rounded-full text-sm font-semibold transition ${filterType === 'all' ? 'bg-warning text-white' : 'bg-surface-muted text-muted hover:bg-warning-muted dark:hover:bg-warning/20'}`}
           >All</button>
           {SPORT_TYPES.map(t => (
             <button key={t} onClick={() => setFilterType(t)}
-              className={`px-3 py-1.5 rounded-full text-sm font-semibold transition ${filterType === t ? 'bg-amber-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20'}`}
+              className={`px-3 py-1.5 rounded-full text-sm font-semibold transition ${filterType === t ? 'bg-warning text-white' : 'bg-surface-muted text-muted hover:bg-warning-muted dark:hover:bg-warning/20'}`}
             >{t}</button>
           ))}
         </div>
         <button
           onClick={openCreateSport}
-          className="flex items-center px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-full font-bold shadow-md transition transform hover:-translate-y-0.5 flex-shrink-0"
+          className="flex items-center px-6 py-2.5 bg-gradient-to-r from-warning to-warning hover:from-warning hover:to-warning text-white rounded-full font-bold shadow-md transition transform hover:-translate-y-0.5 flex-shrink-0"
         >
           <FaPlus className="mr-2" /> Create Sport Event
         </button>
@@ -291,32 +291,32 @@ const Sports = () => {
       {/* SPORT CARDS */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         {loading ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading sports events...</div>
+          <div className="text-center py-12 text-muted">Loading sports events...</div>
         ) : filteredSports.length === 0 ? (
           <div className="text-center py-16">
-            <div className="inline-block p-4 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
-              <FaTrophy className="text-4xl text-gray-300 dark:text-gray-600" />
+            <div className="inline-block p-4 rounded-full bg-surface-muted mb-4">
+              <FaTrophy className="text-4xl text-subtle" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">No sports events found</h3>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">Create one to get started!</p>
+            <h3 className="text-lg font-medium text-foreground">No sports events found</h3>
+            <p className="text-muted mt-1">Create one to get started!</p>
           </div>
         ) : (
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {filteredSports.map(sport => (
-              <div key={sport._id} className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
-                <div className="h-1.5 w-full bg-gradient-to-r from-amber-400 to-orange-500" />
+              <div key={sport._id} className="bg-surface rounded-xl shadow-md hover:shadow-lg transition border border-border overflow-hidden flex flex-col">
+                <div className="h-1.5 w-full bg-gradient-to-r from-warning to-warning" />
                 <div className="p-5 flex-1 flex flex-col">
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <div>
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 mb-1 inline-block">{sport.sportType}</span>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-snug">{sport.title}</h3>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-warning-muted text-warning mb-1 inline-block">{sport.sportType}</span>
+                      <h3 className="text-lg font-bold text-foreground leading-snug">{sport.title}</h3>
                     </div>
                     {canManage(sport) && (
                       <div className="flex gap-1 flex-shrink-0">
-                        <button onClick={() => openEditSport(sport)} className="p-1.5 text-gray-400 hover:text-amber-500 transition rounded-md hover:bg-amber-50 dark:hover:bg-amber-900/20" title="Edit">
+                        <button onClick={() => openEditSport(sport)} className="p-1.5 text-subtle hover:text-warning transition rounded-md hover:bg-warning-muted dark:hover:bg-warning/20" title="Edit">
                           <FaEdit size={13} />
                         </button>
-                        <button onClick={() => handleDeleteSport(sport)} className="p-1.5 text-gray-400 hover:text-red-500 transition rounded-md hover:bg-red-50 dark:hover:bg-red-900/20" title="Delete">
+                        <button onClick={() => handleDeleteSport(sport)} className="p-1.5 text-subtle hover:text-danger transition rounded-md hover:bg-danger-muted dark:hover:bg-danger/20" title="Delete">
                           <FaTrashAlt size={13} />
                         </button>
                       </div>
@@ -324,31 +324,31 @@ const Sports = () => {
                   </div>
 
                   {sport.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{sport.description}</p>
+                    <p className="text-sm text-muted mb-3 line-clamp-2">{sport.description}</p>
                   )}
 
-                  <div className="space-y-1.5 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    <div className="flex items-center gap-2"><FaMapMarkerAlt className="text-amber-500 flex-shrink-0" /><span>{sport.venue}</span></div>
-                    <div className="flex items-center gap-2"><FaCalendarAlt className="text-amber-500 flex-shrink-0" /><span>Event: {formatDate(sport.eventDate)}</span></div>
-                    <div className="flex items-center gap-2"><FaCalendarAlt className="text-amber-500 flex-shrink-0" /><span>Deadline: {formatDate(sport.lastRegistrationDate)}</span></div>
-                    <div className="flex items-center gap-2"><FaUsers className="text-amber-500 flex-shrink-0" /><span>Team size: {sport.teamSize} · {sport.registrationCount} registered</span></div>
+                  <div className="space-y-1.5 text-sm text-muted mb-4">
+                    <div className="flex items-center gap-2"><FaMapMarkerAlt className="text-warning flex-shrink-0" /><span>{sport.venue}</span></div>
+                    <div className="flex items-center gap-2"><FaCalendarAlt className="text-warning flex-shrink-0" /><span>Event: {formatDate(sport.eventDate)}</span></div>
+                    <div className="flex items-center gap-2"><FaCalendarAlt className="text-warning flex-shrink-0" /><span>Deadline: {formatDate(sport.lastRegistrationDate)}</span></div>
+                    <div className="flex items-center gap-2"><FaUsers className="text-warning flex-shrink-0" /><span>Team size: {sport.teamSize} · {sport.registrationCount} registered</span></div>
                     <div className="flex items-center gap-2">
-                      <FaRupeeSign className="text-amber-500 flex-shrink-0" />
+                      <FaRupeeSign className="text-warning flex-shrink-0" />
                       <span>{sport.registrationFee > 0 ? `₹${sport.registrationFee} fee` : 'Free'}</span>
                     </div>
                   </div>
 
-                  <div className="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center gap-2 flex-wrap">
+                  <div className="mt-auto pt-3 border-t border-border flex items-center gap-2 flex-wrap">
                     {!sport.isOpen || new Date(sport.lastRegistrationDate) < new Date() ? (
-                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">Registration Closed</span>
+                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-danger-muted text-danger">Registration Closed</span>
                     ) : sport.hasRegistered ? (
-                      <span className="flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                      <span className="flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-success-muted text-success">
                         <FaCheckCircle /> Registered
                       </span>
                     ) : (
                       <button
                         onClick={() => openRegister(sport)}
-                        className="text-sm font-bold px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition"
+                        className="text-sm font-bold px-4 py-1.5 rounded-full bg-gradient-to-r from-warning to-warning hover:from-warning hover:to-warning text-white transition"
                       >
                         Register
                       </button>
@@ -357,14 +357,14 @@ const Sports = () => {
                     {canManage(sport) && (
                       <button
                         onClick={() => openRegistrations(sport)}
-                        className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition"
+                        className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full border border-warning text-warning hover:bg-warning-muted dark:hover:bg-warning/20 transition"
                       >
                         <FaClipboardList size={11} /> View Registrations
                       </button>
                     )}
 
                     {sport.qrCodeUrl && (
-                      <a href={sport.qrCodeUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-gray-500 hover:text-amber-600 flex items-center gap-1" title="Payment QR">
+                      <a href={sport.qrCodeUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-muted hover:text-warning flex items-center gap-1" title="Payment QR">
                         <FaQrcode /> QR
                       </a>
                     )}
@@ -379,12 +379,12 @@ const Sports = () => {
       {/* ── CREATE SPORT MODAL ── */}
       {isSportModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-amber-200 dark:border-amber-700/50 flex justify-between items-center bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-900 dark:to-slate-800">
-              <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400">
+          <div className="bg-surface rounded-xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-warning flex justify-between items-center bg-gradient-to-r from-warning-muted to-warning-muted  ">
+              <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-warning to-warning  ">
                 {editSportTarget ? 'Edit Sports Event' : 'Create Sports Event'}
               </h3>
-              <button onClick={() => { setIsSportModalOpen(false); setEditSportTarget(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><FaTimes size={20} /></button>
+              <button onClick={() => { setIsSportModalOpen(false); setEditSportTarget(null); }} className="text-subtle hover:text-muted dark:hover:text-subtle"><FaTimes size={20} /></button>
             </div>
             <form onSubmit={handleSportSubmit} className="p-6 space-y-4">
               <div>
@@ -427,7 +427,7 @@ const Sports = () => {
                     className={`${INPUT} ${!sportForm.eventDate ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
                   {sportForm.eventDate && (
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    <p className="text-xs text-subtle mt-1">
                       Must be on or before {new Date(sportForm.eventDate + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   )}
@@ -462,12 +462,12 @@ const Sports = () => {
               {/* QR Code upload */}
               <div>
                 <label className={LABEL}>Payment QR Code (optional)</label>
-                <div className="border-2 border-dashed border-amber-300 dark:border-amber-700 rounded-lg p-4 text-center cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-900/10 relative">
+                <div className="border-2 border-dashed border-warning rounded-lg p-4 text-center cursor-pointer hover:bg-warning-muted dark:hover:bg-warning/10 relative">
                   <input type="file" accept="image/*" onChange={handleQrUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                   {qrPreview ? (
                     <img src={qrPreview} alt="QR Preview" className="h-24 mx-auto object-contain rounded" />
                   ) : (
-                    <div className="text-gray-400 dark:text-gray-500 flex flex-col items-center gap-1">
+                    <div className="text-subtle flex flex-col items-center gap-1">
                       <FaQrcode size={28} />
                       <span className="text-xs">Upload payment QR image</span>
                     </div>
@@ -475,7 +475,7 @@ const Sports = () => {
                 </div>
               </div>
 
-              <button type="submit" disabled={submittingSport} className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-bold shadow-md hover:from-amber-600 hover:to-orange-600 transition flex items-center justify-center">
+              <button type="submit" disabled={submittingSport} className="w-full py-3 bg-gradient-to-r from-warning to-warning text-white rounded-lg font-bold shadow-md hover:from-warning hover:to-warning transition flex items-center justify-center">
                 {submittingSport
                   ? <><FaSpinner className="animate-spin mr-2" /> {editSportTarget ? 'Saving...' : 'Creating...'}</>
                   : editSportTarget ? 'Save Changes' : 'Create Sports Event'
@@ -489,22 +489,22 @@ const Sports = () => {
       {/* ── REGISTER MODAL ── */}
       {registerTarget && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-amber-200 dark:border-amber-700/50 flex justify-between items-center bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-900 dark:to-slate-800">
+          <div className="bg-surface rounded-xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-warning flex justify-between items-center bg-gradient-to-r from-warning-muted to-warning-muted  ">
               <div>
-                <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400">
+                <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-warning to-warning  ">
                   Register for {registerTarget.title}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Team size: {registerTarget.teamSize}</p>
+                <p className="text-xs text-muted">Team size: {registerTarget.teamSize}</p>
               </div>
-              <button onClick={() => setRegisterTarget(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><FaTimes size={20} /></button>
+              <button onClick={() => setRegisterTarget(null)} className="text-subtle hover:text-muted dark:hover:text-subtle"><FaTimes size={20} /></button>
             </div>
 
             {registerTarget.qrCodeUrl && registerTarget.registrationFee > 0 && (
-              <div className="mx-6 mt-5 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800 text-center">
-                <p className="text-sm font-bold text-amber-700 dark:text-amber-400 mb-2">Pay ₹{registerTarget.registrationFee} via QR</p>
+              <div className="mx-6 mt-5 p-4 bg-warning-muted rounded-xl border border-warning text-center">
+                <p className="text-sm font-bold text-warning mb-2">Pay ₹{registerTarget.registrationFee} via QR</p>
                 <img src={registerTarget.qrCodeUrl} alt="Payment QR" className="h-36 mx-auto object-contain rounded" />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Upload proof after payment</p>
+                <p className="text-xs text-muted mt-2">Upload proof after payment</p>
               </div>
             )}
 
@@ -541,14 +541,14 @@ const Sports = () => {
               {registerTarget.registrationFee > 0 && (
                 <div>
                   <label className={LABEL}>Payment Proof *</label>
-                  <div className="border-2 border-dashed border-amber-300 dark:border-amber-700 rounded-lg p-4 text-center cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-900/10 relative">
+                  <div className="border-2 border-dashed border-warning rounded-lg p-4 text-center cursor-pointer hover:bg-warning-muted dark:hover:bg-warning/10 relative">
                     <input type="file" accept="image/*,application/pdf" onChange={handleProofUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     {proofPreview ? (
-                      <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
+                      <div className="flex items-center justify-center gap-2 text-success">
                         <FaFileAlt /> <span className="text-sm font-medium">{proofPreview}</span>
                       </div>
                     ) : (
-                      <div className="text-gray-400 dark:text-gray-500 flex flex-col items-center gap-1">
+                      <div className="text-subtle flex flex-col items-center gap-1">
                         <FaUpload size={22} />
                         <span className="text-xs">Upload screenshot or PDF</span>
                       </div>
@@ -557,7 +557,7 @@ const Sports = () => {
                 </div>
               )}
 
-              <button type="submit" disabled={submittingReg} className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-bold shadow-md hover:from-amber-600 hover:to-orange-600 transition flex items-center justify-center">
+              <button type="submit" disabled={submittingReg} className="w-full py-3 bg-gradient-to-r from-warning to-warning text-white rounded-lg font-bold shadow-md hover:from-warning hover:to-warning transition flex items-center justify-center">
                 {submittingReg ? <><FaSpinner className="animate-spin mr-2" /> Registering...</> : 'Submit Registration'}
               </button>
             </form>
@@ -568,27 +568,27 @@ const Sports = () => {
       {/* ── REGISTRATIONS VIEWER ── */}
       {regsTarget && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Registrations — {regsTarget.title}</h3>
-              <button onClick={() => setRegsTarget(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><FaTimes size={20} /></button>
+          <div className="bg-surface rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-border flex justify-between items-center">
+              <h3 className="text-lg font-bold text-foreground">Registrations — {regsTarget.title}</h3>
+              <button onClick={() => setRegsTarget(null)} className="text-subtle hover:text-muted dark:hover:text-subtle"><FaTimes size={20} /></button>
             </div>
             <div className="p-6">
               {loadingRegs ? (
-                <div className="text-center py-8 text-gray-500"><FaSpinner className="animate-spin mx-auto text-2xl mb-2" /> Loading...</div>
+                <div className="text-center py-8 text-muted"><FaSpinner className="animate-spin mx-auto text-2xl mb-2" /> Loading...</div>
               ) : registrations.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">No registrations yet.</p>
+                <p className="text-center text-muted py-8">No registrations yet.</p>
               ) : (
                 <div className="space-y-3">
                   {registrations.map(reg => (
-                    <div key={reg._id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
+                    <div key={reg._id} className="border border-border rounded-lg p-4 bg-surface-2">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-bold text-gray-900 dark:text-white">{reg.teamName}</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">Captain: {reg.captainName} · {reg.captainContact}</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">{reg.course} · {reg.year} Year</p>
+                          <p className="font-bold text-foreground">{reg.teamName}</p>
+                          <p className="text-sm text-muted">Captain: {reg.captainName} · {reg.captainContact}</p>
+                          <p className="text-sm text-muted">{reg.course} · {reg.year} Year</p>
                           {reg.registeredBy?.name && (
-                            <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">By: {reg.registeredBy.name}</p>
+                            <p className="text-xs text-muted mt-0.5">By: {reg.registeredBy.name}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
@@ -596,7 +596,7 @@ const Sports = () => {
                           <select
                             value={reg.status}
                             onChange={e => handleUpdateStatus(regsTarget._id, reg._id, e.target.value)}
-                            className="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-800 dark:text-white focus:outline-none"
+                            className="text-xs border border-border-strong rounded-lg px-2 py-1 bg-surface text-foreground focus:outline-none"
                           >
                             <option value="pending">Pending</option>
                             <option value="approved">Approved</option>
@@ -606,7 +606,7 @@ const Sports = () => {
                       </div>
                       {reg.paymentProofUrl && (
                         <a href={reg.paymentProofUrl} target="_blank" rel="noopener noreferrer"
-                          className="mt-2 inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 hover:underline font-semibold">
+                          className="mt-2 inline-flex items-center gap-1 text-xs text-warning hover:underline font-semibold">
                           <FaFileAlt /> View Payment Proof
                         </a>
                       )}

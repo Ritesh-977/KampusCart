@@ -122,21 +122,21 @@ const SellItem = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans pb-20 transition-colors duration-200">
+    <div className="min-h-screen bg-surface-2 font-sans pb-20 transition-colors duration-200">
       <Navbar />
 
-      <div className="bg-gradient-to-br from-cyan-400 via-cyan-500 to-teal-500 pb-24 pt-10 transition-colors gradient-animated">
+      <div className="bg-gradient-to-br from-accent via-accent to-primary pb-24 pt-10 transition-colors gradient-animated">
         <div className="max-w-7xl mx-auto px-4 text-center">
             <h1 className="text-4xl font-extrabold text-white">Sell Your Stuff</h1>
-            <p className="mt-2 text-cyan-50 text-lg slide-in-blur" style={{"--animation-delay": "0.2s"}}>Quick, easy, and trusted across campuses.</p>
+            <p className="mt-2 text-accent text-lg slide-in-blur" style={{"--animation-delay": "0.2s"}}>Quick, easy, and trusted across campuses.</p>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 -mt-16">
         <form onSubmit={handleSubmit} className="space-y-8">
             {error && (
-              <div className="bg-cyan-50 dark:bg-cyan-900/20 border-l-4 border-cyan-500 p-4 rounded-md shadow-sm">
-                <p className="text-cyan-700 dark:text-cyan-400 font-medium italic">⚠️ {error}</p>
+              <div className="bg-accent-muted border-l-4 border-accent p-4 rounded-md shadow-sm">
+                <p className="text-accent font-medium italic">⚠️ {error}</p>
               </div>
             )}
 
@@ -146,19 +146,19 @@ const SellItem = () => {
                 <div className="lg:col-span-1 space-y-6">
                     
                     {/* Multi-Image Upload Card */}
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 transition-colors border border-slate-100 dark:border-slate-700">
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center">
-                            <FaCamera className="mr-2 text-cyan-500"/> Product Photos
+                    <div className="bg-surface rounded-2xl shadow-xl p-6 transition-colors border border-border">
+                        <h3 className="text-lg font-bold text-foreground mb-4 flex items-center">
+                            <FaCamera className="mr-2 text-accent"/> Product Photos
                         </h3>
                         
                         <div className="grid grid-cols-2 gap-3 mb-4">
                             {previews.map((src, index) => (
-                                <div key={index} className="relative h-24 rounded-xl overflow-hidden border-2 border-cyan-100 dark:border-slate-600 shadow-inner group">
+                                <div key={index} className="relative h-24 rounded-xl overflow-hidden border-2 border-accent shadow-inner group">
                                     <img src={src} className="w-full h-full object-cover" alt="Preview" />
                                     <button 
                                         type="button"
                                         onClick={() => removeImage(index)}
-                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600"
+                                        className="absolute top-1 right-1 bg-danger text-white rounded-full p-1 shadow-md hover:bg-danger"
                                     >
                                         <FaTimesCircle size={14} />
                                     </button>
@@ -166,27 +166,27 @@ const SellItem = () => {
                             ))}
                             
                             {previews.length < 3 && (
-                                <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-cyan-200 dark:border-slate-600 rounded-xl cursor-pointer bg-cyan-50 dark:bg-slate-700 hover:bg-cyan-100 dark:hover:bg-slate-600 transition-all group">
-                                    <FaCloudUploadAlt className="text-cyan-400 dark:text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-slate-200 text-2xl" />
-                                    <span className="text-[10px] font-bold text-cyan-500 dark:text-slate-400 mt-1 uppercase">Add Image</span>
+                                <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-accent rounded-xl cursor-pointer bg-accent-muted hover:bg-accent-muted dark:hover:bg-surface-muted transition-all group">
+                                    <FaCloudUploadAlt className="text-accent group-hover:text-accent dark:group-hover:text-subtle text-2xl" />
+                                    <span className="text-[10px] font-bold text-accent mt-1 uppercase">Add Image</span>
                                     <input type="file" multiple className="hidden" accept="image/*" onChange={handleImageChange} />
                                 </label>
                             )}
                         </div>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center italic">Upload up to 3 clear photos.</p>
+                        <p className="text-[10px] text-subtle text-center italic">Upload up to 3 clear photos.</p>
                     </div>
                     
                     {/* Contact Info Card */}
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 transition-colors border border-slate-100 dark:border-slate-700">
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center">
-                            <FaPhone className="mr-2 text-cyan-500"/> Seller Identity
+                    <div className="bg-surface rounded-2xl shadow-xl p-6 transition-colors border border-border">
+                        <h3 className="text-lg font-bold text-foreground mb-4 flex items-center">
+                            <FaPhone className="mr-2 text-accent"/> Seller Identity
                         </h3>
                         <div className="space-y-4">
                             <div>
-                                <label className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase">Your Name</label>
+                                <label className="text-xs font-black text-subtle uppercase">Your Name</label>
                                 <div className="mt-1 relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FaUser className="text-slate-300 dark:text-slate-500" />
+                                        <FaUser className="text-subtle" />
                                     </div>
                                     <input 
                                         type="text" 
@@ -194,14 +194,14 @@ const SellItem = () => {
                                         required 
                                         value={formData.sellerName} 
                                         onChange={handleChange} 
-                                        className="block w-full pl-10 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-cyan-500 focus:border-cyan-500 transition-colors" 
+                                        className="block w-full pl-10 border-border bg-surface text-foreground rounded-xl focus:ring-accent focus:border-accent transition-colors" 
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase">WhatsApp Number</label>
+                                <label className="text-xs font-black text-subtle uppercase">WhatsApp Number</label>
                                 <div className="mt-1 relative flex">
-                                    <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-600 text-slate-500 dark:text-slate-300 font-bold text-sm">+91</span>
+                                    <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-border bg-surface-2 text-muted font-bold text-sm">+91</span>
                                     <input 
                                         type="tel" 
                                         name="sellerPhone" 
@@ -212,23 +212,23 @@ const SellItem = () => {
                                           const val = e.target.value.replace(/\D/g, '');
                                           setFormData(prev => ({ ...prev, sellerPhone: val }));
                                         }}
-                                        className={`block w-full border bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-r-xl focus:ring-cyan-500 focus:border-cyan-500 transition-colors ${
+                                        className={`block w-full border bg-surface text-foreground rounded-r-xl focus:ring-accent focus:border-accent transition-colors ${
                                           formData.sellerPhone.length > 0 && !/^[6-9]\d{0,9}$/.test(formData.sellerPhone)
-                                            ? 'border-red-400 dark:border-red-500'
-                                            : 'border-slate-200 dark:border-slate-600'
+                                            ? 'border-danger'
+                                            : 'border-border'
                                         }`}
                                         placeholder="9876543210" 
                                     />
                                 </div>
                                 {formData.sellerPhone.length > 0 && !/^[6-9]\d{0,9}$/.test(formData.sellerPhone) && (
-                                  <p className="mt-1 text-xs text-red-500">Must start with 6, 7, 8, or 9</p>
+                                  <p className="mt-1 text-xs text-danger">Must start with 6, 7, 8, or 9</p>
                                 )}
                             </div>
                             <div>
-                                <label className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase">Email Address</label>
+                                <label className="text-xs font-black text-subtle uppercase">Email Address</label>
                                 <div className="mt-1 relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FaEnvelope className="text-slate-300 dark:text-slate-500" />
+                                        <FaEnvelope className="text-subtle" />
                                     </div>
                                     <input 
                                         type="email" 
@@ -236,7 +236,7 @@ const SellItem = () => {
                                         required 
                                         value={formData.sellerEmail} 
                                         onChange={handleChange} 
-                                        className="block w-full pl-10 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-cyan-500 focus:border-cyan-500 transition-colors" 
+                                        className="block w-full pl-10 border-border bg-surface text-foreground rounded-xl focus:ring-accent focus:border-accent transition-colors" 
                                     />
                                 </div>
                             </div>
@@ -246,29 +246,29 @@ const SellItem = () => {
 
                 {/* --- RIGHT COLUMN --- */}
                 <div className="lg:col-span-2">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 space-y-6 transition-colors border border-slate-100 dark:border-slate-700">
-                        <h3 className="text-2xl font-black text-slate-900 dark:text-white">Ad Particulars</h3>
+                    <div className="bg-surface rounded-2xl shadow-xl p-8 space-y-6 transition-colors border border-border">
+                        <h3 className="text-2xl font-black text-foreground">Ad Particulars</h3>
                         
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Item Title</label>
+                                <label className="block text-sm font-bold text-foreground">Item Title</label>
                                 <input 
                                     type="text" 
                                     name="title" 
                                     required 
                                     value={formData.title} 
                                     onChange={handleChange} 
-                                    className="mt-2 block w-full border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-xl shadow-sm focus:ring-cyan-500 focus:border-cyan-500 py-3 px-4 transition-colors" 
+                                    className="mt-2 block w-full border-border bg-surface text-foreground rounded-xl shadow-sm focus:ring-accent focus:border-accent py-3 px-4 transition-colors" 
                                     placeholder="e.g. Milton 1L Steel Bottle" 
                                 />
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Asking Price</label>
+                                    <label className="block text-sm font-bold text-foreground">Asking Price</label>
                                     <div className="mt-2 relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <FaRupeeSign className="text-slate-400 dark:text-slate-500" />
+                                            <FaRupeeSign className="text-subtle" />
                                         </div>
                                         <input 
                                             type="number" 
@@ -276,17 +276,17 @@ const SellItem = () => {
                                             required 
                                             value={formData.price} 
                                             onChange={handleChange} 
-                                            className="block w-full pl-10 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-cyan-500 focus:border-cyan-500 py-3 transition-colors" 
+                                            className="block w-full pl-10 border-border bg-surface text-foreground rounded-xl focus:ring-accent focus:border-accent py-3 transition-colors" 
                                             placeholder="Amount" 
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Hostel/Building</label>
+                                    <label className="block text-sm font-bold text-foreground">Hostel/Building</label>
                                     <div className="mt-2 relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <FaMapMarkerAlt className="text-slate-400 dark:text-slate-500" />
+                                            <FaMapMarkerAlt className="text-subtle" />
                                         </div>
                                         <input 
                                             type="text" 
@@ -294,7 +294,7 @@ const SellItem = () => {
                                             required 
                                             value={formData.location} 
                                             onChange={handleChange} 
-                                            className="block w-full pl-10 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-cyan-500 focus:border-cyan-500 py-3 transition-colors" 
+                                            className="block w-full pl-10 border-border bg-surface text-foreground rounded-xl focus:ring-accent focus:border-accent py-3 transition-colors" 
                                             placeholder="e.g. Tandon Hostel" 
                                         />
                                     </div>
@@ -302,16 +302,16 @@ const SellItem = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Category</label>
+                                <label className="block text-sm font-bold text-foreground">Category</label>
                                 <div className="mt-2 relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FaTag className="text-slate-400 dark:text-slate-500" />
+                                        <FaTag className="text-subtle" />
                                     </div>
                                     <select 
                                         name="category" 
                                         value={formData.category} 
                                         onChange={handleChange} 
-                                        className="block w-full pl-10 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-cyan-500 focus:border-cyan-500 py-3 transition-colors"
+                                        className="block w-full pl-10 border-border bg-surface text-foreground rounded-xl focus:ring-accent focus:border-accent py-3 transition-colors"
                                     >
                                         <option value="Books & Notes">Books & Notes</option>
                                         <option value="Electronics">Electronics</option>
@@ -324,29 +324,29 @@ const SellItem = () => {
                             </div>
 
                             {formData.category === 'Others' && (
-                                <div className="bg-cyan-50 dark:bg-cyan-900/20 p-4 rounded-xl border border-cyan-100 dark:border-cyan-800 transition-colors">
-                                    <label className="block text-sm font-bold text-cyan-700 dark:text-cyan-300 text-xs">Custom Category</label>
+                                <div className="bg-accent-muted p-4 rounded-xl border border-accent transition-colors">
+                                    <label className="block text-sm font-bold text-accent text-xs">Custom Category</label>
                                     <input 
                                         type="text" 
                                         name="customCategory" 
                                         required 
                                         value={formData.customCategory} 
                                         onChange={handleChange} 
-                                        className="mt-2 block w-full border-cyan-200 dark:border-cyan-700 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg py-2 px-3 focus:ring-cyan-500 focus:border-cyan-500" 
+                                        className="mt-2 block w-full border-accent bg-surface text-foreground rounded-lg py-2 px-3 focus:ring-accent focus:border-accent" 
                                         placeholder="e.g. Musical Instruments" 
                                     />
                                 </div>
                             )}
 
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Item Description</label>
+                                <label className="block text-sm font-bold text-foreground">Item Description</label>
                                 <textarea 
                                     name="description" 
                                     rows={5} 
                                     required 
                                     value={formData.description} 
                                     onChange={handleChange} 
-                                    className="mt-2 block w-full border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-xl p-4 focus:ring-cyan-500 focus:border-cyan-500 transition-colors" 
+                                    className="mt-2 block w-full border-border bg-surface text-foreground rounded-xl p-4 focus:ring-accent focus:border-accent transition-colors" 
                                     placeholder="Condition, time used, accessories included..." 
                                 />
                             </div>
@@ -356,7 +356,7 @@ const SellItem = () => {
                             <button 
                                 type="submit" 
                                 disabled={loading} 
-                                className={`w-full py-4 rounded-xl shadow-lg text-lg font-black text-white ${loading ? 'bg-slate-400 dark:bg-slate-600 animate-pulse' : 'bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 dark:from-cyan-500 dark:hover:from-cyan-600 dark:to-teal-500 dark:hover:to-teal-600 hover:shadow-2xl hover:-translate-y-1 transition-all'}`}
+                                className={`w-full py-4 rounded-xl shadow-lg text-lg font-black text-white ${loading ? 'bg-surface-muted animate-pulse' : 'bg-gradient-to-r from-accent to-primary hover:from-accent hover:to-primary  dark:hover:from-accent  dark:hover:to-primary hover:shadow-2xl hover:-translate-y-1 transition-all'}`}
                             >
                                 {loading ? 'PUBLISHING...' : 'POST AD NOW'}
                             </button>

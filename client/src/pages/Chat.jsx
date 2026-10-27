@@ -313,7 +313,7 @@ const Chat = () => {
     }
     if (!highlight.trim() || !isActive) return text;
     const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
-    return <span>{parts.map((part, i) => part.toLowerCase() === highlight.toLowerCase() ? (<span key={i} className="bg-orange-300 text-gray-900 font-bold px-0.5 rounded shadow-sm">{part}</span>) : (part))}</span>;
+    return <span>{parts.map((part, i) => part.toLowerCase() === highlight.toLowerCase() ? (<span key={i} className="bg-warning text-foreground font-bold px-0.5 rounded shadow-sm">{part}</span>) : (part))}</span>;
   };
 
   const handleViewProfile = (userId) => {
@@ -357,29 +357,29 @@ const Chat = () => {
       }
   };
 
-  if (!user) return <div className="p-10 text-center text-red-500">Please Log In to Chat</div>;
+  if (!user) return <div className="p-10 text-center text-danger">Please Log In to Chat</div>;
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-slate-100 dark:bg-slate-900 font-sans overflow-hidden fixed inset-0">
+    <div className="h-[100dvh] flex flex-col bg-surface-muted font-sans overflow-hidden fixed inset-0">
       <div className="flex-none z-50 relative">
          <Navbar />
       </div>
 
       <div className="flex-1 w-full max-w-[95rem] mx-auto p-0 sm:p-4 lg:p-6 overflow-hidden relative flex flex-col">
-        <div className="bg-white dark:bg-slate-800 sm:rounded-2xl shadow-xl overflow-hidden flex-1 flex border border-slate-200 dark:border-slate-700 relative">
+        <div className="bg-surface sm:rounded-2xl shadow-xl overflow-hidden flex-1 flex border border-border relative">
           
           {/* --- IMAGE PREVIEW MODAL --- */}
           {imagePreview && (
             <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-4 backdrop-blur-sm">
-                <div className="bg-white dark:bg-slate-800 p-2 rounded-lg shadow-2xl max-w-md w-full flex flex-col items-center transition-colors">
+                <div className="bg-surface p-2 rounded-lg shadow-2xl max-w-md w-full flex flex-col items-center transition-colors">
                     <div className="w-full flex justify-between items-center mb-2 px-2">
-                        <h3 className="font-bold text-slate-700 dark:text-slate-200">Send Image?</h3>
-                        <button onClick={cancelPreview} className="text-slate-500 hover:text-red-500"><FaTimes /></button>
+                        <h3 className="font-bold text-foreground">Send Image?</h3>
+                        <button onClick={cancelPreview} className="text-muted hover:text-danger"><FaTimes /></button>
                     </div>
-                    <img src={imagePreview} alt="Preview" className="max-h-[60vh] rounded border border-slate-200 dark:border-slate-700 object-contain" />
+                    <img src={imagePreview} alt="Preview" className="max-h-[60vh] rounded border border-border object-contain" />
                     <div className="flex gap-3 mt-4 w-full">
-                        <button onClick={cancelPreview} className="flex-1 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition" disabled={isUploading}>Cancel</button>
-                        <button onClick={sendImage} className="flex-1 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-semibold hover:from-cyan-600 hover:to-teal-600 transition flex justify-center items-center gap-2" disabled={isUploading}>
+                        <button onClick={cancelPreview} className="flex-1 py-2 rounded-lg border border-border-strong text-foreground font-semibold hover:bg-surface-2 dark:hover:bg-surface-muted transition" disabled={isUploading}>Cancel</button>
+                        <button onClick={sendImage} className="flex-1 py-2 rounded-lg bg-gradient-to-r from-accent to-primary text-white font-semibold hover:from-accent hover:to-primary transition flex justify-center items-center gap-2" disabled={isUploading}>
                             {isUploading ? "Sending..." : <><FaPaperPlane /> Send</>}
                         </button>
                     </div>
@@ -391,11 +391,11 @@ const Chat = () => {
           {showConfirmDelete && (
             <div className="absolute inset-0 z-[60] bg-black/60 flex flex-col items-center justify-center p-4 backdrop-blur-sm"
               style={{animation: 'fadeInBackdrop 0.2s ease-out both'}}>
-                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full flex flex-col items-center text-center overflow-hidden"
+                <div className="bg-surface rounded-2xl shadow-2xl max-w-sm w-full flex flex-col items-center text-center overflow-hidden"
                   style={{animation: 'modalPop 0.25s cubic-bezier(0.34,1.56,0.64,1) both'}}>
 
                     {/* Red header strip */}
-                    <div className="w-full bg-gradient-to-br from-red-500 to-rose-600 pt-8 pb-10 flex flex-col items-center px-6">
+                    <div className="w-full bg-gradient-to-br from-danger to-danger pt-8 pb-10 flex flex-col items-center px-6">
                         <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-3 shadow-lg ring-4 ring-white/30"
                           style={{animation: 'trashWiggle 0.5s 0.25s ease-in-out both'}}>
                             <FaTrashAlt className="text-2xl text-white" />
@@ -404,22 +404,22 @@ const Chat = () => {
                     </div>
 
                     {/* Body */}
-                    <div className="px-6 pt-5 pb-6 w-full -mt-4 bg-white dark:bg-slate-800 rounded-t-2xl">
-                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-1">
+                    <div className="px-6 pt-5 pb-6 w-full -mt-4 bg-surface rounded-t-2xl">
+                        <p className="text-muted text-sm mb-1">
                             All messages in {chatsToDelete.length === 1 ? 'this conversation' : 'these conversations'} will be permanently removed.
                         </p>
-                        <p className="text-xs font-semibold text-red-500 dark:text-red-400 mb-6">This action cannot be undone.</p>
+                        <p className="text-xs font-semibold text-danger mb-6">This action cannot be undone.</p>
 
                         <div className="flex gap-3 w-full">
                             <button
                                 onClick={() => setShowConfirmDelete(false)}
-                                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 hover:shadow-sm"
+                                className="flex-1 py-2.5 rounded-xl border border-border text-foreground font-semibold hover:bg-surface-2 dark:hover:bg-surface-muted transition-all duration-200 hover:shadow-sm"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleDeleteSelected}
-                                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white font-semibold hover:from-red-600 hover:to-rose-700 shadow-md hover:shadow-red-300 dark:hover:shadow-red-900 transition-all duration-200 flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0"
+                                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-danger to-danger text-white font-semibold hover:from-danger hover:to-danger shadow-md hover:shadow-danger dark:hover:shadow-danger transition-all duration-200 flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0"
                             >
                                 <FaTrashAlt className="text-xs" />
                                 Delete
@@ -431,30 +431,30 @@ const Chat = () => {
           )}
 
           {/* --- SIDEBAR --- */}
-          <div className={`${isMobileChatOpen ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 lg:w-1/4 flex-col border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 h-full`}>
+          <div className={`${isMobileChatOpen ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 lg:w-1/4 flex-col border-r border-border bg-surface h-full`}>
             
-            <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800 h-16 shrink-0 relative">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white">Chats</h2>
+            <div className="p-4 border-b border-border flex justify-between items-center bg-surface-2 h-16 shrink-0 relative">
+              <h2 className="text-xl font-bold text-foreground">Chats</h2>
               
               <button 
                 onClick={() => setShowDropdown(!showDropdown)} 
-                className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition relative"
+                className="p-2 rounded-full hover:bg-surface-muted dark:hover:bg-surface-muted text-muted transition relative"
               >
                 <FaEllipsisV />
               </button>
 
               {showDropdown && (
-                <div className="absolute top-14 right-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl rounded-xl py-1.5 w-52 z-50 animate-fade-in origin-top-right"
+                <div className="absolute top-14 right-4 bg-surface border border-border shadow-2xl rounded-xl py-1.5 w-52 z-50 animate-fade-in origin-top-right"
                   style={{animation: 'dropdownPop 0.18s cubic-bezier(0.34,1.56,0.64,1) both'}}>
                     <button
                         onClick={() => {
                             setIsDeleteMode(true);
                             setShowDropdown(false);
                         }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors rounded-lg mx-auto group"
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-danger hover:bg-danger-muted dark:hover:bg-danger/20 transition-colors rounded-lg mx-auto group"
                     >
-                        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-red-100 dark:bg-red-900/30 group-hover:bg-red-200 dark:group-hover:bg-red-800/40 transition-colors">
-                            <FaTrashAlt className="text-xs text-red-500 dark:text-red-400" />
+                        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-danger-muted group-hover:bg-danger dark:group-hover:bg-danger/40 transition-colors">
+                            <FaTrashAlt className="text-xs text-danger" />
                         </span>
                         Delete Chats
                     </button>
@@ -464,33 +464,33 @@ const Chat = () => {
 
             <div className="p-4 shrink-0">
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FaSearch className="text-slate-400" /></span>
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FaSearch className="text-subtle" /></span>
                 <input 
                     type="text" 
                     placeholder="Search chats..." 
                     value={sidebarSearch} 
                     onChange={(e) => setSidebarSearch(e.target.value)} 
-                    className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-700 rounded-full border-none focus:ring-2 focus:ring-cyan-500 text-sm transition outline-none text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400" 
+                    className="w-full pl-10 pr-4 py-2 bg-surface-muted rounded-full border-none focus:ring-2 focus:ring-accent text-sm transition outline-none text-foreground placeholder-subtle" 
                 />
               </div>
             </div>
 
             {isDeleteMode && (
-              <div className="px-4 py-3 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/40 dark:to-rose-950/40 border-b border-red-200 dark:border-red-800/40 flex justify-between items-center shrink-0 shadow-sm"
+              <div className="px-4 py-3 bg-gradient-to-r from-danger-muted to-danger-muted   border-b border-danger flex justify-between items-center shrink-0 shadow-sm"
                 style={{animation: 'slideDown 0.22s ease-out both'}}>
                   <div className="flex items-center gap-2">
-                      <span className="flex items-center justify-center h-6 w-6 rounded-full bg-red-500 text-white text-xs font-bold shadow-sm transition-all duration-300"
+                      <span className="flex items-center justify-center h-6 w-6 rounded-full bg-danger text-white text-xs font-bold shadow-sm transition-all duration-300"
                         style={{transform: chatsToDelete.length > 0 ? 'scale(1.1)' : 'scale(1)'}}>
                           {chatsToDelete.length}
                       </span>
-                      <span className="text-sm font-semibold text-red-700 dark:text-red-400">
+                      <span className="text-sm font-semibold text-danger">
                           {chatsToDelete.length === 1 ? 'chat selected' : 'chats selected'}
                       </span>
                   </div>
                   <div className="flex gap-2">
                       <button
                           onClick={cancelDeleteMode}
-                          className="text-xs px-3.5 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm transition-all duration-200"
+                          className="text-xs px-3.5 py-1.5 rounded-full border border-border-strong text-muted font-medium hover:bg-surface dark:hover:bg-surface-muted hover:shadow-sm transition-all duration-200"
                       >
                           Cancel
                       </button>
@@ -499,8 +499,8 @@ const Chat = () => {
                           disabled={chatsToDelete.length === 0}
                           className={`text-xs px-3.5 py-1.5 rounded-full font-medium flex items-center gap-1.5 transition-all duration-200 ${
                             chatsToDelete.length > 0
-                              ? 'bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-red-300 dark:hover:shadow-red-900 hover:-translate-y-0.5 active:translate-y-0'
-                              : 'bg-red-200 dark:bg-red-900/30 text-red-300 dark:text-red-600 cursor-not-allowed'
+                              ? 'bg-danger hover:bg-danger text-white shadow-md hover:shadow-danger dark:hover:shadow-danger hover:-translate-y-0.5 active:translate-y-0'
+                              : 'bg-danger text-danger cursor-not-allowed'
                           }`}
                       >
                           <FaTrashAlt className="text-[10px]" />
@@ -536,10 +536,10 @@ const Chat = () => {
                   <div 
                     key={getUserId(chat)}
                     onClick={() => isDeleteMode ? toggleChatSelection(getUserId(chat)) : handleSelectChat(chat)}
-                    className={`flex items-center p-4 cursor-pointer transition-colors border-b border-slate-100 dark:border-slate-700 
-                      ${isUnread ? 'bg-white dark:bg-slate-700 border-l-4 border-green-500' : 'bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700'} 
-                      ${isActive && !isDeleteMode ? 'bg-cyan-50 dark:bg-cyan-900/20 border-l-4 border-cyan-600' : ''}
-                      ${chatsToDelete.includes(getUserId(chat)) ? 'bg-red-50 dark:bg-red-900/20' : ''}`}
+                    className={`flex items-center p-4 cursor-pointer transition-colors border-b border-border 
+                      ${isUnread ? 'bg-surface border-l-4 border-success' : 'bg-surface-2 hover:bg-surface-muted dark:hover:bg-surface-muted'} 
+                      ${isActive && !isDeleteMode ? 'bg-accent-muted border-l-4 border-accent' : ''}
+                      ${chatsToDelete.includes(getUserId(chat)) ? 'bg-danger-muted' : ''}`}
                   >
                     {isDeleteMode && (
                         <div className="mr-3 flex-shrink-0">
@@ -547,30 +547,30 @@ const Chat = () => {
                                 type="checkbox"
                                 checked={chatsToDelete.includes(getUserId(chat))}
                                 readOnly
-                                className="h-5 w-5 rounded border-gray-300 text-red-500 focus:ring-red-500 cursor-pointer pointer-events-none"
+                                className="h-5 w-5 rounded border-border-strong text-danger focus:ring-danger cursor-pointer pointer-events-none"
                             />
                         </div>
                     )}
 
                     <div className="relative flex-shrink-0">
-                      <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-500 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-accent to-primary flex items-center justify-center text-white font-bold text-lg overflow-hidden">
                         {partner.profilePic || partner.pic ? <img src={partner.profilePic || partner.pic} className="h-full w-full object-cover" alt="" /> : partner.name.charAt(0)}
                       </div>
                       {onlineUsers.includes(getUserId(partner)) && (
-                        <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white dark:ring-gray-800"></span>
+                        <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-success ring-2 ring-surface"></span>
                       )}
                     </div>
                     <div className="ml-4 flex-1 min-w-0">
                       <div className="flex justify-between items-baseline mb-1">
-                        <h3 className={`text-sm truncate ${isUnread ? 'font-extrabold text-black dark:text-white' : 'font-medium text-slate-700 dark:text-slate-200'} ${isActive && !isDeleteMode ? 'text-cyan-900 dark:text-cyan-400' : ''}`}>
+                        <h3 className={`text-sm truncate ${isUnread ? 'font-extrabold text-foreground' : 'font-medium text-foreground'} ${isActive && !isDeleteMode ? 'text-accent' : ''}`}>
                             {partner.name}
                         </h3>
-                        <span className={`text-xs ${isUnread ? 'font-bold text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                        <span className={`text-xs ${isUnread ? 'font-bold text-success' : 'text-subtle'}`}>
                             {latestMsg ? new Date(latestMsg.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ""}
                         </span>
                       </div>
-                      <p className={`text-sm truncate ${isUnread ? 'font-bold text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'} ${isActive && !isDeleteMode ? 'text-cyan-700 dark:text-cyan-300' : ''}`}>
-                          {isLatestMsgImage ? <span className="flex items-center gap-1 italic text-slate-400"><FaImage /> Photo</span> : latestMsg.content}
+                      <p className={`text-sm truncate ${isUnread ? 'font-bold text-foreground' : 'text-muted'} ${isActive && !isDeleteMode ? 'text-accent' : ''}`}>
+                          {isLatestMsgImage ? <span className="flex items-center gap-1 italic text-subtle"><FaImage /> Photo</span> : latestMsg.content}
                       </p>
                     </div>
                   </div>
@@ -579,41 +579,41 @@ const Chat = () => {
           </div>
 
           {/* --- MAIN CHAT WINDOW --- */}
-          <div className={`${!isMobileChatOpen ? 'hidden md:flex' : 'flex'} flex-1 flex-col bg-[#f0f2f5] dark:bg-slate-900 relative h-full`}>
+          <div className={`${!isMobileChatOpen ? 'hidden md:flex' : 'flex'} flex-1 flex-col bg-chat relative h-full`}>
             {selectedChat ? (
               <>
-                <div className="flex-none p-3 sm:p-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center shadow-sm z-20 h-16 transition-colors">
+                <div className="flex-none p-3 sm:p-4 bg-surface border-b border-border flex justify-between items-center shadow-sm z-20 h-16 transition-colors">
                   <div className="flex items-center">
-                    <button onClick={() => setIsMobileChatOpen(false)} className="md:hidden mr-3 text-gray-500 dark:text-gray-400 hover:text-indigo-600"><FaArrowLeft className="text-xl" /></button>
+                    <button onClick={() => setIsMobileChatOpen(false)} className="md:hidden mr-3 text-muted hover:text-primary"><FaArrowLeft className="text-xl" /></button>
                     <div 
                         className="flex items-center cursor-pointer hover:opacity-80 transition"
                         onClick={() => handleViewProfile(getUserId(getSender(user, selectedChat.users)))}
                     >
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-cyan-500 to-teal-500 flex items-center justify-center text-white font-bold mr-3 overflow-hidden">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-accent to-primary flex items-center justify-center text-white font-bold mr-3 overflow-hidden">
                             {getSender(user, selectedChat.users).pic ? <img src={getSender(user, selectedChat.users).pic} className="h-full w-full object-cover" alt="" /> : getSender(user, selectedChat.users).name.charAt(0)}
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-cyan-600">{getSender(user, selectedChat.users).name}</h3>
+                            <h3 className="text-sm font-bold text-foreground group-hover:text-accent">{getSender(user, selectedChat.users).name}</h3>
                             <p className="text-xs font-medium flex items-center">
-                                {onlineUsers.includes(getUserId(getSender(user, selectedChat.users))) ? <span className="text-green-500 flex items-center gap-1"><FaCircle className="text-[8px]" /> Online</span> : <span className="text-slate-400 dark:text-slate-500">Offline</span>}
+                                {onlineUsers.includes(getUserId(getSender(user, selectedChat.users))) ? <span className="text-success flex items-center gap-1"><FaCircle className="text-[8px]" /> Online</span> : <span className="text-subtle">Offline</span>}
                             </p>
                         </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2 text-cyan-600 dark:text-cyan-400">
+                  <div className="flex items-center space-x-2 text-accent">
                     {showInChatSearch ? (
-                        <div className="flex items-center bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-full px-3 py-1.5 shadow-sm animate-fade-in transition-all">
-                            <input autoFocus type="text" placeholder="Find..." className="bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none appearance-none text-sm text-slate-700 dark:text-white w-28 sm:w-40 placeholder-slate-400" value={inChatSearch} onChange={(e) => setInChatSearch(e.target.value)} />
-                            <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 border-l border-slate-300 dark:border-slate-600 pl-2 ml-2">
+                        <div className="flex items-center bg-surface border border-border-strong rounded-full px-3 py-1.5 shadow-sm animate-fade-in transition-all">
+                            <input autoFocus type="text" placeholder="Find..." className="bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none appearance-none text-sm text-foreground w-28 sm:w-40 placeholder-subtle" value={inChatSearch} onChange={(e) => setInChatSearch(e.target.value)} />
+                            <div className="flex items-center text-xs text-muted border-l border-border-strong pl-2 ml-2">
                                 <span className="mr-2">{searchMatches.length > 0 ? `${currentMatchIndex + 1}/${searchMatches.length}` : '0/0'}</span>
-                                <button onClick={handlePrevMatch} className="hover:bg-slate-100 dark:hover:bg-slate-600 p-1 rounded text-slate-600 dark:text-slate-300"><FaChevronUp /></button>
-                                <button onClick={handleNextMatch} className="hover:bg-slate-100 dark:hover:bg-slate-600 p-1 rounded text-slate-600 dark:text-slate-300"><FaChevronDown /></button>
+                                <button onClick={handlePrevMatch} className="hover:bg-surface-muted dark:hover:bg-surface-muted p-1 rounded text-muted"><FaChevronUp /></button>
+                                <button onClick={handleNextMatch} className="hover:bg-surface-muted dark:hover:bg-surface-muted p-1 rounded text-muted"><FaChevronDown /></button>
                             </div>
-                            <button onClick={() => {setShowInChatSearch(false); setInChatSearch("")}} className="text-slate-400 hover:text-red-500 ml-2 pl-2"><FaTimes /></button>
+                            <button onClick={() => {setShowInChatSearch(false); setInChatSearch("")}} className="text-subtle hover:text-danger ml-2 pl-2"><FaTimes /></button>
                         </div>
                     ) : (
-                        <button onClick={() => setShowInChatSearch(true)} className="hover:bg-cyan-50 dark:hover:bg-cyan-900/30 p-2.5 rounded-full transition text-slate-500 hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400"><FaSearch /></button>
+                        <button onClick={() => setShowInChatSearch(true)} className="hover:bg-accent-muted dark:hover:bg-accent/30 p-2.5 rounded-full transition text-muted hover:text-accent"><FaSearch /></button>
                     )}
                   </div>
                 </div>
@@ -631,13 +631,13 @@ const Chat = () => {
                     return (
                         <div key={index} ref={(el) => (messageRefs.current[msg._id] = el)} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                           <div className={`max-w-[80%] sm:max-w-[60%] rounded-2xl relative group transition-all duration-300 
-                            ${isImg ? 'p-0 bg-transparent shadow-none border-none' : `px-4 py-2 shadow-sm border border-gray-100 dark:border-gray-700 ${isMe ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none'}`} 
-                            ${isCurrentMatch ? 'ring-2 ring-orange-400 ring-offset-2' : ''}`}
+                            ${isImg ? 'p-0 bg-transparent shadow-none border-none' : `px-4 py-2 shadow-sm border border-border ${isMe ? 'bg-primary text-white rounded-br-none' : 'bg-surface text-foreground rounded-bl-none'}`} 
+                            ${isCurrentMatch ? 'ring-2 ring-warning ring-offset-2' : ''}`}
                           >
                             <p className="text-sm leading-relaxed whitespace-pre-wrap break-all">{renderMessageText(msg.content, inChatSearch, isCurrentMatch)}</p>
-                            <div className={`text-[10px] mt-1 flex items-center justify-end space-x-1 ${isImg ? 'text-gray-500 pr-1' : (isMe ? 'text-indigo-200' : 'text-gray-400 dark:text-gray-400')}`}>
+                            <div className={`text-[10px] mt-1 flex items-center justify-end space-x-1 ${isImg ? 'text-muted pr-1' : (isMe ? 'text-primary' : 'text-subtle')}`}>
                                 <span>{msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "Just now"}</span>
-                                {isMe && (<span className="ml-1"><FaCheckDouble className="text-[10px] text-blue-300" /></span>)}
+                                {isMe && (<span className="ml-1"><FaCheckDouble className="text-[10px] text-info" /></span>)}
                             </div>
                           </div>
                         </div>
@@ -645,45 +645,45 @@ const Chat = () => {
                   })}
                   {isTyping && (
                     <div className="ml-4 mb-2 animate-pulse">
-                        <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">Typing...</span>
+                        <span className="text-sm font-bold text-primary">Typing...</span>
                     </div>
                   )}
                   <div ref={bottomRef} />
                   </div>
                 </div>
 
-                <div className="flex-none p-3 sm:p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-30 transition-colors">
+                <div className="flex-none p-3 sm:p-4 bg-surface border-t border-border z-30 transition-colors">
                   {showEmojiPicker && (
                       <div className="absolute bottom-20 left-4 z-30 shadow-2xl">
                           <EmojiPicker onEmojiClick={onEmojiClick} height={350} width={300} />
                       </div>
                   )}
                   <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
-                    <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2 text-gray-400 hover:text-yellow-500 transition"><FaSmile className="text-xl" /></button>
+                    <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2 text-subtle hover:text-warning transition"><FaSmile className="text-xl" /></button>
                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileSelect} />
-                    <button type="button" onClick={() => fileInputRef.current.click()} className="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition"><FaPaperclip className="text-lg" /></button>
+                    <button type="button" onClick={() => fileInputRef.current.click()} className="p-2 text-subtle hover:text-primary dark:hover:text-primary transition"><FaPaperclip className="text-lg" /></button>
                     
                     <input 
                         type="text" 
                         value={newMessage} 
                         onChange={handleTyping} 
                         placeholder="Type a message..." 
-                        className="flex-1 bg-slate-100 dark:bg-slate-700 border-0 rounded-full px-4 py-3 focus:ring-2 focus:ring-cyan-500 focus:bg-white dark:focus:bg-slate-600 transition text-sm sm:text-base text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400" 
+                        className="flex-1 bg-surface-muted border-0 rounded-full px-4 py-3 focus:ring-2 focus:ring-accent focus:bg-surface dark:focus:bg-surface-muted transition text-sm sm:text-base text-foreground placeholder-subtle" 
                     />
                     
-                    <button type="submit" disabled={!newMessage.trim()} className={`p-3 rounded-full shadow-lg transition transform hover:scale-105 ${newMessage.trim() ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white hover:from-cyan-600 hover:to-teal-600' : 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'}`}>
+                    <button type="submit" disabled={!newMessage.trim()} className={`p-3 rounded-full shadow-lg transition transform hover:scale-105 ${newMessage.trim() ? 'bg-gradient-to-r from-accent to-primary text-white hover:from-accent hover:to-primary' : 'bg-surface-muted text-subtle cursor-not-allowed'}`}>
                       <FaPaperPlane />
                     </button>
                   </form>
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center bg-[#f0f2f5] dark:bg-slate-900 text-center p-8 transition-colors">
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-full shadow-md mb-6 animate-bounce-slow">
-                    <div className="text-cyan-200 dark:text-cyan-900 text-6xl"><FaImage className="mx-auto" /></div>
+              <div className="flex-1 flex flex-col items-center justify-center bg-chat text-center p-8 transition-colors">
+                <div className="bg-surface p-6 rounded-full shadow-md mb-6 animate-bounce-slow">
+                    <div className="text-accent text-6xl"><FaImage className="mx-auto" /></div>
                 </div>
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-white">CampusMart Chat</h2>
-                <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-md">Select a chat to start messaging.</p>
+                <h2 className="text-2xl font-bold text-foreground">CampusMart Chat</h2>
+                <p className="text-muted mt-2 max-w-md">Select a chat to start messaging.</p>
               </div>
             )}
           </div>

@@ -4,9 +4,8 @@
 
 @layer base {
   body {
-    /* Default: Light Gray background, Dark text */
-    /* Dark Mode: Dark Gray background (bg-gray-900), Light text */
-    @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200;
+    /* Colours come from theme tokens — edit src/theme/theme.css, not here. */
+    @apply bg-background text-foreground transition-colors duration-200;
   }
 }
 
@@ -59,23 +58,23 @@
 
 @keyframes neon-glow {
   0%, 100% {
-    text-shadow: 0 0 10px rgba(0, 255, 221, 0.5);
-    box-shadow: 0 0 20px rgba(0, 255, 221, 0.3);
+    text-shadow: 0 0 10px rgb(var(--accent) / 0.5);
+    box-shadow: 0 0 20px rgb(var(--accent) / 0.3);
   }
   50% {
-    text-shadow: 0 0 20px rgba(0, 255, 221, 0.8);
-    box-shadow: 0 0 30px rgba(0, 255, 221, 0.6);
+    text-shadow: 0 0 20px rgb(var(--accent) / 0.8);
+    box-shadow: 0 0 30px rgb(var(--accent) / 0.6);
   }
 }
 
 .gradient-animated {
-  background: linear-gradient(-45deg, #0f172a, #1e293b, #0f766e, #164e63);
+  background: linear-gradient(-45deg, rgb(var(--surface-inverse)), rgb(var(--surface)), rgb(var(--primary)), rgb(var(--accent)));
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
 }
 
 .gradient-dark-cyan-animated {
-  background: linear-gradient(135deg, #0f172a 0%, #164e63 25%, #0d9488 50%, #0f172a 75%, #164e63 100%);
+  background: linear-gradient(135deg, rgb(var(--surface-inverse)) 0%, rgb(var(--accent)) 25%, rgb(var(--primary)) 50%, rgb(var(--surface-inverse)) 75%, rgb(var(--accent)) 100%);
   background-size: 200% 200%;
   animation: gradientShift 8s ease infinite;
 }

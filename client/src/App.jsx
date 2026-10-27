@@ -43,7 +43,7 @@ function App() {
 
   return (
     // Layout wrapper
-    <div className="min-h-screen bg-gray-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-surface-muted flex flex-col font-sans">
       
       {/* Toast Notifications */}
       <ToastContainer

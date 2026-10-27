@@ -6,23 +6,25 @@ import {
   FaHeart, FaPlus, FaSignOutAlt, FaUser, FaList, FaBullhorn,
   FaCommentDots, FaTimes, FaUserShield, FaUniversity, FaBars,
   FaCalendarCheck, FaTrophy, FaBook, FaStore, FaThLarge, FaChevronDown, FaBell,
+  FaSun, FaMoon,
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import API from '../api/axios';
 import io from 'socket.io-client';
 import { useCollege } from '../context/CollegeContext';
 import { useNotifications } from '../context/NotificationContext';
+import { useTheme } from '../context/ThemeContext';
 import NotificationDropdown from './NotificationDropdown';
 
 const ENDPOINT = import.meta.env.VITE_SERVER_URL;
 
 // Campus features shown in the waffle menu grid
 const CAMPUS_FEATURES = [
-  { to: '/browse', icon: FaStore, label: 'Browse', color: 'from-purple-500 to-indigo-500', bg: 'bg-purple-50 dark:bg-purple-900/20', ring: 'ring-purple-200 dark:ring-purple-800' },
-  { to: '/lost-and-found', icon: FaBullhorn, label: 'Lost & Found', color: 'from-cyan-500 to-sky-500', bg: 'bg-cyan-50 dark:bg-cyan-900/20', ring: 'ring-cyan-200 dark:ring-cyan-800' },
-  { to: '/events', icon: FaCalendarCheck, label: 'Events', color: 'from-indigo-500 to-violet-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20', ring: 'ring-indigo-200 dark:ring-indigo-800' },
-  { to: '/sports', icon: FaTrophy, label: 'Sports', color: 'from-amber-500 to-orange-500', bg: 'bg-amber-50 dark:bg-amber-900/20', ring: 'ring-amber-200 dark:ring-amber-800' },
-  { to: '/study-materials', icon: FaBook, label: 'Study', color: 'from-teal-500 to-emerald-500', bg: 'bg-teal-50 dark:bg-teal-900/20', ring: 'ring-teal-200 dark:ring-teal-800' },
+  { to: '/browse', icon: FaStore, label: 'Browse', color: 'from-cat-browse to-cat-events', bg: 'bg-cat-browse/10', ring: 'ring-cat-browse/30' },
+  { to: '/lost-and-found', icon: FaBullhorn, label: 'Lost & Found', color: 'from-cat-lost to-info', bg: 'bg-cat-lost/10', ring: 'ring-cat-lost/30' },
+  { to: '/events', icon: FaCalendarCheck, label: 'Events', color: 'from-cat-events to-cat-browse', bg: 'bg-cat-events/10', ring: 'ring-cat-events/30' },
+  { to: '/sports', icon: FaTrophy, label: 'Sports', color: 'from-cat-sports to-warning', bg: 'bg-cat-sports/10', ring: 'ring-cat-sports/30' },
+  { to: '/study-materials', icon: FaBook, label: 'Study', color: 'from-cat-study to-primary', bg: 'bg-cat-study/10', ring: 'ring-cat-study/30' },
 ];
 
 const Navbar = () => {
@@ -41,6 +43,7 @@ const Navbar = () => {
   const isFocused = useRef(false);
 
   const { selectedCollege } = useCollege();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -230,27 +233,27 @@ const Navbar = () => {
   // ── SUB-COMPONENTS ──────────────────────────────────────────────────────────
 
   const SearchDropdown = () => (
-    <div className="absolute top-full left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[100] overflow-hidden">
+    <div className="absolute top-full left-0 mt-1 w-full bg-surface rounded-xl shadow-2xl border border-border z-[100] overflow-hidden">
       {suggestions.length > 0 ? (
         <div className="py-2">
           {suggestions.map(item => (
             <button key={item._id}
               onMouseDown={() => { saveHistory(item.title); navigate(`/item/${item._id}`); }}
-              className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center transition border-b border-gray-100 dark:border-gray-700 last:border-none"
+              className="w-full text-left px-4 py-3 hover:bg-surface-2 dark:hover:bg-surface-muted flex items-center transition border-b border-border last:border-none"
             >
-              <div className="h-12 w-12 rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden flex-shrink-0 mr-3 border border-gray-200 dark:border-gray-600">
+              <div className="h-12 w-12 rounded-lg bg-surface-muted overflow-hidden flex-shrink-0 mr-3 border border-border">
                 {item.images?.[0]
                   ? <img src={item.images[0]?.url || item.images[0]} alt="" className="h-full w-full object-cover" />
                   : <img src="/logo.png" alt="" className="h-full w-full p-2 object-contain opacity-40 grayscale" />
                 }
               </div>
               <div className="min-w-0">
-                <p className="text-sm text-gray-800 dark:text-gray-200 font-semibold line-clamp-1">{item.title}</p>
-                {item.category && <p className="text-xs text-indigo-500 dark:text-indigo-400 mt-0.5">in {item.category}</p>}
+                <p className="text-sm text-foreground font-semibold line-clamp-1">{item.title}</p>
+                {item.category && <p className="text-xs text-primary mt-0.5">in {item.category}</p>}
               </div>
             </button>
           ))}
-          <button onMouseDown={handleFullSearch} className="w-full text-center py-2.5 text-sm text-indigo-700 dark:text-indigo-400 font-bold hover:bg-indigo-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+          <button onMouseDown={handleFullSearch} className="w-full text-center py-2.5 text-sm text-primary font-bold hover:bg-primary-muted dark:hover:bg-surface-muted border-t border-border bg-surface-2">
             See all results for "{searchTerm}"
           </button>
         </div>
@@ -263,10 +266,10 @@ const Navbar = () => {
   const CampusMenu = () => {
     const visibleFeatures = CAMPUS_FEATURES.filter(f => !f.authOnly || isLoggedIn);
     return (
-      <div className="fixed top-[4.5rem] left-1/2 -translate-x-1/2 sm:absolute sm:top-full sm:left-auto sm:translate-x-0 sm:right-0 sm:mt-3 w-[92vw] sm:w-72 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+      <div className="fixed top-[4.5rem] left-1/2 -translate-x-1/2 sm:absolute sm:top-full sm:left-auto sm:translate-x-0 sm:right-0 sm:mt-3 w-[92vw] sm:w-72 bg-surface rounded-2xl shadow-2xl border border-border z-50 overflow-hidden">
         {/* Header */}
-        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900">
-          <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Campus Features</p>
+        <div className="px-4 py-3 border-b border-border bg-gradient-to-r from-surface-muted to-surface-muted  ">
+          <p className="text-xs font-bold text-subtle uppercase tracking-widest">Campus Features</p>
         </div>
         {/* Grid */}
         <div className="p-3 grid grid-cols-3 gap-2">
@@ -276,12 +279,12 @@ const Navbar = () => {
               <Link
                 key={to} to={to}
                 onClick={() => setIsCampusMenuOpen(false)}
-                className={`group flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all duration-150 hover:scale-[1.04] ${isActive ? `${bg} ring-1 ${ring}` : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                className={`group flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all duration-150 hover:scale-[1.04] ${isActive ? `${bg} ring-1 ${ring}` : 'hover:bg-surface-2 dark:hover:bg-surface-muted'}`}
               >
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow`}>
                   <Icon className="text-white text-base" />
                 </div>
-                <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white text-center leading-tight transition-colors">
+                <span className="text-[11px] font-semibold text-muted group-hover:text-foreground dark:group-hover:text-white text-center leading-tight transition-colors">
                   {label}
                 </span>
               </Link>
@@ -294,61 +297,61 @@ const Navbar = () => {
 
   // Profile dropdown
   const ProfileMenu = () => (
-    <div className="absolute right-0 top-full mt-3 w-60 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+    <div className="absolute right-0 top-full mt-3 w-60 bg-surface rounded-2xl shadow-2xl border border-border z-50 overflow-hidden">
       {/* User info header */}
-      <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-br from-indigo-50 to-white dark:from-gray-800 dark:to-gray-900">
+      <div className="px-5 py-4 border-b border-border bg-gradient-to-br from-primary-muted to-white  ">
         <div className="flex items-center gap-3">
           {user?.profilePic
-            ? <img className="h-9 w-9 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700" src={user.profilePic} alt="" />
-            : <div className="h-9 w-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+            ? <img className="h-9 w-9 rounded-full object-cover border-2 border-primary" src={user.profilePic} alt="" />
+            : <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-tertiary flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
               {user?.name?.[0]?.toUpperCase() || 'U'}
             </div>
           }
           <div className="min-w-0">
-            <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user?.name || 'User'}</p>
-            <p className="text-xs text-indigo-500 dark:text-indigo-400 truncate">{user?.email || ''}</p>
+            <p className="text-sm font-bold text-foreground truncate">{user?.name || 'User'}</p>
+            <p className="text-xs text-primary truncate">{user?.email || ''}</p>
           </div>
         </div>
       </div>
 
       <div className="py-1.5">
         <Link to="/profile" onClick={() => setIsProfileOpen(false)}
-          className="group flex items-center px-5 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-          <FaUser className="mr-3 text-gray-400 group-hover:text-indigo-500 transition-colors text-sm" /> Your Profile
+          className="group flex items-center px-5 py-2.5 text-sm text-muted hover:bg-surface-2 dark:hover:bg-surface-muted transition-colors">
+          <FaUser className="mr-3 text-subtle group-hover:text-primary transition-colors text-sm" /> Your Profile
         </Link>
 
         <Link to="/my-listings" onClick={() => setIsProfileOpen(false)}
-          className="group flex items-center px-5 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-          <FaList className="mr-3 text-gray-400 group-hover:text-indigo-500 transition-colors text-sm" /> My Listings
+          className="group flex items-center px-5 py-2.5 text-sm text-muted hover:bg-surface-2 dark:hover:bg-surface-muted transition-colors">
+          <FaList className="mr-3 text-subtle group-hover:text-primary transition-colors text-sm" /> My Listings
         </Link>
 
         <Link to="/wishlist" onClick={() => setIsProfileOpen(false)}
-          className="group flex items-center px-5 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-          <FaHeart className="mr-3 text-gray-400 group-hover:text-rose-500 transition-colors text-sm" /> Wishlist
+          className="group flex items-center px-5 py-2.5 text-sm text-muted hover:bg-surface-2 dark:hover:bg-surface-muted transition-colors">
+          <FaHeart className="mr-3 text-subtle group-hover:text-danger transition-colors text-sm" /> Wishlist
         </Link>
 
         {user?.isAdmin && (
           <Link to="/admin" onClick={() => setIsProfileOpen(false)}
-            className="group flex items-center px-5 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 font-semibold transition-colors">
-            <FaUserShield className="mr-3 text-red-400 text-sm" /> Admin Panel
+            className="group flex items-center px-5 py-2.5 text-sm text-danger hover:bg-danger-muted dark:hover:bg-danger/10 font-semibold transition-colors">
+            <FaUserShield className="mr-3 text-danger text-sm" /> Admin Panel
           </Link>
         )}
 
         {/* Switch Campus button commented out */}
         {/* <button onClick={handleSwitchCampus}
-          className="w-full text-left group flex items-center px-5 py-2.5 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
-          <FaExchangeAlt className="mr-3 text-indigo-400 text-sm" />
+          className="w-full text-left group flex items-center px-5 py-2.5 text-sm text-primary hover:bg-primary-muted dark:hover:bg-primary/20 transition-colors">
+          <FaExchangeAlt className="mr-3 text-primary text-sm" />
           Switch Campus
           {selectedCollege && (
-            <span className="ml-auto text-[10px] font-bold text-gray-400 dark:text-gray-500 truncate max-w-[60px]">{selectedCollege.shortName}</span>
+            <span className="ml-auto text-[10px] font-bold text-subtle truncate max-w-[60px]">{selectedCollege.shortName}</span>
           )}
         </button> */}
 
-        <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+        <div className="my-1 border-t border-border" />
 
         <button onClick={handleLogout}
-          className="w-full text-left group flex items-center px-5 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-          <FaSignOutAlt className="mr-3 text-red-400 text-sm" /> Sign out
+          className="w-full text-left group flex items-center px-5 py-2.5 text-sm text-danger hover:bg-danger-muted dark:hover:bg-danger/20 transition-colors">
+          <FaSignOutAlt className="mr-3 text-danger text-sm" /> Sign out
         </button>
       </div>
     </div>
@@ -356,14 +359,14 @@ const Navbar = () => {
 
   // ── RENDER ──────────────────────────────────────────────────────────────────
   return (
-    <nav className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 border-b border-cyan-700/30 dark:border-cyan-700/20 sticky top-0 z-50 shadow-lg shadow-cyan-500/10">
+    <nav className="bg-gradient-to-r from-surface-inverse via-surface-inverse to-surface-inverse    border-b border-accent/30 sticky top-0 z-50 shadow-lg shadow-accent/10">
       <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[95rem] mx-auto">
         <div className="flex h-16 items-center gap-3">
 
           {/* ── LOGO ── */}
           <div className="flex-shrink-0 flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
             <img src="/logo.png" alt="KampusCart" className="h-9 w-9 object-contain" />
-            <span className="text-lg font-black tracking-tight bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent hidden sm:block">
+            <span className="text-lg font-black tracking-tight bg-gradient-to-r from-tertiary to-info bg-clip-text text-transparent hidden sm:block">
               KampusCart
             </span>
             {/* College badge commented out */}
@@ -387,7 +390,7 @@ const Navbar = () => {
           <div className="flex-1 mx-3 hidden md:block relative max-w-sm">
             <form onSubmit={handleFullSearch} className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaSearch className="text-gray-400" />
+                <FaSearch className="text-subtle" />
               </div>
               <input
                 type="text"
@@ -397,9 +400,9 @@ const Navbar = () => {
                 onChange={e => setSearchTerm(e.target.value)}
                 placeholder="Search for items..."
                 autoComplete="off"
-                className="block w-full pl-10 pr-24 py-2.5 bg-white rounded-full border-none shadow-xl focus:ring-2 focus:ring-teal-400 focus:outline-none text-gray-800 dark:text-white dark:bg-slate-800 placeholder-gray-500 dark:placeholder-slate-400 text-sm transition-all"
+                className="block w-full pl-10 pr-24 py-2.5 bg-surface rounded-full border-none shadow-xl focus:ring-2 focus:ring-primary focus:outline-none text-foreground bg-surface placeholder-subtle text-sm transition-all"
               />
-              <button type="submit" className="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-sm font-bold rounded-full transition">
+              <button type="submit" className="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-primary hover:bg-primary text-white text-sm font-bold rounded-full transition">
                 Search
               </button>
             </form>
@@ -410,12 +413,22 @@ const Navbar = () => {
           {/* ── RIGHT ACTIONS ── */}
           <div className="flex items-center gap-4 sm:gap-4 ml-auto">
 
+            {/* Theme toggle (light / dark) */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 sm:p-2.5 rounded-xl text-inverse-foreground hover:bg-white/10 hover:text-accent transition-all"
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label="Toggle theme"
+            >
+              {isDark ? <FaSun className="text-lg" /> : <FaMoon className="text-lg" />}
+            </button>
+
             {/* Chats (with unread badge) */}
             {isLoggedIn && (
-              <Link to="/chats" className="relative p-2 sm:p-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-all group" title="Chats">
+              <Link to="/chats" className="relative p-2 sm:p-2.5 rounded-xl text-inverse-foreground hover:bg-white/10 hover:text-accent transition-all group" title="Chats">
                 <FaCommentDots className="text-lg group-hover:scale-110 transition-transform" />
                 {unreadChatCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 h-4 w-4 flex items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-slate-900">
+                  <span className="absolute top-0.5 right-0.5 h-4 w-4 flex items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white ring-2 ring-surface-inverse">
                     {unreadChatCount > 9 ? '9+' : unreadChatCount}
                   </span>
                 )}
@@ -425,28 +438,28 @@ const Navbar = () => {
             {/* Sell Item CTA */}
             <Link
               to="/sell"
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 shadow-md hover:shadow-cyan-500/30 transition-all transform hover:-translate-y-px"
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-accent to-primary hover:from-accent hover:to-primary shadow-md hover:shadow-accent/30 transition-all transform hover:-translate-y-px"
             >
               <FaPlus className="text-xs" />
               <span className="hidden md:block">Sell</span>
             </Link>
 
             {/* Separator */}
-            <div className="h-5 w-px bg-slate-700 hidden sm:block mx-1" />
+            <div className="h-5 w-px bg-white/15 hidden sm:block mx-1" />
 
             {/* Campus Features waffle menu */}
             <div className={`relative ${!isLoggedIn ? 'hidden sm:block' : ''}`} ref={campusMenuRef}>
               <button
                 onClick={() => { setIsCampusMenuOpen(p => !p); setIsProfileOpen(false); }}
                 className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-xl text-sm font-semibold transition-all ${isCampusMenuOpen
-                    ? 'bg-slate-700 text-white'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-white/10 text-white'
+                    : 'text-inverse-foreground hover:bg-white/10 hover:text-white'
                   }`}
                 title="Campus features"
               >
                 <FaThLarge className="text-base" />
                 <span className="hidden lg:block">Campus</span>
-                <FaChevronDown className={`text-[10px] text-slate-400 transition-transform duration-200 hidden sm:block ${isCampusMenuOpen ? 'rotate-180' : ''}`} />
+                <FaChevronDown className={`text-[10px] text-inverse-muted transition-transform duration-200 hidden sm:block ${isCampusMenuOpen ? 'rotate-180' : ''}`} />
               </button>
               {isCampusMenuOpen && <CampusMenu />}
             </div>
@@ -456,12 +469,12 @@ const Navbar = () => {
               <div className="relative" ref={notificationRef}>
                 <button
                   onClick={() => { setIsNotificationOpen(p => !p); setIsProfileOpen(false); setIsCampusMenuOpen(false); }}
-                  className="relative p-2 sm:p-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-all group"
+                  className="relative p-2 sm:p-2.5 rounded-xl text-inverse-foreground hover:bg-white/10 hover:text-accent transition-all group"
                   title="Notifications"
                 >
                   <FaBell className="text-lg group-hover:scale-110 transition-transform" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-0.5 right-0.5 h-4 w-4 flex items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-slate-900">
+                    <span className="absolute top-0.5 right-0.5 h-4 w-4 flex items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white ring-2 ring-surface-inverse">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
@@ -475,37 +488,37 @@ const Navbar = () => {
               <div className="relative" ref={profileRef}>
                 <button
                   onClick={() => { setIsProfileOpen(p => !p); setIsCampusMenuOpen(false); }}
-                  className={`flex items-center gap-2 pl-1 pr-1 sm:pr-2.5 py-1 rounded-xl transition-all ${isProfileOpen ? 'bg-slate-700' : 'hover:bg-slate-800'
+                  className={`flex items-center gap-2 pl-1 pr-1 sm:pr-2.5 py-1 rounded-xl transition-all ${isProfileOpen ? 'bg-white/10' : 'hover:bg-white/10'
                     }`}
                 >
                   {user?.profilePic
                     ? <img
-                      className="h-8 w-8 rounded-full object-cover border-2 border-slate-600"
+                      className="h-8 w-8 rounded-full object-cover border-2 border-white/25"
                       src={`${user.profilePic}${user.profilePic.includes('cloudinary') ? `?t=${Date.now()}` : ''}`}
                       alt=""
-                    /> : <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                    /> : <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-tertiary flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                       {user?.name?.[0]?.toUpperCase() || 'U'}
                     </div>
                   }
-                  <span className="hidden lg:block text-sm font-semibold text-slate-200 max-w-[80px] truncate">
+                  <span className="hidden lg:block text-sm font-semibold text-inverse-foreground max-w-[80px] truncate">
                     {user?.name?.split(' ')[0] || 'User'}
                   </span>
-                  <FaChevronDown className={`text-[10px] text-slate-400 transition-transform duration-200 hidden sm:block ${isProfileOpen ? 'rotate-180' : ''}`} />
+                  <FaChevronDown className={`text-[10px] text-inverse-muted transition-transform duration-200 hidden sm:block ${isProfileOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isProfileOpen && <ProfileMenu />}
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Link to="/login" className="hidden sm:block text-slate-300 hover:text-white font-semibold text-sm px-3 py-2 rounded-xl hover:bg-slate-800 transition-colors whitespace-nowrap">
+                <Link to="/login" className="hidden sm:block text-inverse-foreground hover:text-white font-semibold text-sm px-3 py-2 rounded-xl hover:bg-white/10 transition-colors whitespace-nowrap">
                   Log in
                 </Link>
-                <Link to="/signup" className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition-colors whitespace-nowrap">
+                <Link to="/signup" className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition-colors whitespace-nowrap">
                   Sign up
                 </Link>
                 {/* Mobile hamburger (unauthenticated) */}
                 <button
                   onClick={() => setIsMobileMenuOpen(p => !p)}
-                  className="sm:hidden p-2 rounded-xl text-slate-300 hover:bg-slate-800 transition-colors"
+                  className="sm:hidden p-2 rounded-xl text-inverse-foreground hover:bg-white/10 transition-colors"
                 >
                   {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
                 </button>
@@ -519,7 +532,7 @@ const Navbar = () => {
       <div className="md:hidden px-4 pb-3 pt-1 relative">
         <form onSubmit={handleFullSearch} className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FaSearch className="text-gray-400" />
+            <FaSearch className="text-subtle" />
           </div>
           <input
             type="text"
@@ -528,9 +541,9 @@ const Navbar = () => {
             onBlur={() => { isFocused.current = false; setShowDropdown(false); }}
             onChange={e => setSearchTerm(e.target.value)}
             placeholder="Search items..."
-            className="block w-full pl-10 pr-24 py-3 bg-white rounded-full border-none shadow-xl focus:ring-2 focus:ring-teal-400 focus:outline-none text-gray-800 dark:text-white dark:bg-slate-800 placeholder-gray-500 dark:placeholder-slate-400 text-sm transition-all"
+            className="block w-full pl-10 pr-24 py-3 bg-surface rounded-full border-none shadow-xl focus:ring-2 focus:ring-primary focus:outline-none text-foreground bg-surface placeholder-subtle text-sm transition-all"
           />
-          <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-sm font-bold rounded-full transition">
+          <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-primary hover:bg-primary text-white text-sm font-bold rounded-full transition">
             Search
           </button>
         </form>
@@ -539,18 +552,18 @@ const Navbar = () => {
 
       {/* ── UNAUTHENTICATED MOBILE MENU ── */}
       {!isLoggedIn && isMobileMenuOpen && (
-        <div className="sm:hidden border-t border-slate-800 bg-slate-900 px-4 py-3 space-y-2">
+        <div className="sm:hidden border-t border-white/10 bg-surface-inverse px-4 py-3 space-y-2">
           <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center justify-center w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-colors">
+            className="flex items-center justify-center w-full py-3 bg-primary hover:bg-primary text-white font-bold rounded-xl text-sm transition-colors">
             Create Account
           </Link>
           <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center justify-center w-full py-3 border-2 border-slate-700 hover:border-indigo-500 text-slate-200 font-bold rounded-xl text-sm transition-colors">
+            className="flex items-center justify-center w-full py-3 border-2 border-white/15 hover:border-primary text-inverse-foreground font-bold rounded-xl text-sm transition-colors">
             Log in
           </Link>
           {/* Switch Campus button commented out */}
           {/* <button onClick={() => { setIsMobileMenuOpen(false); handleSwitchCampus(); }}
-            className="relative flex items-center justify-center w-full py-3 border border-slate-700 hover:border-indigo-500 text-slate-300 hover:text-indigo-400 font-semibold rounded-xl text-sm transition-colors">
+            className="relative flex items-center justify-center w-full py-3 border border-border-strong hover:border-primary text-subtle hover:text-primary font-semibold rounded-xl text-sm transition-colors">
             
             Switch Campus
             

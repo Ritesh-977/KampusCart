@@ -9,18 +9,18 @@ import SEOHead from '../components/SEOHead';
 import { FiArrowLeft, FiFilter, FiChevronDown } from 'react-icons/fi';
 
 const SkeletonItemCard = () => (
-  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full animate-pulse">
-    <div className="aspect-[4/3] bg-gray-200 dark:bg-gray-700 w-full"></div>
+  <div className="bg-surface rounded-2xl shadow-sm border border-border overflow-hidden flex flex-col h-full animate-pulse">
+    <div className="aspect-[4/3] bg-surface-muted w-full"></div>
     <div className="p-4 flex flex-col flex-1 gap-3">
       <div className="flex justify-between">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+        <div className="h-4 bg-surface-muted rounded w-1/3"></div>
+        <div className="h-4 bg-surface-muted rounded w-1/4"></div>
       </div>
-      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-      <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mt-auto"></div>
-      <div className="flex items-center gap-2 mt-2 pt-3 border-t border-gray-100 dark:border-gray-700">
-        <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+      <div className="h-6 bg-surface-muted rounded w-3/4"></div>
+      <div className="h-8 bg-surface-muted rounded w-1/2 mt-auto"></div>
+      <div className="flex items-center gap-2 mt-2 pt-3 border-t border-border">
+        <div className="h-8 w-8 rounded-full bg-surface-muted"></div>
+        <div className="h-4 bg-surface-muted rounded w-1/3"></div>
       </div>
     </div>
   </div>
@@ -131,7 +131,7 @@ const BrowseItems = () => {
     : 'Browse All Items';
 
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-white dark:bg-slate-950 transition-colors duration-300">
+    <div className="min-h-screen flex flex-col font-sans bg-surface transition-colors duration-300">
       <SEOHead
         title={`${pageTitle} | CampusTrade`}
         description="Browse and filter all campus marketplace listings."
@@ -139,39 +139,39 @@ const BrowseItems = () => {
 
       {/* Background */}
       <div className="fixed inset-0 gradient-dark-cyan-animated opacity-15 dark:opacity-30 pointer-events-none z-0"></div>
-      <div className="fixed top-20 right-10 w-72 h-72 bg-cyan-400 rounded-full blur-3xl opacity-20 dark:opacity-15 float-animation pointer-events-none z-0"></div>
-      <div className="fixed bottom-20 left-10 w-80 h-80 bg-teal-500 rounded-full blur-3xl opacity-20 dark:opacity-15 float-animation pointer-events-none z-0" style={{ animationDelay: '2s' }}></div>
+      <div className="fixed top-20 right-10 w-72 h-72 bg-accent rounded-full blur-3xl opacity-20 dark:opacity-15 float-animation pointer-events-none z-0"></div>
+      <div className="fixed bottom-20 left-10 w-80 h-80 bg-primary rounded-full blur-3xl opacity-20 dark:opacity-15 float-animation pointer-events-none z-0" style={{ animationDelay: '2s' }}></div>
 
       <div className="relative z-10">
         <Navbar />
 
         {/* Page Header */}
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-teal-700/30 py-8 px-4">
+        <div className="bg-gradient-to-r from-surface-inverse to-surface-inverse border-b border-primary/30 py-8 px-4">
           <div className="max-w-7xl mx-auto">
             <Link
               to="/"
-              className="inline-flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors mb-4 group"
+              className="inline-flex items-center gap-2 text-sm text-accent hover:text-accent transition-colors mb-4 group"
             >
               <FiArrowLeft className="group-hover:-translate-x-1 transition-transform" />
               Back to Home
             </Link>
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300">
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary">
               {pageTitle}
             </h1>
-            <p className="text-slate-400 mt-1 text-sm">
+            <p className="text-inverse-muted mt-1 text-sm">
               {!loading && `${items.length} item${items.length !== 1 ? 's' : ''} available`}
             </p>
           </div>
         </div>
 
         {/* Filter & Sort Bar */}
-        <section className="bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 py-3 shadow-md border-b border-teal-200 dark:border-teal-700/30 sticky top-16 z-40 backdrop-blur-sm">
+        <section className="bg-gradient-to-r from-white to-surface-muted   py-3 shadow-md border-b border-primary sticky top-16 z-40 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
 
               {/* Categories */}
               <div className="flex-1 overflow-hidden">
-                <h3 className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-teal-500 dark:from-cyan-400 dark:to-teal-400 uppercase tracking-widest mb-2">
+                <h3 className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary   uppercase tracking-widest mb-2">
                   Categories
                 </h3>
                 <div className="flex space-x-3 overflow-x-auto pb-1 scrollbar-hide">
@@ -179,8 +179,8 @@ const BrowseItems = () => {
                     onClick={() => setSelectedCategory('')}
                     className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap border ${
                       selectedCategory === ''
-                        ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-transparent shadow-lg'
-                        : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border-cyan-300 dark:border-cyan-600 hover:border-cyan-400'
+                        ? 'bg-gradient-to-r from-accent to-primary text-white border-transparent shadow-lg'
+                        : 'bg-surface text-foreground border-accent hover:border-accent'
                     }`}
                   >
                     All
@@ -191,8 +191,8 @@ const BrowseItems = () => {
                       onClick={() => setSelectedCategory(cat === selectedCategory ? '' : cat)}
                       className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap border ${
                         selectedCategory === cat
-                          ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-transparent shadow-lg'
-                          : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border-cyan-300 dark:border-cyan-600 hover:border-cyan-400'
+                          ? 'bg-gradient-to-r from-accent to-primary text-white border-transparent shadow-lg'
+                          : 'bg-surface text-foreground border-accent hover:border-accent'
                       }`}
                     >
                       {cat}
@@ -202,8 +202,8 @@ const BrowseItems = () => {
               </div>
 
               {/* Sort By */}
-              <div className="flex-shrink-0 lg:border-l lg:pl-8 dark:border-teal-700/30 border-teal-200">
-                <h3 className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-teal-500 dark:from-cyan-400 dark:to-teal-400 uppercase tracking-widest mb-2">
+              <div className="flex-shrink-0 lg:border-l lg:pl-8 border-primary/30">
+                <h3 className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary   uppercase tracking-widest mb-2">
                   Sort By
                 </h3>
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -211,8 +211,8 @@ const BrowseItems = () => {
                     onClick={() => setSortBy(sortBy === 'priceLow' ? '' : 'priceLow')}
                     className={`px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition-all whitespace-nowrap ${
                       sortBy === 'priceLow'
-                        ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 shadow-md'
-                        : 'border-cyan-300 dark:border-cyan-600 bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:border-cyan-400'
+                        ? 'border-accent bg-accent-muted text-accent shadow-md'
+                        : 'border-accent bg-surface text-muted hover:border-accent'
                     }`}
                   >
                     Price: Low to High
@@ -221,8 +221,8 @@ const BrowseItems = () => {
                     onClick={() => setSortBy(sortBy === 'priceHigh' ? '' : 'priceHigh')}
                     className={`px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition-all whitespace-nowrap ${
                       sortBy === 'priceHigh'
-                        ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 shadow-md'
-                        : 'border-cyan-300 dark:border-cyan-600 bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:border-cyan-400'
+                        ? 'border-accent bg-accent-muted text-accent shadow-md'
+                        : 'border-accent bg-surface text-muted hover:border-accent'
                     }`}
                   >
                     Price: High to Low
@@ -230,7 +230,7 @@ const BrowseItems = () => {
                   {(selectedCategory || sortBy) && (
                     <button
                       onClick={() => { setSelectedCategory(''); setSortBy(''); }}
-                      className="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition-all whitespace-nowrap border-red-300 dark:border-red-700 bg-white dark:bg-slate-800 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      className="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition-all whitespace-nowrap border-danger bg-surface text-danger hover:bg-danger-muted dark:hover:bg-danger/20"
                     >
                       Clear Filters
                     </button>
@@ -247,7 +247,7 @@ const BrowseItems = () => {
 
             {/* Tourist Banner */}
             {isViewingOtherCollege && (
-              <div className="mb-6 flex items-start gap-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-300 dark:border-amber-700/50 rounded-xl px-4 py-3 text-sm text-amber-800 dark:text-amber-300 shadow-sm">
+              <div className="mb-6 flex items-start gap-3 bg-gradient-to-r from-warning-muted to-warning-muted   border border-warning rounded-xl px-4 py-3 text-sm text-warning shadow-sm">
                 <span className="text-lg leading-snug">👀</span>
                 <p>
                   You are viewing <strong>{selectedCollege.name}</strong>. Your home campus is{' '}
@@ -257,7 +257,7 @@ const BrowseItems = () => {
             )}
 
             <div className="flex items-center justify-between mb-8">
-              <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+              <span className="text-sm text-muted font-medium">
                 Showing {Math.min(visibleCount, items.length)} of {items.length} items
               </span>
             </div>
@@ -285,7 +285,7 @@ const BrowseItems = () => {
                 </div>
                 {visibleCount < items.length && (
                   <div className="flex justify-center mt-12">
-                    <div className="flex items-center gap-2 text-cyan-500 dark:text-cyan-400 animate-bounce">
+                    <div className="flex items-center gap-2 text-accent animate-bounce">
                       <FiChevronDown className="text-xl" />
                       <span className="text-sm font-medium">Scroll for more</span>
                       <FiChevronDown className="text-xl" />
@@ -294,13 +294,13 @@ const BrowseItems = () => {
                 )}
               </>
             ) : (
-              <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
-                <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">
+              <div className="text-center py-20 bg-surface rounded-2xl border border-dashed border-border-strong">
+                <p className="text-muted text-lg font-medium">
                   No items found matching your criteria.
                 </p>
                 <button
                   onClick={() => { setSelectedCategory(''); setSortBy(''); }}
-                  className="mt-4 text-cyan-600 dark:text-cyan-400 font-bold hover:underline"
+                  className="mt-4 text-accent font-bold hover:underline"
                 >
                   Clear Filters
                 </button>

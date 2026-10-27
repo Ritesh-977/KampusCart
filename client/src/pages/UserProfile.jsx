@@ -271,22 +271,22 @@ const UserProfile = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-cyan-400 font-bold bg-slate-900 transition-colors">Loading Profile...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-accent font-bold bg-surface-muted transition-colors">Loading Profile...</div>;
 
   return (
     // FIX 1: Main Background
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-surface-2 font-sans transition-colors duration-200">
       <Navbar />
 
       <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
         {/* FIX 2: Card Background */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden relative transition-colors">
+        <div className="bg-surface rounded-2xl shadow-xl overflow-hidden relative transition-colors">
 
           {/* --- COVER IMAGE SECTION --- */}
-          <div className="relative h-48 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 group overflow-hidden">
+          <div className="relative h-48 bg-gradient-to-br from-surface-inverse via-surface-inverse to-surface-inverse group overflow-hidden">
             {/* Attractive Default Cover Pattern */}
             <div className="absolute inset-0 opacity-20">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-teal-500/20 to-cyan-500/20"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-accent via-primary to-accent"></div>
               <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(6,182,212,0.3),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(20,184,166,0.3),transparent_50%)]"></div>
             </div>
 
@@ -299,10 +299,10 @@ const UserProfile = () => {
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-r from-cyan-400 to-teal-500 flex items-center justify-center">
+                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-r from-accent to-primary flex items-center justify-center">
                     <FaCamera className="text-white text-xl" />
                   </div>
-                  <p className="text-cyan-300 text-sm font-medium">Add a cover photo</p>
+                  <p className="text-accent text-sm font-medium">Add a cover photo</p>
                 </div>
               </div>
             )}
@@ -312,7 +312,7 @@ const UserProfile = () => {
                 <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
                   <button
                     onClick={triggerCoverInput}
-                    className="bg-slate-800/90 backdrop-blur-sm text-cyan-300 border border-cyan-400/30 px-4 py-2 rounded-full font-medium shadow-lg hover:bg-slate-700/90 flex items-center transform hover:scale-105 transition"
+                    className="bg-surface-muted backdrop-blur-sm text-accent border border-accent/30 px-4 py-2 rounded-full font-medium shadow-lg hover:bg-surface-muted flex items-center transform hover:scale-105 transition"
                   >
                     <FaImage className="mr-2" /> Change Cover
                   </button>
@@ -331,11 +331,11 @@ const UserProfile = () => {
   
   {/* Profile Picture Wrapper */}
   <div className="relative group">
-    <div className="w-32 h-32 rounded-full border-4 border-slate-800 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center shadow-xl overflow-hidden relative z-10 transition-colors">
+    <div className="w-32 h-32 rounded-full border-4 border-border-strong bg-gradient-to-br from-surface-inverse to-surface-inverse flex items-center justify-center shadow-xl overflow-hidden relative z-10 transition-colors">
       {imagePreview ? (
         <img src={imagePreview} alt="Profile" className="w-full h-full object-cover" />
       ) : (
-        <span className="text-4xl font-bold text-cyan-400">
+        <span className="text-4xl font-bold text-accent">
           {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
         </span>
       )}
@@ -345,7 +345,7 @@ const UserProfile = () => {
       <button 
         type="button"
         onClick={() => setShowAvatarModal(true)} 
-        className="absolute bottom-0 right-0 bg-gradient-to-r from-cyan-500 to-teal-500 text-white p-3 rounded-full hover:from-cyan-600 hover:to-teal-600 transition shadow-lg z-20 transform hover:scale-105" 
+        className="absolute bottom-0 right-0 bg-gradient-to-r from-accent to-primary text-white p-3 rounded-full hover:from-accent hover:to-primary transition shadow-lg z-20 transform hover:scale-105" 
         title="Change Profile Picture"
       >
         <FaCamera size={16} />
@@ -372,7 +372,7 @@ const UserProfile = () => {
             setCoverFile(null);
           }}
           disabled={saving}
-          className="flex items-center justify-center w-full md:w-auto min-w-[90px] px-3 py-1.5 text-xs md:px-4 md:py-2 md:text-sm bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600 transition disabled:opacity-50"
+          className="flex items-center justify-center w-full md:w-auto min-w-[90px] px-3 py-1.5 text-xs md:px-4 md:py-2 md:text-sm bg-surface-muted text-subtle rounded-md hover:bg-surface-muted transition disabled:opacity-50"
         >
           <FaTimes className="mr-1.5" /> Cancel
         </button>
@@ -381,7 +381,7 @@ const UserProfile = () => {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center justify-center w-full md:w-auto min-w-[90px] px-3 py-1.5 text-xs md:px-4 md:py-2 md:text-sm bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-md hover:from-cyan-600 hover:to-teal-600 transition shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+          className="flex items-center justify-center w-full md:w-auto min-w-[90px] px-3 py-1.5 text-xs md:px-4 md:py-2 md:text-sm bg-gradient-to-r from-accent to-primary text-white rounded-md hover:from-accent hover:to-primary transition shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {saving ? (
             <>
@@ -399,7 +399,7 @@ const UserProfile = () => {
       // Original Edit Button
       <button 
         onClick={() => setIsEditing(true)} 
-        className="flex items-center px-3 py-1.5 text-sm md:px-5 md:py-2.5 md:text-base bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-md md:rounded-lg hover:from-cyan-600 hover:to-teal-600 transition shadow-sm font-medium transform hover:scale-105"
+        className="flex items-center px-3 py-1.5 text-sm md:px-5 md:py-2.5 md:text-base bg-gradient-to-r from-accent to-primary text-white rounded-md md:rounded-lg hover:from-accent hover:to-primary transition shadow-sm font-medium transform hover:scale-105"
       >
         <FaEdit className="mr-1.5 md:mr-2" /> Edit Profile
       </button>
@@ -412,9 +412,9 @@ const UserProfile = () => {
             {/* User Form */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
               <div className="col-span-1 md:col-span-2">
-                <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Full Name</label>
+                <label className="block text-xs font-bold text-subtle uppercase tracking-wider mb-1">Full Name</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FaUser className="text-gray-400 dark:text-gray-500" /></div>
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FaUser className="text-subtle" /></div>
                   <input
                     type="text"
                     name="name"
@@ -422,32 +422,32 @@ const UserProfile = () => {
                     value={user.name}
                     onChange={handleChange}
                     className={`block w-full pl-10 py-3 rounded-lg border transition-all ${isEditing
-                      ? 'border-cyan-300 bg-white dark:bg-slate-700 dark:border-cyan-500 focus:ring-2 focus:ring-cyan-500 text-gray-900 dark:text-white'
-                      : 'border-transparent bg-slate-50 dark:bg-slate-900/50 text-gray-800 dark:text-gray-200 font-bold text-xl'
+                      ? 'border-accent bg-surface border-accent focus:ring-2 focus:ring-accent text-foreground'
+                      : 'border-transparent bg-surface-2 text-foreground font-bold text-xl'
                       }`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Email Address</label>
+                <label className="block text-xs font-bold text-subtle uppercase tracking-wider mb-1">Email Address</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FaEnvelope className="text-gray-400 dark:text-gray-500 mb-2" /></div>
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FaEnvelope className="text-subtle mb-2" /></div>
                   <input
                     type="email"
                     value={user.email}
                     disabled
-                    className="block w-full pl-10 py-3 rounded-lg border border-transparent bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                    className="block w-full pl-10 py-3 rounded-lg border border-transparent bg-surface-2 text-muted cursor-not-allowed"
                   />
-                  <span className="text-xs text-gray-500 dark:text-gray-500 mt-1.5 ml-2 flex items-center gap-1">
+                  <span className="text-xs text-muted mt-1.5 ml-2 flex items-center gap-1">
                     <span role="img" aria-label="lock">🔒</span> Email cannot be changed</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Phone Number</label>
+                <label className="block text-xs font-bold text-subtle uppercase tracking-wider mb-1">Phone Number</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FaPhone className="text-gray-400 dark:text-gray-500" /></div>
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FaPhone className="text-subtle" /></div>
                   <input
                     type="text"
                     name="phone"
@@ -456,17 +456,17 @@ const UserProfile = () => {
                     onChange={handleChange}
                     placeholder="Add phone number"
                     className={`block w-full pl-10 py-3 rounded-lg border transition-all ${isEditing
-                      ? 'border-cyan-300 bg-white dark:bg-slate-700 dark:border-cyan-500 focus:ring-2 focus:ring-cyan-500 text-gray-900 dark:text-white'
-                      : 'border-transparent bg-slate-50 dark:bg-slate-900/50 text-gray-800 dark:text-gray-200'
+                      ? 'border-accent bg-surface border-accent focus:ring-2 focus:ring-accent text-foreground'
+                      : 'border-transparent bg-surface-2 text-foreground'
                       }`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Current Year / Branch</label>
+                <label className="block text-xs font-bold text-subtle uppercase tracking-wider mb-1">Current Year / Branch</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FaGraduationCap className="text-gray-400 dark:text-gray-500" /></div>
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><FaGraduationCap className="text-subtle" /></div>
                   <input
                     type="text"
                     name="year"
@@ -475,8 +475,8 @@ const UserProfile = () => {
                     onChange={handleChange}
                     placeholder="e.g. 2nd Year CSE"
                     className={`block w-full pl-10 py-3 rounded-lg border transition-all ${isEditing
-                      ? 'border-cyan-300 bg-white dark:bg-slate-700 dark:border-cyan-500 focus:ring-2 focus:ring-cyan-500 text-gray-900 dark:text-white'
-                      : 'border-transparent bg-slate-50 dark:bg-slate-900/50 text-gray-800 dark:text-gray-200'
+                      ? 'border-accent bg-surface border-accent focus:ring-2 focus:ring-accent text-foreground'
+                      : 'border-transparent bg-surface-2 text-foreground'
                       }`}
                   />
                 </div>
@@ -488,7 +488,7 @@ const UserProfile = () => {
 
       {/* --- CHANGE PASSWORD CARD --- */}
       <div className="max-w-4xl mx-auto pb-10 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden transition-colors">
+        <div className="bg-surface rounded-2xl shadow-xl overflow-hidden transition-colors">
           {/* Header / Toggle */}
           <button
             onClick={() => {
@@ -498,48 +498,48 @@ const UserProfile = () => {
             className="w-full flex items-center justify-between px-8 py-5 text-left group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center shadow">
                 <FaKey className="text-white text-sm" />
               </div>
               <div>
-                <p className="font-semibold text-gray-800 dark:text-white text-sm sm:text-base">Change Password</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Update your account password</p>
+                <p className="font-semibold text-foreground text-sm sm:text-base">Change Password</p>
+                <p className="text-xs text-muted">Update your account password</p>
               </div>
             </div>
             {showPasswordSection
-              ? <FaChevronUp className="text-gray-400 dark:text-gray-500 group-hover:text-cyan-500 transition" />
-              : <FaChevronDown className="text-gray-400 dark:text-gray-500 group-hover:text-cyan-500 transition" />
+              ? <FaChevronUp className="text-subtle group-hover:text-accent transition" />
+              : <FaChevronDown className="text-subtle group-hover:text-accent transition" />
             }
           </button>
 
           {showPasswordSection && (
-            <div className="px-8 pb-8 border-t border-slate-100 dark:border-slate-700">
+            <div className="px-8 pb-8 border-t border-border">
               <div className="mt-6 grid grid-cols-1 gap-5 max-w-lg">
 
                 {/* Current Password */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-subtle uppercase tracking-wider mb-1">
                     Current Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaLock className="text-gray-400 dark:text-gray-500 text-sm" />
+                      <FaLock className="text-subtle text-sm" />
                     </div>
                     <input
                       type={showCurrentPw ? 'text' : 'password'}
                       value={passwordForm.currentPassword}
                       onChange={e => { setPasswordForm(f => ({ ...f, currentPassword: e.target.value })); setPasswordErrors(er => ({ ...er, currentPassword: '' })); }}
                       placeholder="Enter current password"
-                      className={`block w-full pl-10 pr-10 py-3 rounded-lg border transition-all bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none ${passwordErrors.currentPassword ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-600'}`}
+                      className={`block w-full pl-10 pr-10 py-3 rounded-lg border transition-all bg-surface text-foreground focus:ring-2 focus:ring-accent outline-none ${passwordErrors.currentPassword ? 'border-danger' : 'border-border'}`}
                     />
-                    <button type="button" onClick={() => setShowCurrentPw(v => !v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+                    <button type="button" onClick={() => setShowCurrentPw(v => !v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-subtle hover:text-muted dark:hover:text-subtle transition">
                       {showCurrentPw ? <FaEyeSlash size={15} /> : <FaEye size={15} />}
                     </button>
                   </div>
-                  {passwordErrors.currentPassword && <p className="text-xs text-red-500 mt-1">{passwordErrors.currentPassword}</p>}
+                  {passwordErrors.currentPassword && <p className="text-xs text-danger mt-1">{passwordErrors.currentPassword}</p>}
                   {/* Forgot Password link */}
                   <div className="mt-1.5 text-right">
-                    <Link to="/forgot-password" className="text-base text-cyan-500 hover:text-cyan-600 dark:hover:text-cyan-400 font-medium transition">
+                    <Link to="/forgot-password" className="text-base text-accent hover:text-accent dark:hover:text-accent font-medium transition">
                       Forgot password?
                     </Link>
                   </div>
@@ -547,48 +547,48 @@ const UserProfile = () => {
 
                 {/* New Password */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-subtle uppercase tracking-wider mb-1">
                     New Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaLock className="text-gray-400 dark:text-gray-500 text-sm" />
+                      <FaLock className="text-subtle text-sm" />
                     </div>
                     <input
                       type={showNewPw ? 'text' : 'password'}
                       value={passwordForm.newPassword}
                       onChange={e => { setPasswordForm(f => ({ ...f, newPassword: e.target.value })); setPasswordErrors(er => ({ ...er, newPassword: '' })); }}
                       placeholder="Minimum 6 characters"
-                      className={`block w-full pl-10 pr-10 py-3 rounded-lg border transition-all bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none ${passwordErrors.newPassword ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-600'}`}
+                      className={`block w-full pl-10 pr-10 py-3 rounded-lg border transition-all bg-surface text-foreground focus:ring-2 focus:ring-accent outline-none ${passwordErrors.newPassword ? 'border-danger' : 'border-border'}`}
                     />
-                    <button type="button" onClick={() => setShowNewPw(v => !v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+                    <button type="button" onClick={() => setShowNewPw(v => !v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-subtle hover:text-muted dark:hover:text-subtle transition">
                       {showNewPw ? <FaEyeSlash size={15} /> : <FaEye size={15} />}
                     </button>
                   </div>
-                  {passwordErrors.newPassword && <p className="text-xs text-red-500 mt-1">{passwordErrors.newPassword}</p>}
+                  {passwordErrors.newPassword && <p className="text-xs text-danger mt-1">{passwordErrors.newPassword}</p>}
                 </div>
 
                 {/* Confirm New Password */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-subtle uppercase tracking-wider mb-1">
                     Confirm New Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaLock className="text-gray-400 dark:text-gray-500 text-sm" />
+                      <FaLock className="text-subtle text-sm" />
                     </div>
                     <input
                       type={showConfirmPw ? 'text' : 'password'}
                       value={passwordForm.confirmPassword}
                       onChange={e => { setPasswordForm(f => ({ ...f, confirmPassword: e.target.value })); setPasswordErrors(er => ({ ...er, confirmPassword: '' })); }}
                       placeholder="Re-enter new password"
-                      className={`block w-full pl-10 pr-10 py-3 rounded-lg border transition-all bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 outline-none ${passwordErrors.confirmPassword ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-600'}`}
+                      className={`block w-full pl-10 pr-10 py-3 rounded-lg border transition-all bg-surface text-foreground focus:ring-2 focus:ring-accent outline-none ${passwordErrors.confirmPassword ? 'border-danger' : 'border-border'}`}
                     />
-                    <button type="button" onClick={() => setShowConfirmPw(v => !v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+                    <button type="button" onClick={() => setShowConfirmPw(v => !v)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-subtle hover:text-muted dark:hover:text-subtle transition">
                       {showConfirmPw ? <FaEyeSlash size={15} /> : <FaEye size={15} />}
                     </button>
                   </div>
-                  {passwordErrors.confirmPassword && <p className="text-xs text-red-500 mt-1">{passwordErrors.confirmPassword}</p>}
+                  {passwordErrors.confirmPassword && <p className="text-xs text-danger mt-1">{passwordErrors.confirmPassword}</p>}
                 </div>
 
                 {/* Action Buttons */}
@@ -596,14 +596,14 @@ const UserProfile = () => {
                   <button
                     onClick={() => { setShowPasswordSection(false); setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); setPasswordErrors({}); }}
                     disabled={savingPassword}
-                    className="px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition text-sm font-medium disabled:opacity-50"
+                    className="px-4 py-2 rounded-lg bg-surface-muted text-subtle hover:bg-surface-muted transition text-sm font-medium disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handlePasswordSave}
                     disabled={savingPassword}
-                    className="flex items-center gap-2 px-6 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-sm font-medium hover:from-cyan-600 hover:to-teal-600 transition shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-6 py-2 rounded-lg bg-gradient-to-r from-accent to-primary text-white text-sm font-medium hover:from-accent hover:to-primary transition shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {savingPassword ? <><FaSpinner className="animate-spin" /> Saving…</> : <><FaSave /> Update Password</>}
                   </button>
@@ -618,17 +618,17 @@ const UserProfile = () => {
       {showCropModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm">
           {/* FIX 8: Modal Background */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden transition-colors">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+          <div className="bg-surface rounded-xl shadow-2xl max-w-md w-full overflow-hidden transition-colors">
+            <div className="p-4 border-b border-border">
+              <h3 className="text-lg font-bold text-foreground">
                 {cropTarget === 'profile' ? 'Adjust Profile Picture' : 'Adjust Cover Image'}
               </h3>
             </div>
 
             <div className="p-4 flex flex-col items-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Drag to reposition. Use slider to zoom.</p>
+              <p className="text-sm text-muted mb-4">Drag to reposition. Use slider to zoom.</p>
 
-              <div className="relative w-full h-64 bg-slate-100 dark:bg-slate-900 rounded-lg overflow-hidden">
+              <div className="relative w-full h-64 bg-surface-muted rounded-lg overflow-hidden">
                 <Cropper
                   image={tempImageSrc}
                   crop={crop}
@@ -643,7 +643,7 @@ const UserProfile = () => {
               </div>
 
               <div className="mt-6 w-full flex items-center space-x-2 px-4">
-                <span role="img" aria-label="zoom out" className="text-gray-500 dark:text-gray-400">➖</span>
+                <span role="img" aria-label="zoom out" className="text-muted">➖</span>
                 <input
                   type="range"
                   value={zoom}
@@ -652,24 +652,24 @@ const UserProfile = () => {
                   step={0.1}
                   onChange={(e) => setZoom(Number(e.target.value))}
                   // FIX 9: Slider Colors
-                  className="w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                  className="w-full h-2 bg-surface-muted rounded-lg appearance-none cursor-pointer accent-accent"
                 />
-                <span role="img" aria-label="zoom in" className="text-gray-500 dark:text-gray-400">➕</span>
+                <span role="img" aria-label="zoom in" className="text-muted">➕</span>
               </div>
             </div>
 
-            <div className="p-4 bg-slate-50 dark:bg-slate-700 flex justify-end space-x-3 border-t border-slate-200 dark:border-slate-600">
+            <div className="p-4 bg-surface-2 flex justify-end space-x-3 border-t border-border">
               <button
                 onClick={cancelImage}
                 disabled={isCropping}
-                className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white font-medium"
+                className="px-4 py-2 text-muted hover:text-foreground dark:hover:text-white font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={showCroppedImage}
                 disabled={isCropping}
-                className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-lg hover:from-cyan-600 hover:to-teal-600 font-medium flex items-center disabled:opacity-50"
+                className="px-6 py-2 bg-gradient-to-r from-accent to-primary text-white rounded-lg hover:from-accent hover:to-primary font-medium flex items-center disabled:opacity-50"
               >
                 {isCropping ? <>Processing...</> : <><FaCheck className="mr-2" /> Confirm Crop</>}
               </button>

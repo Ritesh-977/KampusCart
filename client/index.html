@@ -9,7 +9,21 @@
     <title>KampusCart – Campus Marketplace for Students</title>
     <meta name="title" content="KampusCart – Campus Marketplace for Students" />
     <meta name="description" content="The exclusive marketplace for college students. Buy and sell books, electronics, and dorm essentials securely within your campus." />
-    <meta name="theme-color" content="#4f46e5" />
+    <meta name="theme-color" content="#0d9488" />
+
+    <!-- Apply the saved theme before paint to avoid a flash of the wrong theme. -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          var isDark = stored ? stored === 'dark'
+            : !window.matchMedia('(prefers-color-scheme: light)').matches;
+          if (isDark) document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+        } catch (e) { /* ignore */ }
+      })();
+    </script>
+
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.kampuscart.site/" />
